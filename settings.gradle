@@ -1,0 +1,3 @@
+include ':app'
+include ':adblock-client'
+rootProject.name = "AdblockAndroid"
