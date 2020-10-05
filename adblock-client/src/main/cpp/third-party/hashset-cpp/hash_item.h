@@ -3,25 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef HASHITEM_H_
-#define HASHITEM_H_
+#ifndef HASH_ITEM_H_
+#define HASH_ITEM_H_
 
-#include "base.h"
+#include "./base.h"
 
 template<class T>
 class HashItem {
 public:
-    HashItem() : next(nullptr), hashItemStorage(nullptr) {
+    HashItem() : next_(nullptr), hash_item_storage_(nullptr) {
     }
 
     ~HashItem() {
-        if (hashItemStorage) {
-            delete hashItemStorage;
-        }
+      if (hash_item_storage_) {
+        delete hash_item_storage_;
+      }
     }
 
-    HashItem *next;
-    T *hashItemStorage;
+    HashItem *next_;
+    T *hash_item_storage_;
 };
 
-#endif  // HASHITEM_H_
+#endif  // HASH_ITEM_H_

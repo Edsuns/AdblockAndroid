@@ -21,9 +21,12 @@ add_library( # Sets the name of the library.
         src/main/cpp/third-party/ad-block/ad_block_client.cc
         src/main/cpp/third-party/ad-block/cosmetic_filter.cc
         src/main/cpp/third-party/ad-block/filter.cc
+        src/main/cpp/third-party/ad-block/no_fingerprint_domain.cc
+        src/main/cpp/third-party/ad-block/context_domain.cc
+        src/main/cpp/third-party/ad-block/protocol.cc
         src/main/cpp/third-party/bloom-filter-cpp/BloomFilter.cpp
-        src/main/cpp/third-party/bloom-filter-cpp/hashFn.cpp
-        src/main/cpp/third-party/hashset-cpp/HashSet.cpp
+        src/main/cpp/third-party/hashset-cpp/hashFn.cc
+        src/main/cpp/third-party/hashset-cpp/hash_set.cc
         )
 
 # Searches for a specified prebuilt library and stores the path as a

@@ -8,7 +8,7 @@
 
 #include <math.h>
 #include <stdint.h>
-#include "hashFn.h"
+#include "../hashset-cpp/hashFn.h"
 #include "base.h"
 
 static HashFn h1(13);

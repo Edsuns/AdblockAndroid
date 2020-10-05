@@ -3,11 +3,4 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "./cosmetic_filter.h"
-#include "../hashset-cpp/hashFn.h"
-
-static HashFn fn(19);
-
-uint64_t CosmeticFilter::hash() const {
-    return fn(data, static_cast<int>(strlen(data)));
-}
+#include "./hash_set.h"

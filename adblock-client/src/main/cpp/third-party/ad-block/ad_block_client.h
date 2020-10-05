@@ -6,11 +6,20 @@
 #ifndef AD_BLOCK_CLIENT_H_
 #define AD_BLOCK_CLIENT_H_
 
-#include "filter.h"
-#include "bad_fingerprint.h"
-#include "cosmetic_filter.h"
-#include "../bloom-filter-cpp/BloomFilter.h"
-#include "../hashset-cpp/HashSet.h"
+#include <string>
+#include <set>
+#include "./filter.h"
+
+class CosmeticFilter;
+
+class BloomFilter;
+
+class BadFingerprintsHashSet;
+
+class NoFingerprintDomain;
+
+template<class T>
+class HashSet;
 
 class AdBlockClient {
 public:
@@ -20,17 +29,26 @@ public:
 
     void clear();
 
-    bool parse(const char *input);
+//   bool parse(const char *input);
+    bool parse(const char *input, bool preserveRules = false);
 
     bool matches(const char *input,
                  FilterOption contextOption = FONoFilterOption,
-                 const char *contextDomain = nullptr);
+                 const char *contextDomain = nullptr,
+                 Filter **matchedFilter = nullptr,
+                 Filter **matchedExceptionFilter = nullptr);
 
     bool findMatchingFilters(const char *input,
                              FilterOption contextOption,
                              const char *contextDomain,
                              Filter **matchingFilter,
                              Filter **matchingExceptionFilter);
+
+    void addTag(const std::string &tag);
+
+    void removeTag(const std::string &tag);
+
+    bool tagExists(const std::string &tag) const;
 
     // Serializes a the parsed data and bloom filter data into a single buffer.
     // The returned buffer should be deleted.
@@ -48,12 +66,20 @@ public:
         return deserializedBuffer;
     }
 
+    static bool getFingerprint(char *buffer, const char *input);
+
+    static bool getFingerprint(char *buffer, const Filter &f);
+
     Filter *filters;
     Filter *cosmeticFilters;
     Filter *htmlFilters;
     Filter *exceptionFilters;
     Filter *noFingerprintFilters;
     Filter *noFingerprintExceptionFilters;
+    Filter *noFingerprintDomainOnlyFilters;
+    Filter *noFingerprintAntiDomainOnlyFilters;
+    Filter *noFingerprintDomainOnlyExceptionFilters;
+    Filter *noFingerprintAntiDomainOnlyExceptionFilters;
 
     int numFilters;
     int numCosmeticFilters;
@@ -61,6 +87,10 @@ public:
     int numExceptionFilters;
     int numNoFingerprintFilters;
     int numNoFingerprintExceptionFilters;
+    int numNoFingerprintDomainOnlyFilters;
+    int numNoFingerprintAntiDomainOnlyFilters;
+    int numNoFingerprintDomainOnlyExceptionFilters;
+    int numNoFingerprintAntiDomainOnlyExceptionFilters;
     int numHostAnchoredFilters;
     int numHostAnchoredExceptionFilters;
 
@@ -68,6 +98,10 @@ public:
     BloomFilter *exceptionBloomFilter;
     HashSet<Filter> *hostAnchoredHashSet;
     HashSet<Filter> *hostAnchoredExceptionHashSet;
+    HashSet<NoFingerprintDomain> *noFingerprintDomainHashSet;
+    HashSet<NoFingerprintDomain> *noFingerprintAntiDomainHashSet;
+    HashSet<NoFingerprintDomain> *noFingerprintDomainExceptionHashSet;
+    HashSet<NoFingerprintDomain> *noFingerprintAntiDomainExceptionHashSet;
 
     // Used only in the perf program to create a list of bad fingerprints
     BadFingerprintsHashSet *badFingerprintsHashSet;
@@ -80,6 +114,8 @@ public:
     unsigned int numHashSetSaves;
     unsigned int numExceptionHashSetSaves;
 
+    static const int kFingerprintSize;
+
 protected:
     // Determines if a passed in array of filter pointers matches for any of
     // the input
@@ -88,25 +124,24 @@ protected:
                             BloomFilter *inputBloomFilter, const char *inputHost, int inputHostLen,
                             Filter **matchingFilter = nullptr);
 
+    bool isHostAnchoredHashSetMiss(const char *input, int inputLen,
+                                   HashSet<Filter> *hashSet,
+                                   const char *inputHost,
+                                   int inputHostLen,
+                                   FilterOption contextOption,
+                                   const char *contextDomain,
+                                   Filter **foundFilter = nullptr);
+
     void initBloomFilter(BloomFilter **, const char *buffer, int len);
 
-    bool initHashSet(HashSet<Filter> **, char *buffer, int len);
+    template<class T>
+    bool initHashSet(HashSet<T> **, char *buffer, int len);
 
     char *deserializedBuffer;
+    std::set<std::string> tags;
 };
 
-// Fast hash function applicable to 2 byte char checks
-class HashFn2Byte : public HashFn {
-public:
-    HashFn2Byte() : HashFn(0, false) {
-    }
-
-    uint64_t operator()(const char *input, int len,
-                        unsigned char lastCharCode, uint64_t lastHash) override;
-
-    uint64_t operator()(const char *input, int len) override;
-};
-
+extern std::set<std::string> unknownOptions;
 extern const char *separatorCharacters;
 
 void parseFilter(const char *input, const char *end, Filter *f,
@@ -114,17 +149,18 @@ void parseFilter(const char *input, const char *end, Filter *f,
                  BloomFilter *exceptionBloomFilter = nullptr,
                  HashSet<Filter> *hostAnchoredHashSet = nullptr,
                  HashSet<Filter> *hostAnchoredExceptionHashSet = nullptr,
-                 HashSet<CosmeticFilter> *simpleCosmeticFilters = nullptr);
+                 HashSet<CosmeticFilter> *simpleCosmeticFilters = nullptr,
+                 bool preserveRules = false);
 
 void parseFilter(const char *input, Filter *f,
                  BloomFilter *bloomFilter = nullptr,
                  BloomFilter *exceptionBloomFilter = nullptr,
                  HashSet<Filter> *hostAnchoredHashSet = nullptr,
                  HashSet<Filter> *hostAnchoredExceptionHashSet = nullptr,
-                 HashSet<CosmeticFilter> *simpleCosmeticFilters = nullptr);
+                 HashSet<CosmeticFilter> *simpleCosmeticFilters = nullptr,
+                 bool preserveRules = false);
 
 bool isSeparatorChar(char c);
-
 int findFirstSeparatorChar(const char *input, const char *end);
 
 #endif  // AD_BLOCK_CLIENT_H_

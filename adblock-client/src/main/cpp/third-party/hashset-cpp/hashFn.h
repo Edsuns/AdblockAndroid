@@ -6,7 +6,9 @@
 #ifndef HASHFN_H_
 #define HASHFN_H_
 
-#include "base.h"
+#include <cstdint>
+
+#include "./base.h"
 
 typedef uint64_t uint64Array[30];
 static int precomputedArraySize = sizeof(uint64Array) / sizeof(uint64_t);
@@ -50,22 +52,9 @@ public:
     }
 
     virtual uint64_t operator()(const char *input, int len,
-                                unsigned char lastCharCode, uint64_t lastHash) {
-        // See the abracadabra example:
-        // https://en.wikipedia.org/wiki/Rabin%E2%80%93Karp_algorithm
-        return (lastHash - lastCharCode *
-                           customPow(&precomputedPowers, precompute, p, len - 1)) *
-               p + input[len - 1];
-    }
+                                unsigned char lastCharCode, uint64_t lastHash);
 
-    virtual uint64_t operator()(const char *input, int len) {
-        uint64_t total = 0;
-        for (int i = 0; i < len; i++) {
-            total += input[i] *
-                     customPow(&precomputedPowers, precompute, p, len - i - 1);
-        }
-        return total;
-    }
+    virtual uint64_t operator()(const char *input, int len);
 
 private:
     int p;

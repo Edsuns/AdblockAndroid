@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "hashFn.h"
+#include "./hashFn.h"
 
 uint64_t HashFn::operator()(const char *input, int len,
                             unsigned char lastCharCode, uint64_t lastHash) {
