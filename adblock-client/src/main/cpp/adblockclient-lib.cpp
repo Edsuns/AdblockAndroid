@@ -95,19 +95,19 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_matches(JNIEnv *env,
                                                           jobject /* this */,
                                                           jlong clientPointer,
                                                           jstring url,
-                                                          jstring documentUrl,
+                                                          jstring firstPartyDomain,
                                                           jint filterOption) {
     jboolean isUrlCopy;
     const char *urlChars = env->GetStringUTFChars(url, &isUrlCopy);
 
     jboolean isDocumentCopy;
-    const char *documentUrlChars = env->GetStringUTFChars(documentUrl, &isDocumentCopy);
+    const char *firstPartyDomainChars = env->GetStringUTFChars(firstPartyDomain, &isDocumentCopy);
 
     AdBlockClient *client = (AdBlockClient *) clientPointer;
-    bool matches = client->matches(urlChars, (FilterOption) filterOption, documentUrlChars);
+    bool matches = client->matches(urlChars, (FilterOption) filterOption, firstPartyDomainChars);
 
     env->ReleaseStringUTFChars(url, urlChars);
-    env->ReleaseStringUTFChars(documentUrl, documentUrlChars);
+    env->ReleaseStringUTFChars(firstPartyDomain, firstPartyDomainChars);
 
     return matches;
 }

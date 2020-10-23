@@ -16,6 +16,7 @@
 
 package io.github.edsuns.adblockclient
 
+import android.net.Uri
 import io.github.edsuns.adblockclient.Client.ClientName
 import timber.log.Timber
 
@@ -58,15 +59,14 @@ class AdBlockClient(override val name: ClientName) : Client {
     private external fun getProcessedData(clientPointer: Long): ByteArray
 
     override fun matches(url: String, documentUrl: String, resourceType: ResourceType): Boolean =
-        matches(nativeClientPointer, url, documentUrl, resourceType.filterOption)
+        matches(nativeClientPointer, url, documentUrl.baseHost() ?: "", resourceType.filterOption)
 
     private external fun matches(
         clientPointer: Long,
         url: String,
-        documentUrl: String,
+        firstPartyDomain: String,
         filterOption: Int
     ): Boolean
-
 
     @Suppress("unused", "protectedInFinal")
     protected fun finalize() {
@@ -79,4 +79,7 @@ class AdBlockClient(override val name: ClientName) : Client {
         processedDataPointer: Long
     )
 
+    private fun String.baseHost(): String? {
+        return Uri.parse(this).host?.removePrefix("www.")
+    }
 }

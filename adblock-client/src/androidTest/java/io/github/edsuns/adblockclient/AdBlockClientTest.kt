@@ -45,6 +45,13 @@ class AdBlockClientTest {
     }
 
     @Test
+    fun whenBasicDataLoadedWithThirdPartyOptionThenFirstPartyIsNotBlocked() {
+        val testee = AdBlockClient(EASYLIST)
+        testee.loadBasicData(data())
+        assertFalse(testee.matches(trackerUrl, trackerUrl, resourceType))
+    }
+
+    @Test
     fun whenProcessedDataLoadedThenTrackerIsBlocked() {
         val original = AdBlockClient(EASYLIST)
         original.loadBasicData(data())
@@ -62,6 +69,16 @@ class AdBlockClientTest {
         val testee = AdBlockClient(EASYLIST)
         testee.loadProcessedData(processedData)
         assertFalse(testee.matches(nonTrackerUrl, documentUrl, resourceType))
+    }
+
+    @Test
+    fun whenProcessedDataLoadedWithThirdPartyOptionThenFirstPartyIsNotBlocked() {
+        val original = AdBlockClient(EASYLIST)
+        original.loadBasicData(data())
+        val processedData = original.getProcessedData()
+        val testee = AdBlockClient(EASYLIST)
+        testee.loadProcessedData(processedData)
+        assertFalse(testee.matches(trackerUrl, trackerUrl, resourceType))
     }
 
     private fun data(): ByteArray =
