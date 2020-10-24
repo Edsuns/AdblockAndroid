@@ -16,7 +16,6 @@
 
 package io.github.edsuns.adblockclient
 
-import io.github.edsuns.adblockclient.Client.ClientName.EASYLIST
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -24,6 +23,7 @@ import org.junit.Test
 class AdBlockClientTest {
 
     companion object {
+        private const val id = "test"
         private const val documentUrl = "http://example.com"
         private const val trackerUrl = "http://imasdk.googleapis.com/js/sdkloader/ima3.js"
         private const val nonTrackerUrl = "http://duckduckgo.com/index.html"
@@ -32,51 +32,51 @@ class AdBlockClientTest {
 
     @Test
     fun whenBasicDataLoadedThenTrackerIsBlocked() {
-        val testee = AdBlockClient(EASYLIST)
+        val testee = AdBlockClient(id)
         testee.loadBasicData(data())
         assertTrue(testee.matches(trackerUrl, documentUrl, resourceType))
     }
 
     @Test
     fun whenBasicDataLoadedThenNonTrackerIsNotBlocked() {
-        val testee = AdBlockClient(EASYLIST)
+        val testee = AdBlockClient(id)
         testee.loadBasicData(data())
         assertFalse(testee.matches(nonTrackerUrl, documentUrl, resourceType))
     }
 
     @Test
     fun whenBasicDataLoadedWithThirdPartyOptionThenFirstPartyIsNotBlocked() {
-        val testee = AdBlockClient(EASYLIST)
+        val testee = AdBlockClient(id)
         testee.loadBasicData(data())
         assertFalse(testee.matches(trackerUrl, trackerUrl, resourceType))
     }
 
     @Test
     fun whenProcessedDataLoadedThenTrackerIsBlocked() {
-        val original = AdBlockClient(EASYLIST)
+        val original = AdBlockClient(id)
         original.loadBasicData(data())
         val processedData = original.getProcessedData()
-        val testee = AdBlockClient(EASYLIST)
+        val testee = AdBlockClient(id)
         testee.loadProcessedData(processedData)
         assertTrue(testee.matches(trackerUrl, documentUrl, resourceType))
     }
 
     @Test
     fun whenProcessedDataLoadedThenNonTrackerIsNotBlocked() {
-        val original = AdBlockClient(EASYLIST)
+        val original = AdBlockClient(id)
         original.loadBasicData(data())
         val processedData = original.getProcessedData()
-        val testee = AdBlockClient(EASYLIST)
+        val testee = AdBlockClient(id)
         testee.loadProcessedData(processedData)
         assertFalse(testee.matches(nonTrackerUrl, documentUrl, resourceType))
     }
 
     @Test
     fun whenProcessedDataLoadedWithThirdPartyOptionThenFirstPartyIsNotBlocked() {
-        val original = AdBlockClient(EASYLIST)
+        val original = AdBlockClient(id)
         original.loadBasicData(data())
         val processedData = original.getProcessedData()
-        val testee = AdBlockClient(EASYLIST)
+        val testee = AdBlockClient(id)
         testee.loadProcessedData(processedData)
         assertFalse(testee.matches(trackerUrl, trackerUrl, resourceType))
     }

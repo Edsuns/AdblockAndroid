@@ -18,23 +18,7 @@ package io.github.edsuns.adblockclient
 
 interface Client {
 
-    enum class ClientType {
-
-        BLOCKING,
-        WHITELIST
-
-    }
-
-    enum class ClientName(val type: ClientType) {
-
-        EASYLIST(ClientType.BLOCKING),
-        EASYPRIVACY(ClientType.BLOCKING),
-        TRACKERSWHITELIST(ClientType.WHITELIST),
-        DISCONNECT(ClientType.BLOCKING)
-
-    }
-
-    val name: ClientName
+    val id: String
 
     fun matches(url: String, documentUrl: String, resourceType: ResourceType): Boolean
 

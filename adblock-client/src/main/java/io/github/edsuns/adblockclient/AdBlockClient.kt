@@ -17,11 +17,10 @@
 package io.github.edsuns.adblockclient
 
 import android.net.Uri
-import io.github.edsuns.adblockclient.Client.ClientName
 import timber.log.Timber
 
 
-class AdBlockClient(override val name: ClientName) : Client {
+class AdBlockClient(override val id: String) : Client {
 
     private val nativeClientPointer: Long
     private var rawDataPointer: Long
@@ -38,18 +37,18 @@ class AdBlockClient(override val name: ClientName) : Client {
 
     fun loadBasicData(data: ByteArray) {
         val timestamp = System.currentTimeMillis()
-        Timber.d("Loading basic data for ${name.name}")
+        Timber.d("Loading basic data for $id")
         rawDataPointer = loadBasicData(nativeClientPointer, data)
-        Timber.d("Loading basic data for ${name.name} completed in ${System.currentTimeMillis() - timestamp}ms")
+        Timber.d("Loading basic data for $id completed in ${System.currentTimeMillis() - timestamp}ms")
     }
 
     private external fun loadBasicData(clientPointer: Long, data: ByteArray): Long
 
     fun loadProcessedData(data: ByteArray) {
         val timestamp = System.currentTimeMillis()
-        Timber.d("Loading preprocessed data for ${name.name}")
+        Timber.d("Loading preprocessed data for $id")
         processedDataPointer = loadProcessedData(nativeClientPointer, data)
-        Timber.d("Loading preprocessed data for ${name.name} completed in ${System.currentTimeMillis() - timestamp}ms")
+        Timber.d("Loading preprocessed data for $id completed in ${System.currentTimeMillis() - timestamp}ms")
     }
 
     private external fun loadProcessedData(clientPointer: Long, data: ByteArray): Long
