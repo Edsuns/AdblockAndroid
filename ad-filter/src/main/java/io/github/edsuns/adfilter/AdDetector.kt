@@ -12,7 +12,7 @@ interface AbstractAdDetector {
     fun shouldBlock(url: String, documentUrl: String, resourceType: ResourceType): Boolean
 }
 
-class AdDetector : AbstractAdDetector {
+internal class AdDetector : AbstractAdDetector {
 
     private val clients = CopyOnWriteArrayList<Client>()
 

@@ -1,6 +1,9 @@
 package io.github.edsuns.adfilter
 
+import android.app.Activity
 import android.app.Application
+import android.content.Context
+import android.os.Bundle
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -13,34 +16,50 @@ import org.jetbrains.anko.doAsync
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
-class AdFilter(private val application: Application) {
+class AdFilter internal constructor(private val application: Application) {
+
+    private val viewModel = FilterViewModel(application)
 
     private val adDetector: AdDetector by lazy { AdDetector() }
-    private val filterDataStore: FilterDataStore by lazy { FilterDataStore(application) }
     private val filterDataLoader: FilterDataLoader by lazy {
         FilterDataLoader(
             adDetector,
-            filterDataStore
-        )
-    }
-    private val dataDownloader: DataDownloader by lazy {
-        DataDownloader(
-            application,
-            filterDataStore
+            BinaryDataStore(application.getDir(FILE_STORE, Context.MODE_PRIVATE))
         )
     }
 
-    private fun init() {
+    init {
+        application.registerActivityLifecycleCallbacks(object :
+            Application.ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+            }
+
+            override fun onActivityStarted(activity: Activity) {
+            }
+
+            override fun onActivityResumed(activity: Activity) {
+            }
+
+            override fun onActivityPaused(activity: Activity) {
+            }
+
+            override fun onActivityStopped(activity: Activity) {
+            }
+
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
+            }
+
+            override fun onActivityDestroyed(activity: Activity) {
+                viewModel.saveSharedPreferences()
+            }
+        })
         doAsync {
-            if (filterDataStore.configured()) {
-                filterDataStore.subscriptionList.forEach {
-                    if (it.isEnabled && it.downloaded()) {
+            if (viewModel.isEnabled.value!! && !viewModel.filters.value.isNullOrEmpty()) {
+                viewModel.filters.value!!.values.forEach {
+                    if (it.isEnabled && it.hasDownloaded()) {
                         filterDataLoader.load(it.id)
                     }
                 }
-            } else {
-                val enabled = filterDataStore.subscriptionList.filter { it.isEnabled }
-                dataDownloader.download(enabled)
             }
         }
     }
@@ -75,6 +94,8 @@ class AdFilter(private val application: Application) {
     }
 
     companion object {
+        private const val FILE_STORE = "ad_filter"
+
         private var instance: AdFilter? = null
 
         fun get(): AdFilter {
@@ -89,7 +110,6 @@ class AdFilter(private val application: Application) {
                 throw InstantiationException("Instance already created!")
             }
             instance = AdFilter(application)
-            instance!!.init()
             return instance!!
         }
     }

@@ -6,9 +6,9 @@ import timber.log.Timber
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
-class FilterDataLoader constructor(
+internal class FilterDataLoader(
     private val adDetector: AdDetector,
-    private val filterDataStore: FilterDataStore
+    private val filterDataStore: BinaryDataStore
 ) {
 
     fun load(id: String) {
