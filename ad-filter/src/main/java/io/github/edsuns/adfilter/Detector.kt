@@ -11,6 +11,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 interface AbstractDetector {
     fun addClient(client: Client)
     fun removeClient(id: String)
+    fun clearAllClient()
     fun shouldBlock(url: String, documentUrl: String, resourceType: ResourceType): Boolean
 }
 
@@ -21,12 +22,17 @@ internal class Detector : AbstractDetector {
     override fun addClient(client: Client) {
         clients.removeAll { it.id == client.id }
         clients.add(client)
-        Timber.v("Client count: ${clients.size} (addClient)")
+        Timber.v("Client count: ${clients.size} (after addClient)")
     }
 
     override fun removeClient(id: String) {
         clients.removeAll { it.id == id }
-        Timber.v("Client count: ${clients.size} (removeClient)")
+        Timber.v("Client count: ${clients.size} (after removeClient)")
+    }
+
+    override fun clearAllClient() {
+        clients.clear()
+        Timber.v("Client count: ${clients.size} (after clearAllClient)")
     }
 
     override fun shouldBlock(

@@ -7,6 +7,7 @@ import androidx.work.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 
 /**
  * Created by Edsuns@qq.com on 2021/1/1.
@@ -21,7 +22,7 @@ class FilterViewModel internal constructor(
 
     val isEnabled: MutableLiveData<Boolean> by lazy { MutableLiveData(sharedPreferences.isEnabled) }
 
-    private val workManager: WorkManager = WorkManager.getInstance(application)
+    internal val workManager: WorkManager = WorkManager.getInstance(application)
 
     val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_WORK)
 
@@ -30,6 +31,10 @@ class FilterViewModel internal constructor(
     }
 
     val filters: LiveData<HashMap<String, Filter>> = filterMap
+
+    init {
+        workManager.pruneWork()
+    }
 
     fun addFilter(name: String, url: String): Filter {
         val filter = Filter(url)
@@ -59,20 +64,35 @@ class FilterViewModel internal constructor(
 
     fun setFilterEnabled(id: String, enabled: Boolean) {
         filterMap.value?.get(id)?.let {
-            if (enabled)
-                filterDataLoader.load(it.id)
-            else
-                filterDataLoader.unload(it.id)
-            it.isEnabled = enabled
+            if (it.isEnabled != enabled && it.hasDownloaded()) {
+                if (isEnabled.value == true) {
+                    if (enabled)
+                        filterDataLoader.load(it.id)
+                    else
+                        filterDataLoader.unload(it.id)
+                }
+                it.isEnabled = enabled
+            }
+            // refresh
+            filterMap.postValue(filterMap.value)
         }
-        // refresh
-        filterMap.postValue(filterMap.value)
+    }
+
+    internal fun enableFilter(id: String) {
+        filterMap.value?.get(id)?.let {
+            filterDataLoader.load(id)
+            it.isEnabled = true
+            // refresh
+            filterMap.postValue(filterMap.value)
+        }
     }
 
     fun renameFilter(id: String, name: String) {
-        filterMap.value?.get(id)?.let { it.name = name }
-        // refresh
-        filterMap.postValue(filterMap.value)
+        filterMap.value?.get(id)?.let {
+            it.name = name
+            // refresh
+            filterMap.postValue(filterMap.value)
+        }
     }
 
     fun download(id: String) {
@@ -103,6 +123,7 @@ class FilterViewModel internal constructor(
     fun saveSharedPreferences() {
         sharedPreferences.isEnabled = isEnabled.value ?: false
         sharedPreferences.filterMap = Json.encodeToString(filterMap.value)
+        Timber.v("FilterViewModel: saveSharedPreferences")
     }
 
     companion object {

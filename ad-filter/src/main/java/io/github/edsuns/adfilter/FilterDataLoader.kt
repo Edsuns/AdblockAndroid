@@ -25,6 +25,10 @@ internal class FilterDataLoader(
         detector.removeClient(id)
     }
 
+    fun unloadAll() {
+        detector.clearAllClient()
+    }
+
     fun remove(id: String) {
         binaryDataStore.clearData(id)
         unload(id)

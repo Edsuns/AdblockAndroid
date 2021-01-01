@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">AdblockSample</string>
+    <string name="url_text_edit_hit">Search or type URL</string>
+    <string name="add_filter">Add Filter</string>
+    <string name="enable_ad_filter">Enable Filter</string>
+    <string name="count_none">-</string>
+    <string name="off">OFF</string>
+    <string name="name">Name</string>
+    <string name="url">URL</string>
+    <string name="invalid_name_or_url">Invalid Name or Url!</string>
+    <string name="downloading">Downloading</string>
+    <string name="failed_to_download">Download Failed</string>
+    <string name="not_downloaded">Not Downloaded</string>
+    <string name="update">Update</string>
+    <string name="delete">Delete</string>
 </resources>

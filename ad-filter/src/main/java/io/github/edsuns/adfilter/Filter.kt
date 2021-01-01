@@ -14,7 +14,7 @@ data class Filter internal constructor(
     var name: String = ""
         internal set
 
-    var isEnabled: Boolean = false
+    var isEnabled: Boolean = true
         internal set
 
     var downloadState = DownloadState.NONE

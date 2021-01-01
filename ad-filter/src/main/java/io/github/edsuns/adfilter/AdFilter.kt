@@ -11,7 +11,6 @@ import io.github.edsuns.adblockclient.ResourceType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import org.jetbrains.anko.doAsync
 import java.io.File
 
 /**
@@ -53,13 +52,15 @@ class AdFilter internal constructor(application: Application) {
                 viewModel.saveSharedPreferences()
             }
         })
-        doAsync {
-            if (viewModel.isEnabled.value!! && !viewModel.filters.value.isNullOrEmpty()) {
-                viewModel.filters.value!!.values.forEach {
+        viewModel.isEnabled.observeForever { enable ->
+            if (enable) {
+                viewModel.filters.value?.values?.forEach {
                     if (it.isEnabled && it.hasDownloaded()) {
                         filterDataLoader.load(it.id)
                     }
                 }
+            } else {
+                filterDataLoader.unloadAll()
             }
         }
         viewModel.workInfo.observeForever { list ->
@@ -76,7 +77,8 @@ class AdFilter internal constructor(application: Application) {
                     val downloadState = when (state) {
                         WorkInfo.State.SUCCEEDED -> {
                             it.updateTime = System.currentTimeMillis()
-                            viewModel.setFilterEnabled(it.id, true)
+                            if (it.isEnabled)
+                                viewModel.enableFilter(it.id)
                             DownloadState.SUCCESS
                         }
                         WorkInfo.State.FAILED -> DownloadState.FAILED
@@ -85,6 +87,7 @@ class AdFilter internal constructor(application: Application) {
                     it.downloadState = downloadState
                     viewModel.updateFilter(it)
                 }
+                viewModel.workManager.pruneWork()
             }
         }
     }

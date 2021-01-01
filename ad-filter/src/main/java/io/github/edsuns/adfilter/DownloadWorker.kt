@@ -18,6 +18,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : Worker(
     override fun doWork(): Result {
         val id = inputData.getString(KEY_FILTER_ID)
         val url = inputData.getString(KEY_DOWNLOAD_URL)
+        Timber.v("DownloadWorker: start download $url $id")
         try {
             url?.let {
                 id?.let {
@@ -27,7 +28,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : Worker(
                 }
             }
         } catch (e: IOException) {
-            Timber.v(e, "DownloadWorker: failed to download $url")
+            Timber.v(e, "DownloadWorker: failed to download $url $id")
         }
         return Result.failure(inputData)
     }
