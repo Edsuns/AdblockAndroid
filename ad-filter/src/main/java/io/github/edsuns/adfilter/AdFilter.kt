@@ -2,7 +2,6 @@ package io.github.edsuns.adfilter
 
 import android.app.Activity
 import android.app.Application
-import android.content.Context
 import android.os.Bundle
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -13,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.jetbrains.anko.doAsync
+import java.io.File
 
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
@@ -20,17 +20,13 @@ import org.jetbrains.anko.doAsync
 class AdFilter internal constructor(application: Application) {
 
     private val detector: Detector = Detector()
-
-    internal val binaryDataStore: BinaryDataStore = BinaryDataStore(
-        application.getDir(
-            FILE_STORE_DIR,
-            Context.MODE_PRIVATE
-        )
-    )
-
-    val viewModel = FilterViewModel(application, binaryDataStore)
-
+    internal val binaryDataStore: BinaryDataStore =
+        BinaryDataStore(File(application.filesDir, FILE_STORE_DIR))
     private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
+    val viewModel = FilterViewModel(application, filterDataLoader)
+
+    val hasInstallation: Boolean
+        get() = viewModel.sharedPreferences.hasInstallation
 
     init {
         application.registerActivityLifecycleCallbacks(object :
@@ -80,6 +76,7 @@ class AdFilter internal constructor(application: Application) {
                     val downloadState = when (state) {
                         WorkInfo.State.SUCCEEDED -> {
                             it.updateTime = System.currentTimeMillis()
+                            viewModel.setFilterEnabled(it.id, true)
                             DownloadState.SUCCESS
                         }
                         WorkInfo.State.FAILED -> DownloadState.FAILED

@@ -1,11 +1,18 @@
 package io.github.edsuns.adfilter
 
+import timber.log.Timber
 import java.io.File
 
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
 class BinaryDataStore(private val dir: File) {
+
+    init {
+        if (!dir.exists() && !dir.mkdirs()) {
+            Timber.v("BinaryDataStore: failed to create store dirs")
+        }
+    }
 
     fun hasData(name: String): Boolean = File(dir, name).exists()
 

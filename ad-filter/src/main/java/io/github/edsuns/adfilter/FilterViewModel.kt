@@ -13,59 +13,74 @@ import kotlinx.serialization.json.Json
  */
 class FilterViewModel internal constructor(
     application: Application,
-    private val binaryDataStore: BinaryDataStore
+    private val filterDataLoader: FilterDataLoader
 ) {
 
-    private val sharedPreferences: FilterSharedPreferences =
+    internal val sharedPreferences: FilterSharedPreferences =
         FilterSharedPreferences(application)
 
-    val isEnabled: MutableLiveData<Boolean> by lazy {
-        val data = MutableLiveData<Boolean>()
-        data.value = sharedPreferences.isEnabled
-        data
-    }
+    val isEnabled: MutableLiveData<Boolean> by lazy { MutableLiveData(sharedPreferences.isEnabled) }
 
     private val workManager: WorkManager = WorkManager.getInstance(application)
 
     val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_WORK)
 
     private val filterMap: MutableLiveData<HashMap<String, Filter>> by lazy {
-        val data = MutableLiveData<HashMap<String, Filter>>()
-        data.value = Json.decodeFromString<HashMap<String, Filter>>(
-            sharedPreferences.filterMap
-        )
-        data
+        MutableLiveData(Json.decodeFromString<HashMap<String, Filter>>(sharedPreferences.filterMap))
     }
 
     val filters: LiveData<HashMap<String, Filter>> = filterMap
 
-    fun addFilter(name: String, url: String) {
-        val filter = Filter(name, url)
+    fun addFilter(name: String, url: String): Filter {
+        val filter = Filter(url)
+        filter.name = name
         filterMap.value?.set(filter.id, filter)
         // refresh
-        filterMap.value = filterMap.value
+        filterMap.postValue(filterMap.value)
+        return filter
     }
 
-    fun updateFilter(filter: Filter) {
+    internal fun updateFilter(filter: Filter) {
         filterMap.value?.get(filter.id)?.let {
             it.name = filter.name
             it.updateTime = filter.updateTime
             it.isEnabled = filter.isEnabled
         }
         // refresh
-        filterMap.value = filterMap.value
+        filterMap.postValue(filterMap.value)
     }
 
     fun removeFilter(id: String) {
-        binaryDataStore.clearData(id)
+        filterDataLoader.remove(id)
         filterMap.value?.remove(id)
         // refresh
-        filterMap.value = filterMap.value
+        filterMap.postValue(filterMap.value)
+    }
+
+    fun setFilterEnabled(id: String, enabled: Boolean) {
+        filterMap.value?.get(id)?.let {
+            if (enabled)
+                filterDataLoader.load(it.id)
+            else
+                filterDataLoader.unload(it.id)
+            it.isEnabled = enabled
+        }
+        // refresh
+        filterMap.postValue(filterMap.value)
+    }
+
+    fun renameFilter(id: String, name: String) {
+        filterMap.value?.get(id)?.let { it.name = name }
+        // refresh
+        filterMap.postValue(filterMap.value)
     }
 
     fun download(id: String) {
         filterMap.value?.get(id)?.let {
-            val constraints = Constraints.Builder().build()
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresCharging(false)
+                .build()
             val inputData = workDataOf(
                 KEY_FILTER_ID to it.id,
                 KEY_DOWNLOAD_URL to it.url
@@ -86,6 +101,7 @@ class FilterViewModel internal constructor(
     }
 
     fun saveSharedPreferences() {
+        sharedPreferences.isEnabled = isEnabled.value ?: false
         sharedPreferences.filterMap = Json.encodeToString(filterMap.value)
     }
 

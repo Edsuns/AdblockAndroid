@@ -7,14 +7,20 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Filter internal constructor(
-    var name: String,
     val url: String,
-    var updateTime: Long = -1L,
-    var isEnabled: Boolean = true
 ) {
     val id by lazy { url.sha1 }
 
+    var name: String = ""
+        internal set
+
+    var isEnabled: Boolean = false
+        internal set
+
     var downloadState = DownloadState.NONE
+        internal set
+
+    var updateTime: Long = -1L
         internal set
 
     fun hasDownloaded() = updateTime > 0

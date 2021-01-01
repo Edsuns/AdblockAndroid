@@ -8,16 +8,25 @@ import timber.log.Timber
  */
 internal class FilterDataLoader(
     private val detector: Detector,
-    private val filterDataStore: BinaryDataStore
+    private val binaryDataStore: BinaryDataStore
 ) {
 
     fun load(id: String) {
-        if (filterDataStore.hasData(id)) {
+        if (binaryDataStore.hasData(id)) {
             val client = AdBlockClient(id)
-            client.loadProcessedData(filterDataStore.loadData(id))
+            client.loadProcessedData(binaryDataStore.loadData(id))
             detector.addClient(client)
         } else {
             Timber.v("Couldn't find client processed data: $id")
         }
+    }
+
+    fun unload(id: String) {
+        detector.removeClient(id)
+    }
+
+    fun remove(id: String) {
+        binaryDataStore.clearData(id)
+        unload(id)
     }
 }

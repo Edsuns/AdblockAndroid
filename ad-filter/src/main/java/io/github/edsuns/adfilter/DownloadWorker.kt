@@ -5,6 +5,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import io.github.edsuns.adblockclient.AdBlockClient
 import io.github.edsuns.net.HttpRequest
+import timber.log.Timber
 import java.io.IOException
 
 /**
@@ -25,7 +26,8 @@ class DownloadWorker(context: Context, params: WorkerParameters) : Worker(
                     return Result.success(inputData)
                 }
             }
-        } catch (ignore: IOException) {
+        } catch (e: IOException) {
+            Timber.v(e, "DownloadWorker: failed to download $url")
         }
         return Result.failure(inputData)
     }
