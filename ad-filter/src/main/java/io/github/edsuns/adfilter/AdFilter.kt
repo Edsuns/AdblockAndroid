@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
+import androidx.work.WorkInfo
 import io.github.edsuns.adblockclient.ResourceType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -16,17 +17,20 @@ import org.jetbrains.anko.doAsync
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
-class AdFilter internal constructor(private val application: Application) {
+class AdFilter internal constructor(application: Application) {
 
-    private val viewModel = FilterViewModel(application)
+    private val detector: Detector = Detector()
 
-    private val adDetector: AdDetector by lazy { AdDetector() }
-    private val filterDataLoader: FilterDataLoader by lazy {
-        FilterDataLoader(
-            adDetector,
-            BinaryDataStore(application.getDir(FILE_STORE, Context.MODE_PRIVATE))
+    internal val binaryDataStore: BinaryDataStore = BinaryDataStore(
+        application.getDir(
+            FILE_STORE_DIR,
+            Context.MODE_PRIVATE
         )
-    }
+    )
+
+    val viewModel = FilterViewModel(application, binaryDataStore)
+
+    private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
 
     init {
         application.registerActivityLifecycleCallbacks(object :
@@ -62,6 +66,30 @@ class AdFilter internal constructor(private val application: Application) {
                 }
             }
         }
+        viewModel.workInfo.observeForever { list ->
+            processWorkInfo(list)
+        }
+    }
+
+    private fun processWorkInfo(list: List<WorkInfo>?) {
+        list?.forEach { workInfo ->
+            val state = workInfo.state
+            if (state.isFinished) {
+                val id = workInfo.outputData.getString(KEY_FILTER_ID)
+                viewModel.filters.value?.get(id)?.let {
+                    val downloadState = when (state) {
+                        WorkInfo.State.SUCCEEDED -> {
+                            it.updateTime = System.currentTimeMillis()
+                            DownloadState.SUCCESS
+                        }
+                        WorkInfo.State.FAILED -> DownloadState.FAILED
+                        else -> DownloadState.NONE
+                    }
+                    it.downloadState = downloadState
+                    viewModel.updateFilter(it)
+                }
+            }
+        }
     }
 
     /**
@@ -85,7 +113,7 @@ class AdFilter internal constructor(private val application: Application) {
             val url = request.url.toString()
             val documentUrl = withContext(Dispatchers.Main) { webView.url }
 
-            val shouldBlock = adDetector.shouldBlock(url, documentUrl, ResourceType.from(request))
+            val shouldBlock = detector.shouldBlock(url, documentUrl, ResourceType.from(request))
             if (shouldBlock)
                 WebResourceResponse(null, null, null)
             else
@@ -94,8 +122,6 @@ class AdFilter internal constructor(private val application: Application) {
     }
 
     companion object {
-        private const val FILE_STORE = "ad_filter"
-
         private var instance: AdFilter? = null
 
         fun get(): AdFilter {
@@ -106,10 +132,9 @@ class AdFilter internal constructor(private val application: Application) {
         }
 
         fun create(application: Application): AdFilter {
-            if (instance != null) {
-                throw InstantiationException("Instance already created!")
+            if (instance == null) {
+                instance = AdFilter(application)
             }
-            instance = AdFilter(application)
             return instance!!
         }
     }

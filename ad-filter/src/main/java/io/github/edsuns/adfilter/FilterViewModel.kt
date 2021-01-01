@@ -3,8 +3,7 @@ package io.github.edsuns.adfilter
 import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
+import androidx.work.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -12,7 +11,10 @@ import kotlinx.serialization.json.Json
 /**
  * Created by Edsuns@qq.com on 2021/1/1.
  */
-class FilterViewModel internal constructor(application: Application) {
+class FilterViewModel internal constructor(
+    application: Application,
+    private val binaryDataStore: BinaryDataStore
+) {
 
     private val sharedPreferences: FilterSharedPreferences =
         FilterSharedPreferences(application)
@@ -55,6 +57,7 @@ class FilterViewModel internal constructor(application: Application) {
     }
 
     fun removeFilter(id: String) {
+        binaryDataStore.clearData(id)
         filterMap.value?.remove(id)
         // refresh
         filterMap.value = filterMap.value
@@ -62,9 +65,23 @@ class FilterViewModel internal constructor(application: Application) {
 
     fun download(id: String) {
         filterMap.value?.get(id)?.let {
-            it.downloading = true
+            val constraints = Constraints.Builder().build()
+            val inputData = workDataOf(
+                KEY_FILTER_ID to it.id,
+                KEY_DOWNLOAD_URL to it.url
+            )
+            val request =
+                OneTimeWorkRequestBuilder<DownloadWorker>()
+                    .setConstraints(constraints)
+                    .addTag(TAG_WORK)
+                    .setInputData(inputData)
+                    .build()
+            val continuation = workManager.beginUniqueWork(
+                it.id, ExistingWorkPolicy.KEEP, request
+            )
+            continuation.enqueue()
+            it.downloadState = DownloadState.DOWNLOADING
             updateFilter(it)
-            TODO("Not yet implemented")
         }
     }
 

@@ -13,11 +13,11 @@ internal class FilterSharedPreferences(private val context: Context) {
         get() = preferences.contains(KEY_FILTER_MAP)
 
     var isEnabled: Boolean
-        get() = preferences.getBoolean(KEY_ENABLED, false)
+        get() = preferences.getBoolean(KEY_ENABLED, true)
         set(value) = preferences.edit { putBoolean(KEY_ENABLED, value) }
 
     var filterMap: String
-        get() = preferences.getString(KEY_FILTER_MAP, "")!!
+        get() = preferences.getString(KEY_FILTER_MAP, "{}")!!
         set(value) = preferences.edit { putString(KEY_FILTER_MAP, value) }
 
     private val preferences: SharedPreferences
@@ -25,7 +25,7 @@ internal class FilterSharedPreferences(private val context: Context) {
 
     companion object {
         private const val FILENAME = "io.github.edsuns.filter"
-        private const val KEY_FILTER_MAP = "io.github.edsuns.filter.map"
-        private const val KEY_ENABLED = "io.github.edsuns.filter.map"
+        private const val KEY_FILTER_MAP = "filter_map"
+        private const val KEY_ENABLED = "filter_enabled"
     }
 }

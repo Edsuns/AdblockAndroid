@@ -7,12 +7,12 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
-interface AbstractAdDetector {
+interface AbstractDetector {
     fun addClient(client: Client)
     fun shouldBlock(url: String, documentUrl: String, resourceType: ResourceType): Boolean
 }
 
-internal class AdDetector : AbstractAdDetector {
+internal class Detector : AbstractDetector {
 
     private val clients = CopyOnWriteArrayList<Client>()
 

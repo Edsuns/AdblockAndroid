@@ -34,6 +34,10 @@ android {
     }
 }
 
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
 ext {
     timber = "4.7.1"
     coroutines = "1.3.7"
@@ -62,5 +66,7 @@ dependencies {
 
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1"
 
-    implementation "androidx.work:work-runtime:2.4.0"
+    implementation "androidx.work:work-runtime-ktx:2.4.0"
+
+    implementation 'com.github.Edsuns:HttpRequest:0.2'
 }
