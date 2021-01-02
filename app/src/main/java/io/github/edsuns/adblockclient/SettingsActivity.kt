@@ -51,7 +51,6 @@ class SettingsActivity : AppCompatActivity() {
         val adapter = FilterListAdapter()
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter.data = viewModel.filters.value?.values!!.toList()
         viewModel.filters.observe(this, {
             adapter.data = it.values.toList()
         })

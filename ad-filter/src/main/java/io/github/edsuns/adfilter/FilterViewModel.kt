@@ -50,9 +50,9 @@ class FilterViewModel internal constructor(
             it.name = filter.name
             it.updateTime = filter.updateTime
             it.isEnabled = filter.isEnabled
+            // refresh
+            filterMap.postValue(filterMap.value)
         }
-        // refresh
-        filterMap.postValue(filterMap.value)
     }
 
     fun removeFilter(id: String) {
@@ -72,9 +72,9 @@ class FilterViewModel internal constructor(
                         filterDataLoader.unload(it.id)
                 }
                 it.isEnabled = enabled
+                // refresh
+                filterMap.postValue(filterMap.value)
             }
-            // refresh
-            filterMap.postValue(filterMap.value)
         }
     }
 
