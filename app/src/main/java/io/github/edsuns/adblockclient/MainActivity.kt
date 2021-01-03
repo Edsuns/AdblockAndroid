@@ -70,7 +70,14 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
                 || event.keyCode == KeyEvent.KEYCODE_ENTER
                 && event.action == KeyEvent.ACTION_DOWN
             ) {
-                webView.loadUrl(smartUrlFilter(urlText.text.toString()))
+                val urlIn = urlText.text.toString()
+                webView.loadUrl(
+                    urlIn.smartUrlFilter() ?: URLUtil.composeSearchUrl(
+                        urlIn,
+                        "https://www.bing.com/search?q={s}",
+                        "{s}"
+                    )
+                )
                 webView.requestFocus()
                 hideKeyboard(urlText)
                 return@setOnEditorActionListener true
@@ -82,10 +89,6 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             binding.countText.text =
                 if (it) getString(R.string.count_none) else getString(R.string.off)
         })
-    }
-
-    private fun smartUrlFilter(url: String): String {
-        return URLUtil.guessUrl(url)
     }
 
     private fun hideKeyboard(view: View) {

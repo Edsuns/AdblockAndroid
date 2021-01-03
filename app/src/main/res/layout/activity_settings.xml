@@ -8,7 +8,7 @@
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/enableSwitch"
         style="@style/SettingsSwitch"
-        android:text="@string/enable_ad_filter"
+        android:text="@string/enable_filter"
         android:theme="@style/SettingsSwitchTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
