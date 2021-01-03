@@ -184,7 +184,7 @@ class SettingsActivity : AppCompatActivity() {
 
         init {
             switch.setOnCheckedChangeListener { _, isChecked ->
-                viewModel.setFilterEnabled(adapter.data[adapterPosition].id, isChecked)
+                viewModel.setFilterEnabled(adapter.data[adapterPosition].id, isChecked, false)
             }
         }
     }

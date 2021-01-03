@@ -122,6 +122,7 @@ class AdFilter internal constructor(application: Application) {
     }
 
     companion object {
+        @Volatile
         private var instance: AdFilter? = null
 
         fun get(): AdFilter {
@@ -132,10 +133,10 @@ class AdFilter internal constructor(application: Application) {
         }
 
         fun create(application: Application): AdFilter {
-            if (instance == null) {
-                instance = AdFilter(application)
+            return instance ?: synchronized(this) {
+                instance = instance ?: AdFilter(application)
+                instance!!
             }
-            return instance!!
         }
     }
 }

@@ -37,7 +37,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:hint="@string/url_text_edit_hit"
+                    android:hint="@string/url_edit_text_hit"
                     android:imeOptions="actionGo|flagNoExtractUi"
                     android:inputType="textUri"
                     android:maxLines="1"

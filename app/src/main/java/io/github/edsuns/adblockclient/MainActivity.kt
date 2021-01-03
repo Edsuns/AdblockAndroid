@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import io.github.edsuns.adblockclient.databinding.ActivityMainBinding
 import io.github.edsuns.adfilter.AdFilter
 import io.github.edsuns.adfilter.FilterViewModel
+import timber.log.Timber
 
 class MainActivity : AppCompatActivity(), WebViewClientListener {
     private lateinit var viewModel: FilterViewModel
@@ -115,11 +116,13 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
     override fun requestBlocked(url: String) {
         runOnUiThread {
+            val requestUrl = url.stripParamsAndAnchor()
             val pageUrl = webView.url
             val blockedSet = blockedCountMap[pageUrl] ?: hashSetOf()
-            blockedSet.add(url)
+            blockedSet.add(requestUrl)
             blockedCountMap[pageUrl] = blockedSet
             binding.countText.text = blockedSet.size.toString()
+            Timber.v("Web request blocked: $requestUrl")
         }
     }
 

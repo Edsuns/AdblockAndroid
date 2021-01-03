@@ -63,6 +63,10 @@ class FilterViewModel internal constructor(
     }
 
     fun setFilterEnabled(id: String, enabled: Boolean) {
+        setFilterEnabled(id, enabled, true)
+    }
+
+    fun setFilterEnabled(id: String, enabled: Boolean, post: Boolean) {
         filterMap.value?.get(id)?.let {
             if (it.isEnabled != enabled && it.hasDownloaded()) {
                 if (isEnabled.value == true) {
@@ -73,7 +77,8 @@ class FilterViewModel internal constructor(
                 }
                 it.isEnabled = enabled
                 // refresh
-                filterMap.postValue(filterMap.value)
+                if (post)
+                    filterMap.postValue(filterMap.value)
             }
         }
     }
