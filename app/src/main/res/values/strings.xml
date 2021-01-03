@@ -8,9 +8,13 @@
     <string name="name">Name</string>
     <string name="url">URL</string>
     <string name="invalid_name_or_url">Invalid Name or Url!</string>
-    <string name="downloading">Downloading</string>
+    <string name="downloading">Downloading…</string>
     <string name="failed_to_download">Download Failed</string>
     <string name="not_downloaded">Not Downloaded</string>
     <string name="update">Update</string>
     <string name="delete">Delete</string>
+    <string name="refresh">Refresh</string>
+    <string name="go_forward">Forward</string>
+    <string name="settings">Settings</string>
+    <string name="exit">Exit</string>
 </resources>

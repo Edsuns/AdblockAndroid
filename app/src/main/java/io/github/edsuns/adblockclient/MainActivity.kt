@@ -4,12 +4,14 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.webkit.URLUtil
 import android.webkit.WebView
+import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
 import io.github.edsuns.adblockclient.databinding.ActivityMainBinding
 import io.github.edsuns.adfilter.AdFilter
@@ -30,10 +32,26 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
         viewModel = AdFilter.get().viewModel
 
-        val menuButton = binding.menuButton
-        menuButton.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+        val popupMenu = PopupMenu(
+            this,
+            binding.menuButton,
+            Gravity.NO_GRAVITY,
+            R.attr.actionOverflowMenuStyle,
+            0
+        )
+        popupMenu.inflate(R.menu.menu_main)
+        popupMenu.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.menuRefresh -> webView.reload()
+                R.id.menuForward -> webView.goForward()
+                R.id.menuSettings ->
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                else -> finish()
+            }
+            true
         }
+
+        binding.menuButton.setOnClickListener { popupMenu.show() }
 
         webView = binding.webView
         webView.webViewClient = WebClient(this)

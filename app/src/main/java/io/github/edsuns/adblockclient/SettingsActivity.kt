@@ -111,7 +111,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu, menu)
+        menuInflater.inflate(R.menu.menu_settings, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -143,17 +143,18 @@ class SettingsActivity : AppCompatActivity() {
             filterList[position].let { filter ->
                 holder.filterName.text = filter.name
                 holder.filterUrl.text = filter.url
-                holder.filterUpdateTime.text = dateFormatter.format(Date(filter.updateTime))
                 holder.switch.isChecked = filter.isEnabled
                 when (filter.downloadState) {
-                    DownloadState.DOWNLOADING -> holder.filterDownloadState.text =
+                    DownloadState.DOWNLOADING -> holder.filterUpdateTime.text =
                         getString(R.string.downloading)
-                    DownloadState.FAILED -> holder.filterDownloadState.text =
+                    DownloadState.FAILED -> holder.filterUpdateTime.text =
                         getString(R.string.failed_to_download)
                     else -> {
+                        holder.filterUpdateTime.text =
+                            if (filter.hasDownloaded())
+                                dateFormatter.format(Date(filter.updateTime))
+                            else getString(R.string.not_downloaded)
                         holder.switch.isEnabled = filter.hasDownloaded()
-                        holder.filterDownloadState.text =
-                            if (filter.hasDownloaded()) "" else getString(R.string.not_downloaded)
                     }
                 }
                 holder.itemView.setOnClickListener {
@@ -179,7 +180,6 @@ class SettingsActivity : AppCompatActivity() {
         val filterName: TextView by lazy { itemView.findViewById(R.id.filterName) }
         val filterUrl: TextView by lazy { itemView.findViewById(R.id.filterUrl) }
         val filterUpdateTime: TextView by lazy { itemView.findViewById(R.id.filterUpdateTime) }
-        val filterDownloadState: TextView by lazy { itemView.findViewById(R.id.downloadState) }
         val switch: SwitchCompat by lazy { itemView.findViewById(R.id.filterSwitch) }
 
         init {
