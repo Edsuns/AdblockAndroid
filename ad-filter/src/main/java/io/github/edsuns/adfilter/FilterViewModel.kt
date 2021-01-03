@@ -26,11 +26,11 @@ class FilterViewModel internal constructor(
 
     val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_WORK)
 
-    private val filterMap: MutableLiveData<HashMap<String, Filter>> by lazy {
-        MutableLiveData(Json.decodeFromString<HashMap<String, Filter>>(sharedPreferences.filterMap))
+    private val filterMap: MutableLiveData<LinkedHashMap<String, Filter>> by lazy {
+        MutableLiveData(Json.decodeFromString(sharedPreferences.filterMap))
     }
 
-    val filters: LiveData<HashMap<String, Filter>> = filterMap
+    val filters: LiveData<LinkedHashMap<String, Filter>> = filterMap
 
     init {
         workManager.pruneWork()
