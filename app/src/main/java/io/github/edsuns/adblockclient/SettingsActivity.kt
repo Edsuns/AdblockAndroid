@@ -126,7 +126,7 @@ class SettingsActivity : AppCompatActivity() {
                 notifyDataSetChanged()
             }
 
-        var selectedId: String? = null
+        var selectedFilter: Filter? = null
 
         private val dialog: Dialog by lazy {
             AlertDialog.Builder(this@SettingsActivity)
@@ -158,7 +158,7 @@ class SettingsActivity : AppCompatActivity() {
                     }
                 }
                 holder.itemView.setOnClickListener {
-                    selectedId = filter.id
+                    selectedFilter = filter
                     dialog.show()
                 }
             }
@@ -166,10 +166,29 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun getItemCount(): Int = filterList.size
         override fun onClick(dialog: DialogInterface?, which: Int) {
-            selectedId?.let {
+            selectedFilter?.let {
                 when (which) {
-                    0 -> viewModel.download(selectedId!!)
-                    1 -> viewModel.removeFilter(selectedId!!)
+                    0 -> {
+                        val renameDialogView: View = layoutInflater.inflate(
+                            R.layout.dialog_rename_filter,
+                            LinearLayout(this@SettingsActivity)
+                        )
+                        val renameEdit: EditText = renameDialogView.findViewById(R.id.renameEdit)
+                        renameEdit.setText(it.name)
+                        AlertDialog.Builder(this@SettingsActivity)
+                            .setTitle(R.string.rename_filter)
+                            .setMessage(selectedFilter?.url ?: "")
+                            .setView(renameDialogView)
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
+                                if (renameEdit.text.isNotBlank())
+                                    viewModel.renameFilter(it.id, renameEdit.text.toString())
+                            }
+                            .show()
+                    }
+                    1 -> viewModel.download(selectedFilter!!.id)
+                    2 -> viewModel.removeFilter(selectedFilter!!.id)
+                    else -> return
                 }
             }
         }
