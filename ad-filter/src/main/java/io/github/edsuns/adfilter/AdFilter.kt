@@ -1,8 +1,6 @@
 package io.github.edsuns.adfilter
 
-import android.app.Activity
 import android.app.Application
-import android.os.Bundle
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -28,30 +26,6 @@ class AdFilter internal constructor(application: Application) {
         get() = viewModel.sharedPreferences.hasInstallation
 
     init {
-        application.registerActivityLifecycleCallbacks(object :
-            Application.ActivityLifecycleCallbacks {
-            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-            }
-
-            override fun onActivityStarted(activity: Activity) {
-            }
-
-            override fun onActivityResumed(activity: Activity) {
-            }
-
-            override fun onActivityPaused(activity: Activity) {
-            }
-
-            override fun onActivityStopped(activity: Activity) {
-            }
-
-            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-            }
-
-            override fun onActivityDestroyed(activity: Activity) {
-                viewModel.saveSharedPreferences()
-            }
-        })
         viewModel.isEnabled.observeForever { enable ->
             if (enable) {
                 viewModel.filters.value?.values?.forEach {
@@ -62,6 +36,7 @@ class AdFilter internal constructor(application: Application) {
             } else {
                 filterDataLoader.unloadAll()
             }
+            viewModel.sharedPreferences.isEnabled = enable
         }
         viewModel.workInfo.observeForever { list ->
             processWorkInfo(list)

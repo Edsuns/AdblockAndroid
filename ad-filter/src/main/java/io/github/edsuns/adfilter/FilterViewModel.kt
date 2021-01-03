@@ -42,6 +42,7 @@ class FilterViewModel internal constructor(
         filterMap.value?.set(filter.id, filter)
         // refresh
         filterMap.postValue(filterMap.value)
+        saveFilterMap()
         return filter
     }
 
@@ -52,6 +53,7 @@ class FilterViewModel internal constructor(
             it.isEnabled = filter.isEnabled
             // refresh
             filterMap.postValue(filterMap.value)
+            saveFilterMap()
         }
     }
 
@@ -60,6 +62,7 @@ class FilterViewModel internal constructor(
         filterMap.value?.remove(id)
         // refresh
         filterMap.postValue(filterMap.value)
+        saveFilterMap()
     }
 
     fun setFilterEnabled(id: String, enabled: Boolean) {
@@ -79,6 +82,7 @@ class FilterViewModel internal constructor(
                 // refresh
                 if (post)
                     filterMap.postValue(filterMap.value)
+                saveFilterMap()
             }
         }
     }
@@ -89,6 +93,7 @@ class FilterViewModel internal constructor(
             it.isEnabled = true
             // refresh
             filterMap.postValue(filterMap.value)
+            saveFilterMap()
         }
     }
 
@@ -97,6 +102,7 @@ class FilterViewModel internal constructor(
             it.name = name
             // refresh
             filterMap.postValue(filterMap.value)
+            saveFilterMap()
         }
     }
 
@@ -125,10 +131,9 @@ class FilterViewModel internal constructor(
         }
     }
 
-    fun saveSharedPreferences() {
-        sharedPreferences.isEnabled = isEnabled.value ?: false
+    private fun saveFilterMap() {
         sharedPreferences.filterMap = Json.encodeToString(filterMap.value)
-        Timber.v("FilterViewModel: saveSharedPreferences")
+        Timber.v("FilterViewModel: saveFilterMap")
     }
 
     companion object {
