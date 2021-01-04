@@ -51,8 +51,12 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             }
             true
         }
+        val menuForward = popupMenu.menu.findItem(R.id.menuForward)
 
-        binding.menuButton.setOnClickListener { popupMenu.show() }
+        binding.menuButton.setOnClickListener {
+            menuForward.isVisible = webView.canGoForward()
+            popupMenu.show()
+        }
 
         webView = binding.webView
         webView.webViewClient = WebClient(this)

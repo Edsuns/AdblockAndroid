@@ -6,7 +6,7 @@
 
     <item
         android:id="@+id/menuForward"
-        android:title="@string/go_forward" />
+        android:title="@string/forward" />
     <item
         android:id="@+id/menuSettings"
         android:title="@string/settings" />
