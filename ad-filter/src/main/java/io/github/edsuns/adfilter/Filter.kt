@@ -14,7 +14,7 @@ data class Filter internal constructor(
     var name: String = ""
         internal set
 
-    var isEnabled: Boolean = true
+    var isEnabled: Boolean = false
         internal set
 
     var downloadState = DownloadState.NONE
@@ -27,5 +27,11 @@ data class Filter internal constructor(
 }
 
 enum class DownloadState {
-    ENQUEUED, DOWNLOADING, INSTALLING, SUCCESS, FAILED, CANCELLED, NONE
+    ENQUEUED, DOWNLOADING, INSTALLING, SUCCESS, FAILED, CANCELLED, NONE;
+
+    val isRunning
+        get() = when (this) {
+            ENQUEUED, DOWNLOADING, INSTALLING -> true
+            else -> false
+        }
 }

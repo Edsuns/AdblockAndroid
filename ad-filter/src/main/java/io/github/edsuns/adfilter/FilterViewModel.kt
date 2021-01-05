@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.work.*
+import io.github.edsuns.adfilter.workers.DownloadWorker
+import io.github.edsuns.adfilter.workers.InstallationWorker
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -60,6 +62,7 @@ class FilterViewModel internal constructor(
     }
 
     fun removeFilter(id: String) {
+        cancelDownload(id)
         filterDataLoader.remove(id)
         filterMap.value?.remove(id)
         // refresh
@@ -73,14 +76,15 @@ class FilterViewModel internal constructor(
 
     fun setFilterEnabled(id: String, enabled: Boolean, post: Boolean) {
         filterMap.value?.get(id)?.let {
-            if (it.isEnabled != enabled && it.hasDownloaded()) {
+            val enableMask = enabled && it.hasDownloaded()
+            if (it.isEnabled != enableMask) {
                 if (isEnabled.value == true) {
-                    if (enabled)
+                    if (enableMask)
                         filterDataLoader.load(it.id)
                     else
                         filterDataLoader.unload(it.id)
                 }
-                it.isEnabled = enabled
+                it.isEnabled = enableMask
                 // refresh
                 if (post)
                     filterMap.postValue(filterMap.value)
@@ -91,7 +95,8 @@ class FilterViewModel internal constructor(
 
     internal fun enableFilter(id: String) {
         filterMap.value?.get(id)?.let {
-            filterDataLoader.load(id)
+            if (isEnabled.value == true)
+                filterDataLoader.load(id)
             it.isEnabled = true
             // refresh
             filterMap.postValue(filterMap.value)
@@ -118,17 +123,25 @@ class FilterViewModel internal constructor(
                 KEY_FILTER_ID to it.id,
                 KEY_DOWNLOAD_URL to it.url
             )
-            val request =
+            val download =
                 OneTimeWorkRequestBuilder<DownloadWorker>()
                     .setConstraints(constraints)
                     .addTag(TAG_WORK)
                     .setInputData(inputData)
                     .build()
+            val install =
+                OneTimeWorkRequestBuilder<InstallationWorker>()
+                    .addTag(TAG_WORK)
+                    .addTag(TAG_INSTALLATION)
+                    .build()
             val continuation = workManager.beginUniqueWork(
-                it.id, ExistingWorkPolicy.KEEP, request
-            )
-            downloadFilterIdMap[request.id.toString()] = it.id
+                it.id, ExistingWorkPolicy.KEEP, download
+            ).then(install)
+            // record worker ids
+            downloadFilterIdMap[download.id.toString()] = it.id
+            downloadFilterIdMap[install.id.toString()] = it.id
             sharedPreferences.downloadFilterIdMap = downloadFilterIdMap
+            // start the work
             continuation.enqueue()
         }
     }

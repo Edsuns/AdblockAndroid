@@ -31,6 +31,7 @@ internal class FilterDataLoader(
 
     fun remove(id: String) {
         binaryDataStore.clearData(id)
+        binaryDataStore.clearData("_$id")
         unload(id)
     }
 }

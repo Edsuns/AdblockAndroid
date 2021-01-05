@@ -144,6 +144,7 @@ class SettingsActivity : AppCompatActivity() {
                 holder.filterName.text = filter.name
                 holder.filterUrl.text = filter.url
                 holder.switch.isChecked = filter.isEnabled
+                holder.switch.isEnabled = filter.hasDownloaded()
                 when (filter.downloadState) {
                     DownloadState.ENQUEUED -> holder.filterUpdateTime.text =
                         getString(R.string.waiting)
@@ -160,7 +161,6 @@ class SettingsActivity : AppCompatActivity() {
                             if (filter.hasDownloaded())
                                 dateFormatter.format(Date(filter.updateTime))
                             else getString(R.string.not_downloaded)
-                        holder.switch.isEnabled = filter.hasDownloaded()
                     }
                 }
                 holder.itemView.setOnClickListener {
@@ -192,7 +192,13 @@ class SettingsActivity : AppCompatActivity() {
                             }
                             .show()
                     }
-                    1 -> viewModel.download(selectedFilter!!.id)
+                    1 -> {
+                        val downloadState = selectedFilter!!.downloadState
+                        if (downloadState.isRunning)
+                            viewModel.cancelDownload(selectedFilter!!.id)
+                        else
+                            viewModel.download(selectedFilter!!.id)
+                    }
                     2 -> viewModel.removeFilter(selectedFilter!!.id)
                     else -> return
                 }

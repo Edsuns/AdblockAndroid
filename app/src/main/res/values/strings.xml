@@ -11,7 +11,7 @@
     <string name="downloading">Downloading…</string>
     <string name="failed_to_download">Download Failed</string>
     <string name="not_downloaded">Not Downloaded</string>
-    <string name="update">Update</string>
+    <string name="update_or_cancel">Update / Cancel</string>
     <string name="delete">Delete</string>
     <string name="refresh">Refresh</string>
     <string name="forward">Forward</string>

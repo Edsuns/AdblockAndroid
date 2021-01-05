@@ -48,22 +48,27 @@ class AdFilter internal constructor(application: Application) {
             val state = workInfo.state
             val filterId = viewModel.downloadFilterIdMap[workInfo.id.toString()]
             viewModel.filters.value?.get(filterId)?.let {
-                it.downloadState = when (state) {
-                    WorkInfo.State.ENQUEUED -> DownloadState.ENQUEUED
-                    WorkInfo.State.RUNNING -> {
-                        val installing =
-                            workInfo.progress.getBoolean(KEY_INSTALLING, false)
-                        if (installing) DownloadState.INSTALLING else DownloadState.DOWNLOADING
+                val isInstallation = workInfo.tags.contains(TAG_INSTALLATION)
+                val downloadState: DownloadState
+                if (isInstallation) {
+                    downloadState = when (state) {
+                        WorkInfo.State.RUNNING -> DownloadState.INSTALLING
+                        WorkInfo.State.SUCCEEDED -> {
+                            if (it.isEnabled || !it.hasDownloaded())
+                                viewModel.enableFilter(it.id)
+                            it.updateTime = System.currentTimeMillis()
+                            DownloadState.SUCCESS
+                        }
+                        WorkInfo.State.FAILED -> DownloadState.FAILED
+                        WorkInfo.State.CANCELLED -> DownloadState.CANCELLED
+                        else -> DownloadState.NONE
                     }
-                    WorkInfo.State.SUCCEEDED -> {
-                        it.updateTime = System.currentTimeMillis()
-                        if (it.isEnabled)
-                            viewModel.enableFilter(it.id)
-                        DownloadState.SUCCESS
+                } else {
+                    downloadState = when (state) {
+                        WorkInfo.State.ENQUEUED -> DownloadState.ENQUEUED
+                        WorkInfo.State.RUNNING -> DownloadState.DOWNLOADING
+                        else -> DownloadState.NONE
                     }
-                    WorkInfo.State.FAILED -> DownloadState.FAILED
-                    WorkInfo.State.CANCELLED -> DownloadState.CANCELLED
-                    else -> DownloadState.NONE
                 }
                 if (state.isFinished) {
                     viewModel.downloadFilterIdMap.remove(workInfo.id.toString())
@@ -71,7 +76,10 @@ class AdFilter internal constructor(application: Application) {
                     viewModel.sharedPreferences.downloadFilterIdMap = viewModel.downloadFilterIdMap
                     viewModel.workManager.pruneWork()
                 }
-                viewModel.updateFilter(it)
+                if (downloadState != DownloadState.NONE) {
+                    it.downloadState = downloadState
+                    viewModel.updateFilter(it)
+                }
             }
         }
     }
