@@ -1,4 +1,4 @@
-package io.github.edsuns.adblockclient
+package io.github.edsuns.adblockclient.sample
 
 import android.graphics.Bitmap
 

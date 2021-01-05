@@ -1,4 +1,4 @@
-package io.github.edsuns.adblockclient
+package io.github.edsuns.adblockclient.sample
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -13,7 +13,7 @@ import android.webkit.URLUtil
 import android.webkit.WebView
 import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
-import io.github.edsuns.adblockclient.databinding.ActivityMainBinding
+import io.github.edsuns.adblockclient.sample.databinding.ActivityMainBinding
 import io.github.edsuns.adfilter.AdFilter
 import io.github.edsuns.adfilter.FilterViewModel
 import timber.log.Timber
@@ -78,8 +78,8 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
                 webView.loadUrl(
                     urlIn.smartUrlFilter() ?: URLUtil.composeSearchUrl(
                         urlIn,
-                        "https://www.bing.com/search?q={s}",
-                        "{s}"
+                        "https://www.bing.com/search?q={}",
+                        "{}"
                     )
                 )
                 webView.requestFocus()
@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             val pageUrl = webView.url
             val blockedSet = blockedCountMap[pageUrl] ?: hashSetOf()
             blockedSet.add(requestUrl)
-            blockedCountMap[pageUrl] = blockedSet
+            pageUrl?.let { blockedCountMap[pageUrl] = blockedSet }
             binding.countText.text = blockedSet.size.toString()
             Timber.v("Web request blocked: $requestUrl")
         }

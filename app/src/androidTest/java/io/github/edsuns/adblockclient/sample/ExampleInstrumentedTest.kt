@@ -1,4 +1,4 @@
-package io.github.edsuns.adblockclient
+package io.github.edsuns.adblockclient.sample
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
