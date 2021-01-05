@@ -145,10 +145,16 @@ class SettingsActivity : AppCompatActivity() {
                 holder.filterUrl.text = filter.url
                 holder.switch.isChecked = filter.isEnabled
                 when (filter.downloadState) {
+                    DownloadState.ENQUEUED -> holder.filterUpdateTime.text =
+                        getString(R.string.waiting)
                     DownloadState.DOWNLOADING -> holder.filterUpdateTime.text =
                         getString(R.string.downloading)
+                    DownloadState.INSTALLING -> holder.filterUpdateTime.text =
+                        getString(R.string.installing)
                     DownloadState.FAILED -> holder.filterUpdateTime.text =
                         getString(R.string.failed_to_download)
+                    DownloadState.CANCELLED -> holder.filterUpdateTime.text =
+                        getString(R.string.cancelled)
                     else -> {
                         holder.filterUpdateTime.text =
                             if (filter.hasDownloaded())

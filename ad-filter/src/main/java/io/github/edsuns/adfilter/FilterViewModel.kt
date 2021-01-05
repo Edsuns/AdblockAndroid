@@ -32,6 +32,8 @@ class FilterViewModel internal constructor(
 
     val filters: LiveData<LinkedHashMap<String, Filter>> = filterMap
 
+    val downloadFilterIdMap: HashMap<String, String> by lazy { sharedPreferences.downloadFilterIdMap }
+
     init {
         workManager.pruneWork()
     }
@@ -125,10 +127,14 @@ class FilterViewModel internal constructor(
             val continuation = workManager.beginUniqueWork(
                 it.id, ExistingWorkPolicy.KEEP, request
             )
+            downloadFilterIdMap[request.id.toString()] = it.id
+            sharedPreferences.downloadFilterIdMap = downloadFilterIdMap
             continuation.enqueue()
-            it.downloadState = DownloadState.DOWNLOADING
-            updateFilter(it)
         }
+    }
+
+    fun cancelDownload(id: String) {
+        workManager.cancelUniqueWork(id)
     }
 
     private fun saveFilterMap() {

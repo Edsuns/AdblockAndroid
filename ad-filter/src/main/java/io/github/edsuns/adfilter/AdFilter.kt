@@ -46,23 +46,32 @@ class AdFilter internal constructor(application: Application) {
     private fun processWorkInfo(list: List<WorkInfo>?) {
         list?.forEach { workInfo ->
             val state = workInfo.state
-            if (state.isFinished) {
-                val id = workInfo.outputData.getString(KEY_FILTER_ID)
-                viewModel.filters.value?.get(id)?.let {
-                    val downloadState = when (state) {
-                        WorkInfo.State.SUCCEEDED -> {
-                            it.updateTime = System.currentTimeMillis()
-                            if (it.isEnabled)
-                                viewModel.enableFilter(it.id)
-                            DownloadState.SUCCESS
-                        }
-                        WorkInfo.State.FAILED -> DownloadState.FAILED
-                        else -> DownloadState.NONE
+            val filterId = viewModel.downloadFilterIdMap[workInfo.id.toString()]
+            viewModel.filters.value?.get(filterId)?.let {
+                it.downloadState = when (state) {
+                    WorkInfo.State.ENQUEUED -> DownloadState.ENQUEUED
+                    WorkInfo.State.RUNNING -> {
+                        val installing =
+                            workInfo.progress.getBoolean(KEY_INSTALLING, false)
+                        if (installing) DownloadState.INSTALLING else DownloadState.DOWNLOADING
                     }
-                    it.downloadState = downloadState
-                    viewModel.updateFilter(it)
+                    WorkInfo.State.SUCCEEDED -> {
+                        it.updateTime = System.currentTimeMillis()
+                        if (it.isEnabled)
+                            viewModel.enableFilter(it.id)
+                        DownloadState.SUCCESS
+                    }
+                    WorkInfo.State.FAILED -> DownloadState.FAILED
+                    WorkInfo.State.CANCELLED -> DownloadState.CANCELLED
+                    else -> DownloadState.NONE
                 }
-                viewModel.workManager.pruneWork()
+                if (state.isFinished) {
+                    viewModel.downloadFilterIdMap.remove(workInfo.id.toString())
+                    // save shared preferences
+                    viewModel.sharedPreferences.downloadFilterIdMap = viewModel.downloadFilterIdMap
+                    viewModel.workManager.pruneWork()
+                }
+                viewModel.updateFilter(it)
             }
         }
     }

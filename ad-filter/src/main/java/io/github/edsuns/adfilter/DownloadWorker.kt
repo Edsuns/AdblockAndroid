@@ -3,6 +3,7 @@ package io.github.edsuns.adfilter
 import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import io.github.edsuns.adblockclient.AdBlockClient
 import io.github.edsuns.net.HttpRequest
 import timber.log.Timber
@@ -23,6 +24,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : Worker(
             url?.let {
                 id?.let {
                     val request = HttpRequest(url).get()
+                    setProgressAsync(workDataOf(KEY_INSTALLING to true))
                     persistFilterData(it, request.bodyBytes)
                     return Result.success(inputData)
                 }

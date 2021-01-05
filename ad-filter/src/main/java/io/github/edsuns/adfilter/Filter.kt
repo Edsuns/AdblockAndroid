@@ -27,5 +27,5 @@ data class Filter internal constructor(
 }
 
 enum class DownloadState {
-    DOWNLOADING, SUCCESS, FAILED, NONE
+    ENQUEUED, DOWNLOADING, INSTALLING, SUCCESS, FAILED, CANCELLED, NONE
 }

@@ -19,4 +19,7 @@
     <string name="exit">Exit</string>
     <string name="rename">Rename</string>
     <string name="rename_filter">Rename Filter</string>
+    <string name="waiting">Waiting…</string>
+    <string name="installing">Installing…</string>
+    <string name="cancelled">Cancelled</string>
 </resources>
