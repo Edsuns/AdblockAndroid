@@ -27,7 +27,7 @@ class AdBlockClient(override val id: String) : Client {
     private var processedDataPointer: Long
 
     init {
-        System.loadLibrary("adblockclient-lib")
+        System.loadLibrary("adblock-client")
         nativeClientPointer = createClient()
         rawDataPointer = 0
         processedDataPointer = 0
