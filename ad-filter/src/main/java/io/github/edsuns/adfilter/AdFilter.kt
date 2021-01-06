@@ -39,49 +39,74 @@ class AdFilter internal constructor(application: Application) {
             viewModel.sharedPreferences.isEnabled = enable
         }
         viewModel.workInfo.observeForever { list ->
-            processWorkInfo(list)
+            list?.forEach {
+                processWorkInfo(it)
+            }
         }
     }
 
-    private fun processWorkInfo(list: List<WorkInfo>?) {
-        list?.forEach { workInfo ->
-            val state = workInfo.state
-            val filterId = viewModel.downloadFilterIdMap[workInfo.id.toString()]
-            viewModel.filters.value?.get(filterId)?.let {
-                val isInstallation = workInfo.tags.contains(TAG_INSTALLATION)
-                val downloadState: DownloadState
-                if (isInstallation) {
-                    downloadState = when (state) {
+    private fun processWorkInfo(workInfo: WorkInfo) {
+        val filterId = viewModel.downloadFilterIdMap[workInfo.id.toString()]
+        viewModel.filters.value?.get(filterId)?.let {
+            updateFilter(it, workInfo)
+        }
+    }
+
+    private fun updateFilter(filter: Filter, workInfo: WorkInfo) {
+        val state = workInfo.state
+        val isInstallation = workInfo.tags.contains(TAG_INSTALLATION)
+        var downloadState = filter.downloadState
+        if (isInstallation) {
+            // when alreadyUpToDate is true
+            // WorkInfo.State.SUCCEEDED can't always be received here
+            // maybe it is squeezed by other WorkInfo.State
+            // so we receive it in the else block
+            if (filter.downloadState != DownloadState.SUCCESS) {
+                downloadState =
+                    when (state) {
                         WorkInfo.State.RUNNING -> DownloadState.INSTALLING
                         WorkInfo.State.SUCCEEDED -> {
-                            if (it.isEnabled || !it.hasDownloaded())
-                                viewModel.enableFilter(it.id)
-                            it.updateTime = System.currentTimeMillis()
-                            it.filtersCount = workInfo.outputData.getInt(KEY_FILTERS_COUNT, 0)
+                            if (filter.isEnabled || !filter.hasDownloaded())
+                                viewModel.enableFilter(filter.id)
+                            filter.filtersCount =
+                                workInfo.outputData.getInt(KEY_FILTERS_COUNT, 0)
+                            workInfo.outputData.getString(KEY_RAW_SHA_256)?.let {
+                                filter.rawSha256 = it
+                            }
+                            filter.updateTime = System.currentTimeMillis()
                             DownloadState.SUCCESS
                         }
                         WorkInfo.State.FAILED -> DownloadState.FAILED
                         WorkInfo.State.CANCELLED -> DownloadState.CANCELLED
-                        else -> DownloadState.NONE
+                        else -> downloadState
                     }
-                } else {
-                    downloadState = when (state) {
-                        WorkInfo.State.ENQUEUED -> DownloadState.ENQUEUED
-                        WorkInfo.State.RUNNING -> DownloadState.DOWNLOADING
-                        else -> DownloadState.NONE
-                    }
-                }
-                if (state.isFinished) {
-                    viewModel.downloadFilterIdMap.remove(workInfo.id.toString())
-                    // save shared preferences
-                    viewModel.sharedPreferences.downloadFilterIdMap = viewModel.downloadFilterIdMap
-                    viewModel.workManager.pruneWork()
-                }
-                if (downloadState != DownloadState.NONE) {
-                    it.downloadState = downloadState
-                    viewModel.updateFilter(it)
-                }
             }
+        } else {
+            downloadState = when (state) {
+                WorkInfo.State.ENQUEUED -> DownloadState.ENQUEUED
+                WorkInfo.State.RUNNING -> DownloadState.DOWNLOADING
+                WorkInfo.State.SUCCEEDED -> {
+                    val alreadyUpToDate =
+                        workInfo.outputData.getBoolean(KEY_ALREADY_UP_TO_DATE, false)
+                    if (alreadyUpToDate) {
+                        filter.updateTime = System.currentTimeMillis()
+                        DownloadState.SUCCESS
+                    } else {
+                        downloadState
+                    }
+                }
+                else -> downloadState
+            }
+        }
+        if (state.isFinished) {
+            viewModel.downloadFilterIdMap.remove(workInfo.id.toString())
+            // save shared preferences
+            viewModel.sharedPreferences.downloadFilterIdMap = viewModel.downloadFilterIdMap
+            viewModel.workManager.pruneWork()
+        }
+        if (downloadState != filter.downloadState) {
+            filter.downloadState = downloadState
+            viewModel.updateFilter(filter)
         }
     }
 

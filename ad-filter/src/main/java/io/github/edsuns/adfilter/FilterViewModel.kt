@@ -38,6 +38,16 @@ class FilterViewModel internal constructor(
 
     init {
         workManager.pruneWork()
+        // clear bad running download state
+        filters.value?.values?.forEach {
+            if (it.downloadState.isRunning) {
+                val list = workManager.getWorkInfosForUniqueWork(it.id).get()
+                if (list == null || list.isEmpty()) {
+                    it.downloadState = DownloadState.FAILED
+                    updateFilter(it)
+                }
+            }
+        }
     }
 
     fun addFilter(name: String, url: String): Filter {
@@ -121,7 +131,8 @@ class FilterViewModel internal constructor(
                 .build()
             val inputData = workDataOf(
                 KEY_FILTER_ID to it.id,
-                KEY_DOWNLOAD_URL to it.url
+                KEY_DOWNLOAD_URL to it.url,
+                KEY_RAW_SHA_256 to it.rawSha256
             )
             val download =
                 OneTimeWorkRequestBuilder<DownloadWorker>()
