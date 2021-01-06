@@ -57,6 +57,7 @@ class AdFilter internal constructor(application: Application) {
                             if (it.isEnabled || !it.hasDownloaded())
                                 viewModel.enableFilter(it.id)
                             it.updateTime = System.currentTimeMillis()
+                            it.filtersCount = workInfo.outputData.getInt(KEY_FILTERS_COUNT, 0)
                             DownloadState.SUCCESS
                         }
                         WorkInfo.State.FAILED -> DownloadState.FAILED

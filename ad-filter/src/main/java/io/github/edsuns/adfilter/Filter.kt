@@ -23,6 +23,9 @@ data class Filter internal constructor(
     var updateTime: Long = -1L
         internal set
 
+    var filtersCount: Int = 0
+        internal set
+
     fun hasDownloaded() = updateTime > 0
 }
 

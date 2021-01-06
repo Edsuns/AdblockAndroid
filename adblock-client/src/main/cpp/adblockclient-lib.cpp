@@ -6,7 +6,7 @@ JNIEXPORT jlong
 JNICALL
 Java_io_github_edsuns_adblockclient_AdBlockClient_createClient(JNIEnv *env,
                                                                jobject) {
-    AdBlockClient *client = new AdBlockClient();
+    auto *client = new AdBlockClient();
     return (long) client;
 }
 
@@ -18,7 +18,7 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_releaseClient(JNIEnv *env,
                                                                 jlong clientPointer,
                                                                 jlong rawDataPointer,
                                                                 jlong processedDataPointer) {
-    AdBlockClient *client = (AdBlockClient *) clientPointer;
+    auto *client = (AdBlockClient *) clientPointer;
     delete client;
 
     char *rawData = (char *) rawDataPointer;
@@ -41,7 +41,7 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_loadBasicData(JNIEnv *env,
     char *dataChars = new char[dataLength];
     env->GetByteArrayRegion(data, 0, dataLength, reinterpret_cast<jbyte *>(dataChars));
 
-    AdBlockClient *client = (AdBlockClient *) clientPointer;
+    auto *client = (AdBlockClient *) clientPointer;
     client->parse(dataChars);
 
     return (long) dataChars;
@@ -59,7 +59,7 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_loadProcessedData(JNIEnv *env,
     char *dataChars = new char[dataLength];
     env->GetByteArrayRegion(data, 0, dataLength, reinterpret_cast<jbyte *>(dataChars));
 
-    AdBlockClient *client = (AdBlockClient *) clientPointer;
+    auto *client = (AdBlockClient *) clientPointer;
     client->deserialize(dataChars);
 
     // We cannot delete datachars here as adblock keeps a ptr to it.
@@ -76,7 +76,7 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_getProcessedData(JNIEnv *env,
                                                                    jobject /* this */,
                                                                    jlong clientPointer) {
 
-    AdBlockClient *client = (AdBlockClient *) clientPointer;
+    auto *client = (AdBlockClient *) clientPointer;
 
     int size;
     char *data = client->serialize(&size, false, false);
@@ -86,6 +86,27 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_getProcessedData(JNIEnv *env,
 
     delete[] data;
     return dataBytes;
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_io_github_edsuns_adblockclient_AdBlockClient_getFiltersCount(JNIEnv *env, jobject /* this */,
+                                                                  jlong clientPointer) {
+
+    auto *client = (AdBlockClient *) clientPointer;
+    int count = client->numFilters
+                + client->numCosmeticFilters
+                + client->numHtmlFilters
+                + client->numExceptionFilters
+                + client->numNoFingerprintFilters
+                + client->numNoFingerprintExceptionFilters
+                + client->numNoFingerprintDomainOnlyFilters
+                + client->numNoFingerprintAntiDomainOnlyFilters
+                + client->numNoFingerprintDomainOnlyExceptionFilters
+                + client->numNoFingerprintAntiDomainOnlyExceptionFilters
+                + client->numHostAnchoredFilters
+                + client->numHostAnchoredExceptionFilters;
+    return count;
 }
 
 extern "C"
@@ -103,7 +124,7 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_matches(JNIEnv *env,
     jboolean isDocumentCopy;
     const char *firstPartyDomainChars = env->GetStringUTFChars(firstPartyDomain, &isDocumentCopy);
 
-    AdBlockClient *client = (AdBlockClient *) clientPointer;
+    auto *client = (AdBlockClient *) clientPointer;
     bool matches = client->matches(urlChars, (FilterOption) filterOption, firstPartyDomainChars);
 
     env->ReleaseStringUTFChars(url, urlChars);

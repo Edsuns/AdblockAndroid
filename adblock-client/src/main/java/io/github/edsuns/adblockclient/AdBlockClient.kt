@@ -57,6 +57,10 @@ class AdBlockClient(override val id: String) : Client {
 
     private external fun getProcessedData(clientPointer: Long): ByteArray
 
+    fun getFiltersCount(): Int = getFiltersCount(nativeClientPointer)
+
+    private external fun getFiltersCount(clientPointer: Long): Int
+
     override fun matches(url: String, documentUrl: String, resourceType: ResourceType): Boolean =
         matches(nativeClientPointer, url, documentUrl.baseHost() ?: "", resourceType.filterOption)
 

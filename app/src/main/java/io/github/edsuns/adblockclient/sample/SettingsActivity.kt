@@ -145,24 +145,20 @@ class SettingsActivity : AppCompatActivity() {
                 holder.filterUrl.text = filter.url
                 holder.switch.isChecked = filter.isEnabled
                 holder.switch.isEnabled = filter.hasDownloaded()
-                when (filter.downloadState) {
-                    DownloadState.ENQUEUED -> holder.filterUpdateTime.text =
-                        getString(R.string.waiting)
-                    DownloadState.DOWNLOADING -> holder.filterUpdateTime.text =
-                        getString(R.string.downloading)
-                    DownloadState.INSTALLING -> holder.filterUpdateTime.text =
-                        getString(R.string.installing)
-                    DownloadState.FAILED -> holder.filterUpdateTime.text =
-                        getString(R.string.failed_to_download)
-                    DownloadState.CANCELLED -> holder.filterUpdateTime.text =
-                        getString(R.string.cancelled)
+                holder.filterUpdateTime.text = when (filter.downloadState) {
+                    DownloadState.ENQUEUED -> getString(R.string.waiting)
+                    DownloadState.DOWNLOADING -> getString(R.string.downloading)
+                    DownloadState.INSTALLING -> getString(R.string.installing)
+                    DownloadState.FAILED -> getString(R.string.failed_to_download)
+                    DownloadState.CANCELLED -> getString(R.string.cancelled)
                     else -> {
-                        holder.filterUpdateTime.text =
-                            if (filter.hasDownloaded())
-                                dateFormatter.format(Date(filter.updateTime))
-                            else getString(R.string.not_downloaded)
+                        if (filter.hasDownloaded())
+                            dateFormatter.format(Date(filter.updateTime))
+                        else getString(R.string.not_downloaded)
                     }
                 }
+                holder.filtersCount.text =
+                    if (filter.hasDownloaded()) filter.filtersCount.toString() else ""
                 holder.itemView.setOnClickListener {
                     selectedFilter = filter
                     dialog.show()
@@ -211,6 +207,7 @@ class SettingsActivity : AppCompatActivity() {
         val filterName: TextView by lazy { itemView.findViewById(R.id.filterName) }
         val filterUrl: TextView by lazy { itemView.findViewById(R.id.filterUrl) }
         val filterUpdateTime: TextView by lazy { itemView.findViewById(R.id.filterUpdateTime) }
+        val filtersCount: TextView by lazy { itemView.findViewById(R.id.filtersCount) }
         val switch: SwitchCompat by lazy { itemView.findViewById(R.id.filterSwitch) }
 
         init {
