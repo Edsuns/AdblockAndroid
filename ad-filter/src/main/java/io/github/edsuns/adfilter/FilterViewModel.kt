@@ -112,8 +112,7 @@ class FilterViewModel internal constructor(
                 .build()
             val inputData = workDataOf(
                 KEY_FILTER_ID to it.id,
-                KEY_DOWNLOAD_URL to it.url,
-                KEY_RAW_SHA_256 to it.rawSha256
+                KEY_DOWNLOAD_URL to it.url
             )
             val download =
                 OneTimeWorkRequestBuilder<DownloadWorker>()
@@ -125,6 +124,7 @@ class FilterViewModel internal constructor(
                 OneTimeWorkRequestBuilder<InstallationWorker>()
                     .addTag(TAG_WORK)
                     .addTag(TAG_INSTALLATION)
+                    .setInputData(workDataOf(KEY_RAW_CHECKSUM to it.checksum))
                     .build()
             val continuation = workManager.beginUniqueWork(
                 it.id, ExistingWorkPolicy.KEEP, download
@@ -150,7 +150,7 @@ class FilterViewModel internal constructor(
 
     private fun saveFilterMap() {
         sharedPreferences.filterMap = Json.encodeToString(filterMap.value)
-        Timber.v("FilterViewModel: saveFilterMap")
+        Timber.v("Save sharedPreferences.filterMap")
     }
 
     companion object {

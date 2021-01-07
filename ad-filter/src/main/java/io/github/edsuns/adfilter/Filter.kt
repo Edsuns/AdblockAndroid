@@ -26,7 +26,7 @@ data class Filter internal constructor(
     var filtersCount: Int = 0
         internal set
 
-    var rawSha256: String = ""
+    var checksum: String = ""
         internal set
 
     fun hasDownloaded() = updateTime > 0
