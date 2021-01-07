@@ -44,7 +44,7 @@ class FilterViewModel internal constructor(
                 val list = workManager.getWorkInfosForUniqueWork(it.id).get()
                 if (list == null || list.isEmpty()) {
                     it.downloadState = DownloadState.FAILED
-                    updateFilter(it)
+                    flushFilter()
                 }
             }
         }
@@ -54,30 +54,15 @@ class FilterViewModel internal constructor(
         val filter = Filter(url)
         filter.name = name
         filterMap.value?.set(filter.id, filter)
-        // refresh
-        filterMap.postValue(filterMap.value)
-        saveFilterMap()
+        flushFilter()
         return filter
-    }
-
-    internal fun updateFilter(filter: Filter) {
-        filterMap.value?.get(filter.id)?.let {
-            it.name = filter.name
-            it.updateTime = filter.updateTime
-            it.isEnabled = filter.isEnabled
-            // refresh
-            filterMap.postValue(filterMap.value)
-            saveFilterMap()
-        }
     }
 
     fun removeFilter(id: String) {
         cancelDownload(id)
         filterDataLoader.remove(id)
         filterMap.value?.remove(id)
-        // refresh
-        filterMap.postValue(filterMap.value)
-        saveFilterMap()
+        flushFilter()
     }
 
     fun setFilterEnabled(id: String, enabled: Boolean) {
@@ -108,18 +93,14 @@ class FilterViewModel internal constructor(
             if (isEnabled.value == true)
                 filterDataLoader.load(id)
             it.isEnabled = true
-            // refresh
-            filterMap.postValue(filterMap.value)
-            saveFilterMap()
+            flushFilter()
         }
     }
 
     fun renameFilter(id: String, name: String) {
         filterMap.value?.get(id)?.let {
             it.name = name
-            // refresh
-            filterMap.postValue(filterMap.value)
-            saveFilterMap()
+            flushFilter()
         }
     }
 
@@ -159,6 +140,12 @@ class FilterViewModel internal constructor(
 
     fun cancelDownload(id: String) {
         workManager.cancelUniqueWork(id)
+    }
+
+    internal fun flushFilter() {
+        // refresh
+        filterMap.postValue(filterMap.value)
+        saveFilterMap()
     }
 
     private fun saveFilterMap() {

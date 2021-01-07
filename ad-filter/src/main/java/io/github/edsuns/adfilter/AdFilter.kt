@@ -106,7 +106,7 @@ class AdFilter internal constructor(application: Application) {
         }
         if (downloadState != filter.downloadState) {
             filter.downloadState = downloadState
-            viewModel.updateFilter(filter)
+            viewModel.flushFilter()
         }
     }
 
