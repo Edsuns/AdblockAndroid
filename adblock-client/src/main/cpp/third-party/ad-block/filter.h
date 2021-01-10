@@ -115,7 +115,7 @@ public:
 
     // Checks to see if any filter matches the input but does not match
     // any exception rule You may want to call the first overload to be
-    // slighly more efficient
+    // slightly more efficient
     bool matches(const char *input, int inputLen,
                  FilterOption contextOption = FONoFilterOption,
                  const char *contextDomain = nullptr,
@@ -139,15 +139,15 @@ public:
     void parseOptions(const char *input);
 
     // Checks to see if the specified context domain is in the
-    // domain (or antiDmomain) list.
+    // domain (or antiDomain) list.
     bool containsDomain(const char *contextDomain, size_t contextDomainLen,
                         bool anti = false) const;
 
     // Returns true if the filter is composed of only domains and no anti domains
     // Note that the set of all domain and anti-domain rules are not mutually
-    // exclusive.  One xapmle is:
+    // exclusive.  One example is:
     // domain=example.com|~foo.example.com restricts the filter to the example.com
-    // domain with the exception of "foo.example.com" subdomain.
+    // domain with the exception of "foo.example.com" sub-domain.
     bool isDomainOnlyFilter();
 
     // Returns true if the filter is composed of only anti-domains and no domains
@@ -238,5 +238,80 @@ bool isThirdPartyHost(const char *baseContextHost,
 static inline bool isEndOfLine(char c) {
     return c == '\r' || c == '\n';
 }
+
+class FilterVector {
+public:
+    class Iterator {
+    public:
+        FilterVector &parent;
+        int index;
+
+        explicit Iterator(FilterVector &o, int i = 0) : parent(o), index(i) {}
+
+        Iterator &operator++() {
+            ++index;
+            return *this;
+        }
+
+        Filter operator*() const {
+            return parent.m_ptr[index];
+        }
+
+        bool operator!=(Iterator i) const {
+            return i.index != index;
+        }
+    };
+
+public:
+    explicit FilterVector(int initialCapacity = 20000) : m_capacity(initialCapacity),
+                                                         m_size(0),
+                                                         m_ptr(new Filter[initialCapacity]) {
+    }
+
+    ~FilterVector() {
+        delete[] m_ptr;
+    }
+
+    Iterator begin() {
+        return iteratorBegin;
+    }
+
+    Iterator end() {
+        return iteratorEnd;
+    }
+
+    Filter &operator[](int i) {
+        return m_ptr[i];
+    }
+
+    void push_back(Filter v) {
+        if (m_size >= m_capacity) {
+            m_capacity += 20000;
+            auto *tmpPtr = new Filter[m_capacity];
+            for (int i = 0; i < m_size; ++i) {
+                tmpPtr[i].swapData(&(m_ptr[i]));
+                m_ptr[i].borrowed_data = true;
+            }
+            delete[] m_ptr;
+            m_ptr = tmpPtr;
+        }
+
+        m_ptr[m_size++].swapData(&v);
+        // iteratorEnd.index == (actual index + 1) == size
+        // don't worry about index out of bounds which will never happen
+        iteratorEnd.index = m_size;
+    }
+
+    int length() const {
+        return m_size;
+    }
+
+private:
+    Iterator iteratorBegin = Iterator(*this);
+    Iterator iteratorEnd = Iterator(*this);
+    int m_capacity;
+    int m_size;
+    Filter *m_ptr;
+};
 
 #endif  // FILTER_H_

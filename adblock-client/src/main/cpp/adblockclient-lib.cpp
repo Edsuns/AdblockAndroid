@@ -36,7 +36,6 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_loadBasicData(JNIEnv *env,
                                                                 jobject,
                                                                 jlong clientPointer,
                                                                 jbyteArray data) {
-
     int dataLength = env->GetArrayLength(data);
     char *dataChars = new char[dataLength];
     env->GetByteArrayRegion(data, 0, dataLength, reinterpret_cast<jbyte *>(dataChars));
@@ -54,7 +53,6 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_loadProcessedData(JNIEnv *env,
                                                                     jobject /* this */,
                                                                     jlong clientPointer,
                                                                     jbyteArray data) {
-
     int dataLength = env->GetArrayLength(data);
     char *dataChars = new char[dataLength];
     env->GetByteArrayRegion(data, 0, dataLength, reinterpret_cast<jbyte *>(dataChars));
@@ -62,10 +60,9 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_loadProcessedData(JNIEnv *env,
     auto *client = (AdBlockClient *) clientPointer;
     client->deserialize(dataChars);
 
-    // We cannot delete datachars here as adblock keeps a ptr to it.
+    // We cannot delete dataChars here as adblock keeps a ptr to it.
     // Instead we send back a ptr ref so we can delete it later in the release method
     return (long) dataChars;
-
 }
 
 
@@ -75,7 +72,6 @@ JNICALL
 Java_io_github_edsuns_adblockclient_AdBlockClient_getProcessedData(JNIEnv *env,
                                                                    jobject /* this */,
                                                                    jlong clientPointer) {
-
     auto *client = (AdBlockClient *) clientPointer;
 
     int size;
@@ -92,7 +88,6 @@ extern "C"
 JNIEXPORT jint JNICALL
 Java_io_github_edsuns_adblockclient_AdBlockClient_getFiltersCount(JNIEnv *env, jobject /* this */,
                                                                   jlong clientPointer) {
-
     auto *client = (AdBlockClient *) clientPointer;
     int count = client->numFilters
                 + client->numCosmeticFilters

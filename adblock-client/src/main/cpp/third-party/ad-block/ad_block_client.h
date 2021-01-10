@@ -54,7 +54,7 @@ public:
     // The returned buffer should be deleted.
     char *serialize(int *size,
                     bool ignoreCosmeticFilters = true,
-                    bool ignoreHtmlFilters = true);
+                    bool ignoreHtmlFilters = true) const;
 
     // Deserializes the buffer, a size is not needed since a serialized.
     // buffer is self described
@@ -122,7 +122,7 @@ protected:
     bool hasMatchingFilters(Filter *filter, int numFilters, const char *input,
                             int inputLen, FilterOption contextOption, const char *contextDomain,
                             BloomFilter *inputBloomFilter, const char *inputHost, int inputHostLen,
-                            Filter **matchingFilter = nullptr);
+                            Filter **matchingFilter = nullptr) const;
 
     bool isHostAnchoredHashSetMiss(const char *input, int inputLen,
                                    HashSet<Filter> *hashSet,
@@ -130,9 +130,9 @@ protected:
                                    int inputHostLen,
                                    FilterOption contextOption,
                                    const char *contextDomain,
-                                   Filter **foundFilter = nullptr);
+                                   Filter **foundFilter = nullptr) const;
 
-    void initBloomFilter(BloomFilter **, const char *buffer, int len);
+    static void initBloomFilter(BloomFilter **, const char *buffer, int len);
 
     template<class T>
     bool initHashSet(HashSet<T> **, char *buffer, int len);
