@@ -53,6 +53,9 @@ class FilterViewModel internal constructor(
     fun addFilter(name: String, url: String): Filter {
         val filter = Filter(url)
         filter.name = name
+        filterMap.value?.get(filter.id)?.let {
+            return it
+        }
         filterMap.value?.set(filter.id, filter)
         flushFilter()
         return filter

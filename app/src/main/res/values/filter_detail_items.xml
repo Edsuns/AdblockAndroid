@@ -2,7 +2,8 @@
 <resources>
     <string-array name="filter_detail_items" translatable="false">
         <item>@string/rename</item>
-        <item>@string/update_or_cancel</item>
+        <item>@string/copy</item>
+        <item>@string/update</item>
         <item>@string/delete</item>
     </string-array>
 </resources>

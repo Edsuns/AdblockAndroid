@@ -2,6 +2,9 @@ package io.github.edsuns.adblockclient.sample
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.Menu
@@ -128,12 +131,6 @@ class SettingsActivity : AppCompatActivity() {
 
         var selectedFilter: Filter? = null
 
-        private val dialog: Dialog by lazy {
-            AlertDialog.Builder(this@SettingsActivity)
-                .setItems(R.array.filter_detail_items, this)
-                .create()
-        }
-
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FilterViewHolder {
             val itemView = layoutInflater.inflate(R.layout.filter_item, parent, false)
             return FilterViewHolder(this, itemView)
@@ -161,7 +158,13 @@ class SettingsActivity : AppCompatActivity() {
                     if (filter.hasDownloaded()) filter.filtersCount.toString() else ""
                 holder.itemView.setOnClickListener {
                     selectedFilter = filter
-                    dialog.show()
+                    val items = resources.getTextArray(R.array.filter_detail_items)
+                    if (filter.downloadState.isRunning) {
+                        items[2] = getString(R.string.cancel)
+                    }
+                    AlertDialog.Builder(this@SettingsActivity)
+                        .setItems(items, this)
+                        .show()
                 }
             }
         }
@@ -179,7 +182,7 @@ class SettingsActivity : AppCompatActivity() {
                         renameEdit.setText(it.name)
                         AlertDialog.Builder(this@SettingsActivity)
                             .setTitle(R.string.rename_filter)
-                            .setMessage(selectedFilter?.url ?: "")
+                            .setMessage(it.url)
                             .setView(renameDialogView)
                             .setNegativeButton(android.R.string.cancel, null)
                             .setPositiveButton(android.R.string.ok) { _, _ ->
@@ -189,13 +192,23 @@ class SettingsActivity : AppCompatActivity() {
                             .show()
                     }
                     1 -> {
-                        val downloadState = selectedFilter!!.downloadState
-                        if (downloadState.isRunning)
-                            viewModel.cancelDownload(selectedFilter!!.id)
-                        else
-                            viewModel.download(selectedFilter!!.id)
+                        val clipboardManager =
+                            getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clipData = ClipData.newPlainText("text", it.url)
+                        clipboardManager.setPrimaryClip(clipData)
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            R.string.url_copied,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                    2 -> viewModel.removeFilter(selectedFilter!!.id)
+                    2 -> {
+                        if (it.downloadState.isRunning)
+                            viewModel.cancelDownload(it.id)
+                        else
+                            viewModel.download(it.id)
+                    }
+                    3 -> viewModel.removeFilter(it.id)
                     else -> return
                 }
             }
