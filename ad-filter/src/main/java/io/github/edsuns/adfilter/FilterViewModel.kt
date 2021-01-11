@@ -1,6 +1,6 @@
 package io.github.edsuns.adfilter
 
-import android.app.Application
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.work.*
@@ -15,16 +15,16 @@ import timber.log.Timber
  * Created by Edsuns@qq.com on 2021/1/1.
  */
 class FilterViewModel internal constructor(
-    application: Application,
+    context: Context,
     private val filterDataLoader: FilterDataLoader
 ) {
 
     internal val sharedPreferences: FilterSharedPreferences =
-        FilterSharedPreferences(application)
+        FilterSharedPreferences(context)
 
     val isEnabled: MutableLiveData<Boolean> by lazy { MutableLiveData(sharedPreferences.isEnabled) }
 
-    internal val workManager: WorkManager = WorkManager.getInstance(application)
+    internal val workManager: WorkManager = WorkManager.getInstance(context)
 
     val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_WORK)
 

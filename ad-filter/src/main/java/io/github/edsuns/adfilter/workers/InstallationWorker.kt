@@ -15,7 +15,7 @@ class InstallationWorker(context: Context, params: WorkerParameters) : Worker(
     context,
     params
 ) {
-    private val binaryDataStore = AdFilter.get().binaryDataStore
+    private val binaryDataStore = AdFilter.get(applicationContext).binaryDataStore
 
     override fun doWork(): Result {
         val id = inputData.getString(KEY_FILTER_ID) ?: return Result.failure()

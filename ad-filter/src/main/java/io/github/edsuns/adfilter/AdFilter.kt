@@ -1,6 +1,6 @@
 package io.github.edsuns.adfilter
 
-import android.app.Application
+import android.content.Context
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -14,13 +14,13 @@ import java.io.File
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
-class AdFilter internal constructor(application: Application) {
+class AdFilter internal constructor(context: Context) {
 
     private val detector: Detector = Detector()
     internal val binaryDataStore: BinaryDataStore =
-        BinaryDataStore(File(application.filesDir, FILE_STORE_DIR))
+        BinaryDataStore(File(context.filesDir, FILE_STORE_DIR))
     private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
-    val viewModel = FilterViewModel(application, filterDataLoader)
+    val viewModel = FilterViewModel(context, filterDataLoader)
 
     val hasInstallation: Boolean
         get() = viewModel.sharedPreferences.hasInstallation
@@ -132,18 +132,16 @@ class AdFilter internal constructor(application: Application) {
         @Volatile
         private var instance: AdFilter? = null
 
-        fun get(): AdFilter {
-            if (instance == null) {
-                throw RuntimeException("Should call create() before get()")
-            }
-            return instance!!
-        }
+        fun get(): AdFilter =
+            instance ?: throw RuntimeException("Should call create() before get()")
 
-        fun create(application: Application): AdFilter {
+        fun get(context: Context): AdFilter {
             return instance ?: synchronized(this) {
-                instance = instance ?: AdFilter(application)
+                instance = instance ?: AdFilter(context)
                 instance!!
             }
         }
+
+        fun create(context: Context): AdFilter = get(context)
     }
 }
