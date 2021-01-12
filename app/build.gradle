@@ -87,4 +87,6 @@ dependencies {
     implementation "com.jakewharton.timber:timber:$timber"
 
     implementation 'com.google.android.material:material:1.2.1'
+
+    implementation 'com.github.Edsuns:SmoothProgressAnimator:1.0'
 }

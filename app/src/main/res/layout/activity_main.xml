@@ -59,7 +59,7 @@
                 android:layout_height="2dp"
                 android:layout_alignParentBottom="true"
                 android:max="100"
-                android:progress="100" />
+                android:alpha="0" />
 
         </RelativeLayout>
 

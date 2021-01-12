@@ -6,9 +6,7 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.Gravity
 import android.view.KeyEvent
-import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.webkit.URLUtil
 import android.webkit.WebView
 import android.widget.PopupMenu
@@ -16,12 +14,14 @@ import androidx.appcompat.app.AppCompatActivity
 import io.github.edsuns.adblockclient.sample.databinding.ActivityMainBinding
 import io.github.edsuns.adfilter.AdFilter
 import io.github.edsuns.adfilter.FilterViewModel
+import io.github.edsuns.smoothprogress.SmoothProgressAnimator
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity(), WebViewClientListener {
     private lateinit var viewModel: FilterViewModel
     private lateinit var binding: ActivityMainBinding
     private lateinit var webView: WebView
+    private lateinit var progressAnimator: SmoothProgressAnimator
 
     private val blockedCountMap: HashMap<String, HashSet<String>> = hashMapOf()
 
@@ -68,6 +68,8 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         settings.loadWithOverviewMode = true
         settings.useWideViewPort = true
 
+        progressAnimator = SmoothProgressAnimator(binding.loadProgress)
+
         val urlText = binding.urlEditText
         urlText.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_GO
@@ -83,7 +85,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
                     )
                 )
                 webView.requestFocus()
-                hideKeyboard(urlText)
+                urlText.hideKeyboard()
                 return@setOnEditorActionListener true
             }
             return@setOnEditorActionListener false
@@ -93,16 +95,6 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             binding.countText.text =
                 if (it) getString(R.string.count_none) else getString(R.string.off)
         })
-    }
-
-    private fun hideKeyboard(view: View) {
-        view.context.getSystemService(InputMethodManager::class.java)
-            ?.hideSoftInputFromWindow(view.windowToken, 0)
-    }
-
-    private fun showKeyboard(view: View) {
-        view.context.getSystemService(InputMethodManager::class.java)
-            ?.toggleSoftInputFromWindow(view.windowToken, 0, 0)
     }
 
     override fun onPageStarted(url: String?, favicon: Bitmap?) {
@@ -116,7 +108,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
     override fun progressChanged(newProgress: Int) {
         runOnUiThread {
-            binding.loadProgress.progress = newProgress
+            progressAnimator.progress = newProgress
             binding.urlEditText.setText(webView.url)
         }
     }
