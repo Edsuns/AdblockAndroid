@@ -26,7 +26,7 @@ class FilterViewModel internal constructor(
 
     internal val workManager: WorkManager = WorkManager.getInstance(context)
 
-    val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_WORK)
+    val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_FILTER_WORK)
 
     private val filterMap: MutableLiveData<LinkedHashMap<String, Filter>> by lazy {
         MutableLiveData(Json.decodeFromString(sharedPreferences.filterMap))
@@ -76,13 +76,10 @@ class FilterViewModel internal constructor(
         filterMap.value?.get(id)?.let {
             val enableMask = enabled && it.hasDownloaded()
             if (it.isEnabled != enableMask) {
-                if (isEnabled.value == true) {
-                    if (enableMask)
-                        filterDataLoader.load(it.id)
-                    else
-                        filterDataLoader.unload(it.id)
-                }
-                it.isEnabled = enableMask
+                if (enableMask)
+                    enableFilter(it)
+                else
+                    disableFilter(it)
                 // refresh
                 if (post)
                     filterMap.postValue(filterMap.value)
@@ -91,13 +88,16 @@ class FilterViewModel internal constructor(
         }
     }
 
-    internal fun enableFilter(id: String) {
-        filterMap.value?.get(id)?.let {
-            if (isEnabled.value == true)
-                filterDataLoader.load(id)
-            it.isEnabled = true
-            flushFilter()
+    internal fun enableFilter(filter: Filter) {
+        if (isEnabled.value == true && filter.filtersCount > 0) {
+            filterDataLoader.load(filter.id)
+            filter.isEnabled = true
         }
+    }
+
+    private fun disableFilter(filter: Filter) {
+        filterDataLoader.unload(filter.id)
+        filter.isEnabled = false
     }
 
     fun renameFilter(id: String, name: String) {
@@ -120,14 +120,19 @@ class FilterViewModel internal constructor(
             val download =
                 OneTimeWorkRequestBuilder<DownloadWorker>()
                     .setConstraints(constraints)
-                    .addTag(TAG_WORK)
+                    .addTag(TAG_FILTER_WORK)
                     .setInputData(inputData)
                     .build()
             val install =
                 OneTimeWorkRequestBuilder<InstallationWorker>()
-                    .addTag(TAG_WORK)
+                    .addTag(TAG_FILTER_WORK)
                     .addTag(TAG_INSTALLATION)
-                    .setInputData(workDataOf(KEY_RAW_CHECKSUM to it.checksum))
+                    .setInputData(
+                        workDataOf(
+                            KEY_RAW_CHECKSUM to it.checksum,
+                            KEY_CHECK_LICENSE to true
+                        )
+                    )
                     .build()
             val continuation = workManager.beginUniqueWork(
                 it.id, ExistingWorkPolicy.KEEP, download
@@ -157,6 +162,6 @@ class FilterViewModel internal constructor(
     }
 
     companion object {
-        private const val TAG_WORK = "tag_ad_filter_work"
+        private const val TAG_FILTER_WORK = "TAG_FILTER_WORK"
     }
 }

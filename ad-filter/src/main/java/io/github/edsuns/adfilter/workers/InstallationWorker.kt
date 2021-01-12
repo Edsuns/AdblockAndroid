@@ -21,8 +21,15 @@ class InstallationWorker(context: Context, params: WorkerParameters) : Worker(
         val id = inputData.getString(KEY_FILTER_ID) ?: return Result.failure()
         val downloadedDataName = inputData.getString(KEY_DOWNLOADED_DATA) ?: return Result.failure()
         val rawChecksum = inputData.getString(KEY_RAW_CHECKSUM) ?: return Result.failure()
+        val checkLicense = inputData.getBoolean(KEY_CHECK_LICENSE, false)
         val rawData = binaryDataStore.loadData(downloadedDataName)
-        val checksum = Checksum(String(rawData))
+        val dataStr = String(rawData)
+        val checksum = Checksum(dataStr)
+        // reject filter that doesn't include both checksum and license if checkLicense is true
+        if (checksum.checksumIn == null && checkLicense && !validateLicense(dataStr)) {
+            Timber.v("Filter is invalid: $id")
+            return Result.success()
+        }
         Timber.v("Checksum: $rawChecksum, ${checksum.checksumIn}, ${checksum.checksumCalc}, ${checksum.validate()}")
         if (!checksum.validate()) {
             return Result.failure()
@@ -40,6 +47,17 @@ class InstallationWorker(context: Context, params: WorkerParameters) : Worker(
             )
         )
     }
+
+    private val licenseRegexp = Regex(
+        "^\\s*!\\s*licen[sc]e[\\s\\-:]+([\\S ]+)\\n",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)
+    )
+
+    /**
+     * Check if the filter includes a license.
+     * Returning false often means that the filter is invalid.
+     */
+    private fun validateLicense(data: String): Boolean = licenseRegexp.containsMatchIn(data)
 
     private fun persistFilterData(id: String, rawBytes: ByteArray): Int {
         val client = AdBlockClient(id)

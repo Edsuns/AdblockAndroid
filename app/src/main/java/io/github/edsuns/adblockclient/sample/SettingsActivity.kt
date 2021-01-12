@@ -141,7 +141,7 @@ class SettingsActivity : AppCompatActivity() {
                 holder.filterName.text = filter.name
                 holder.filterUrl.text = filter.url
                 holder.switch.isChecked = filter.isEnabled
-                holder.switch.isEnabled = filter.hasDownloaded()
+                holder.switch.isEnabled = filter.filtersCount > 0
                 holder.filterUpdateTime.text = when (filter.downloadState) {
                     DownloadState.ENQUEUED -> getString(R.string.waiting)
                     DownloadState.DOWNLOADING -> getString(R.string.downloading)

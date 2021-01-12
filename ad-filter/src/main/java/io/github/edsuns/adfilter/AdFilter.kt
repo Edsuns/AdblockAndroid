@@ -30,7 +30,7 @@ class AdFilter internal constructor(context: Context) {
             if (enable) {
                 viewModel.filters.value?.values?.forEach {
                     if (it.isEnabled && it.hasDownloaded()) {
-                        filterDataLoader.load(it.id)
+                        viewModel.enableFilter(it)
                     }
                 }
             } else {
@@ -64,13 +64,13 @@ class AdFilter internal constructor(context: Context) {
                         val alreadyUpToDate =
                             workInfo.outputData.getBoolean(KEY_ALREADY_UP_TO_DATE, false)
                         if (!alreadyUpToDate) {
-                            if (filter.isEnabled || !filter.hasDownloaded())
-                                viewModel.enableFilter(filter.id)
                             filter.filtersCount =
                                 workInfo.outputData.getInt(KEY_FILTERS_COUNT, 0)
                             workInfo.outputData.getString(KEY_RAW_CHECKSUM)?.let {
                                 filter.checksum = it
                             }
+                            if (filter.isEnabled || !filter.hasDownloaded())
+                                viewModel.enableFilter(filter)
                         }
                         filter.updateTime = System.currentTimeMillis()
                         DownloadState.SUCCESS
