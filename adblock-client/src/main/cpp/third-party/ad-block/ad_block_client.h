@@ -21,6 +21,9 @@ class NoFingerprintDomain;
 template<class T>
 class HashSet;
 
+template<class K, class V>
+class HashMap;
+
 class AdBlockClient {
 public:
     AdBlockClient();
@@ -103,6 +106,9 @@ public:
     HashSet<NoFingerprintDomain> *noFingerprintDomainExceptionHashSet;
     HashSet<NoFingerprintDomain> *noFingerprintAntiDomainExceptionHashSet;
 
+    HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingSelectorHashMap;
+    HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingExceptionSelectorHashMap;
+
     // Used only in the perf program to create a list of bad fingerprints
     BadFingerprintsHashSet *badFingerprintsHashSet;
 
@@ -136,6 +142,9 @@ protected:
 
     template<class T>
     bool initHashSet(HashSet<T> **, char *buffer, int len);
+
+    template<class K, class V>
+    bool initHashMap(HashMap<K, V> **, char *buffer, int len);
 
     char *deserializedBuffer;
     std::set<std::string> tags;

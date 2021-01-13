@@ -9,6 +9,8 @@
 #include <math.h>
 #include <string.h>
 #include "../hashset-cpp/hash_set.h"
+#include "hash_map.h"
+#include "no_fingerprint_domain.h"
 
 class CosmeticFilter {
 public:
@@ -68,8 +70,8 @@ public:
 
 class CosmeticFilterHashSet : public HashSet<CosmeticFilter> {
 public:
-    CosmeticFilterHashSet() : HashSet<CosmeticFilter>(1000, false) {
-    }
+    CosmeticFilterHashSet(uint32_t bucket_count = 1000) : HashSet<CosmeticFilter>(bucket_count,
+                                                                                  false) {}
 
     char *toStylesheet(uint32_t *len) {
         *len = fillStylesheetBuffer(nullptr);
@@ -84,26 +86,53 @@ private:
         uint32_t len = 0;
         for (uint32_t bucketIndex = 0; bucketIndex < bucket_count_; bucketIndex++) {
             HashItem<CosmeticFilter> *hashItem = buckets_[bucketIndex];
-            len = 0;
             while (hashItem) {
-                CosmeticFilter *cosmeticFilter = hashItem->hash_item_storage_;
-                // [cosmeticFilter],[space]
-                int cosmeticFilterLen =
-                        static_cast<int>(strlen(cosmeticFilter->data));
-                if (buffer) {
-                    memcpy(buffer + len, cosmeticFilter->data, cosmeticFilterLen);
-                }
-                len += cosmeticFilterLen;
-                if (hashItem->next_) {
+                if (len > 0) {
                     if (buffer) {
                         memcpy(buffer + len, ", ", 2);
                     }
                     len += 2;
                 }
+                CosmeticFilter *cosmeticFilter = hashItem->hash_item_storage_;
+                int cosmeticFilterLen = static_cast<int>(strlen(cosmeticFilter->data));
+                if (buffer) {
+                    memcpy(buffer + len, cosmeticFilter->data, cosmeticFilterLen);
+                }
+                len += cosmeticFilterLen;
                 hashItem = hashItem->next_;
             }
         }
         return len;
+    }
+};
+
+class CosmeticFilterHashMap : public HashMap<NoFingerprintDomain, CosmeticFilterHashSet> {
+public:
+    CosmeticFilterHashMap() : HashMap<NoFingerprintDomain, CosmeticFilterHashSet>(2000) {}
+
+    void putCosmeticFilter(const NoFingerprintDomain &key, const CosmeticFilter &value) {
+        CosmeticFilterHashSet existing_hash_set;
+        if (get(key, existing_hash_set)) {
+            existing_hash_set.Add(value);
+        } else {
+            CosmeticFilterHashSet *created_hash_set = new CosmeticFilterHashSet(50);
+            created_hash_set->Add(value);
+            put(key, created_hash_set);
+        }
+    }
+
+    void toElementHidingSelectorMap(HashMap<NoFingerprintDomain, CosmeticFilter> *selectorMap) {
+        for (uint32_t bucketIndex = 0; bucketIndex < bucket_count_; bucketIndex++) {
+            HashItem<MapNode<NoFingerprintDomain, CosmeticFilterHashSet>> *hashItem = buckets_[bucketIndex];
+            while (hashItem) {
+                MapNode<NoFingerprintDomain, CosmeticFilterHashSet> *node = hashItem->hash_item_storage_;
+                uint32_t len;
+                char *selector = node->getValue()->toStylesheet(&len);
+                selectorMap->put(*node->getKey(), new CosmeticFilter(selector));
+                delete[] selector;
+                hashItem = hashItem->next_;
+            }
+        }
     }
 };
 

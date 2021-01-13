@@ -49,11 +49,11 @@ const char *getUrlHost(const char *input, int *len) {
   while (*p != '\0' && *p != ':') {
     p++;
   }
-  if (*p != '\0') {
+  if (*p == ':') {
     p++;
-    while (*p == '/') {
-      p++;
-    }
+  }
+  while (*p == '/') {
+    p++;
   }
   const char *q = p;
   while (*q != '\0') {
@@ -96,6 +96,37 @@ void AddFilterDomainsToHashSet(Filter *filter,
       len++;
     }
   }
+}
+
+void putElementHidingFilterToHashMap(Filter *filter, CosmeticFilterHashMap *hashMap) {
+  if (filter->domainList && filter->data) {
+    char *filter_domain_list = filter->domainList;
+    int len = 0;
+    const char *p = filter_domain_list;
+    const char *q;
+    while (*p != '\0') {
+      len = 0;
+      while (*p == ' ') {
+        p++;
+      }
+      q = p;
+      while (*q != '\0' && *q != ',') {
+        len++;
+        q++;
+      }
+      if (len > 0) {
+        hashMap->putCosmeticFilter(NoFingerprintDomain(p, len), CosmeticFilter(filter->data));
+      }
+      p += (len + 1);
+    }
+  }
+}
+
+bool getElementHidingFilterFrom(HashMap<NoFingerprintDomain, CosmeticFilter> *hashMap,
+                                const char *url, CosmeticFilter &filter) {
+  int hostLen;
+  const char *host = getUrlHost(url, &hostLen);
+  return hashMap->get(NoFingerprintDomain(host, hostLen), filter);
 }
 
 inline bool isFingerprintChar(char c) {
@@ -505,7 +536,9 @@ AdBlockClient::AdBlockClient() : filters(nullptr),
                                  numExceptionBloomFilterSaves(0),
                                  numHashSetSaves(0),
                                  numExceptionHashSetSaves(0),
-                                 deserializedBuffer(nullptr) {
+                                 deserializedBuffer(nullptr),
+                                 elementHidingSelectorHashMap(nullptr),
+                                 elementHidingExceptionSelectorHashMap(nullptr) {
 }
 
 AdBlockClient::~AdBlockClient() {
@@ -589,6 +622,14 @@ void AdBlockClient::clear() {
   if (badFingerprintsHashSet) {
     delete badFingerprintsHashSet;
     badFingerprintsHashSet = nullptr;
+  }
+  if (elementHidingSelectorHashMap) {
+    delete elementHidingSelectorHashMap;
+    elementHidingSelectorHashMap = nullptr;
+  }
+  if (elementHidingExceptionSelectorHashMap) {
+    delete elementHidingExceptionSelectorHashMap;
+    elementHidingExceptionSelectorHashMap = nullptr;
   }
 
   numFilters = 0;
@@ -1080,6 +1121,20 @@ bool AdBlockClient::initHashSet(HashSet<T> **pp, char *buffer, int len) {
   return true;
 }
 
+template<class K, class V>
+bool AdBlockClient::initHashMap(HashMap<K, V> **pp, char *buffer, int len) {
+  if (*pp) {
+    delete *pp;
+  }
+  if (len > 0) {
+    *pp = new HashMap<K, V>(2000);
+
+    return (*pp)->Deserialize(buffer, len);
+  }
+
+  return true;
+}
+
 // Parses the filter data into a few collections of filters and enables
 // efficient querying.
 bool AdBlockClient::parse(const char *input, bool preserveRules) {
@@ -1380,6 +1435,9 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
   noFingerprintAntiDomainOnlyExceptionFilters =
           newNoFingerprintAntiDomainOnlyExceptionFilters;
 
+  CosmeticFilterHashMap elementHidingFilterHashMap;
+  CosmeticFilterHashMap elementHidingExceptionFilterHashMap;
+
   for (auto f : filterVector) {
     switch (f.filterType & FTListTypesMask) {
       case FTException:
@@ -1404,8 +1462,13 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
         }
             break;
       case FTElementHiding:
+        putElementHidingFilterToHashMap(&f, &elementHidingFilterHashMap);
+            (*curCosmeticFilters).swapData(&f);
+            curCosmeticFilters++;
+            break;
       case FTElementHidingException:
-        (*curCosmeticFilters).swapData(&f);
+        putElementHidingFilterToHashMap(&f, &elementHidingExceptionFilterHashMap);
+            (*curCosmeticFilters).swapData(&f);
             curCosmeticFilters++;
             break;
       case FTHTMLFiltering:
@@ -1439,6 +1502,16 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
             break;
     }
   }
+
+  if (!elementHidingSelectorHashMap) {
+    elementHidingSelectorHashMap = new HashMap<NoFingerprintDomain, CosmeticFilter>(2000);
+  }
+  if (!elementHidingExceptionSelectorHashMap) {
+    elementHidingExceptionSelectorHashMap = new HashMap<NoFingerprintDomain, CosmeticFilter>(2000);
+  }
+  elementHidingFilterHashMap.toElementHidingSelectorMap(elementHidingSelectorHashMap);
+  elementHidingExceptionFilterHashMap
+          .toElementHidingSelectorMap(elementHidingExceptionSelectorHashMap);
 
 #ifdef PERF_STATS
   cout << "Simple cosmetic filter size: "
@@ -1576,10 +1649,23 @@ char *AdBlockClient::serialize(int *totalSize,
                     &noFingerprintAntiDomainExceptionHashSetSize);
   }
 
+  uint32_t elementHidingHashMapSize = 0;
+  char *elementHidingHashMapBuffer = nullptr;
+  if (elementHidingSelectorHashMap) {
+    elementHidingHashMapBuffer = elementHidingSelectorHashMap->Serialize(&elementHidingHashMapSize);
+  }
+
+  uint32_t elementHidingExceptionHashMapSize = 0;
+  char *elementHidingExceptionHashMapBuffer = nullptr;
+  if (elementHidingExceptionSelectorHashMap) {
+    elementHidingExceptionHashMapBuffer =
+            elementHidingExceptionSelectorHashMap->Serialize(&elementHidingExceptionHashMapSize);
+  }
+
   // Get the number of bytes that we'll need
   char sz[512];
   *totalSize += 1 + snprintf(sz, sizeof(sz),
-                             "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
+                             "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
                              numFilters,
                              numExceptionFilters, adjustedNumCosmeticFilters,
                              adjustedNumHtmlFilters,
@@ -1596,7 +1682,8 @@ char *AdBlockClient::serialize(int *totalSize,
                              noFingerprintDomainHashSetSize,
                              noFingerprintAntiDomainHashSetSize,
                              noFingerprintDomainExceptionHashSetSize,
-                             noFingerprintAntiDomainExceptionHashSetSize);
+                             noFingerprintAntiDomainExceptionHashSetSize,
+                             elementHidingHashMapSize, elementHidingExceptionHashMapSize);
   *totalSize += serializeFilters(nullptr, 0, filters, numFilters) +
                 serializeFilters(nullptr, 0, exceptionFilters, numExceptionFilters) +
                 serializeFilters(nullptr, 0, cosmeticFilters, adjustedNumCosmeticFilters) +
@@ -1703,6 +1790,18 @@ char *AdBlockClient::serialize(int *totalSize,
     pos += noFingerprintAntiDomainExceptionHashSetSize;
     delete[] noFingerprintAntiDomainExceptionHashSetBuffer;
   }
+  if (elementHidingSelectorHashMap) {
+    memcpy(buffer + pos, elementHidingHashMapBuffer,
+           elementHidingHashMapSize);
+    pos += elementHidingHashMapSize;
+    delete[] elementHidingHashMapBuffer;
+  }
+  if (elementHidingExceptionSelectorHashMap) {
+    memcpy(buffer + pos, elementHidingExceptionHashMapBuffer,
+           elementHidingExceptionHashMapSize);
+    pos += elementHidingExceptionHashMapSize;
+    delete[] elementHidingExceptionHashMapBuffer;
+  }
 
   return buffer;
 }
@@ -1770,10 +1869,10 @@ bool AdBlockClient::deserialize(char *buffer) {
           noFingerprintDomainHashSetSize = 0,
           noFingerprintAntiDomainHashSetSize = 0,
           noFingerprintDomainExceptionHashSetSize = 0,
-          noFingerprintAntiDomainExceptionHashSetSize = 0;
+          noFingerprintAntiDomainExceptionHashSetSize = 0, elementHidingHashMapSize = 0, elementHidingExceptionHashMapSize = 0;
   int pos = 0;
   sscanf(buffer + pos,
-         "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
+         "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
          &numFilters,
          &numExceptionFilters, &numCosmeticFilters, &numHtmlFilters,
          &numNoFingerprintFilters, &numNoFingerprintExceptionFilters,
@@ -1787,7 +1886,8 @@ bool AdBlockClient::deserialize(char *buffer) {
          &noFingerprintDomainHashSetSize,
          &noFingerprintAntiDomainHashSetSize,
          &noFingerprintDomainExceptionHashSetSize,
-         &noFingerprintAntiDomainExceptionHashSetSize);
+         &noFingerprintAntiDomainExceptionHashSetSize,
+         &elementHidingHashMapSize, &elementHidingExceptionHashMapSize);
   pos += static_cast<int>(strlen(buffer + pos)) + 1;
 
   filters = new Filter[numFilters];
@@ -1869,6 +1969,18 @@ bool AdBlockClient::deserialize(char *buffer) {
     return false;
   }
   pos += noFingerprintAntiDomainExceptionHashSetSize;
+
+  if (!initHashMap(&elementHidingSelectorHashMap,
+                   buffer + pos, elementHidingHashMapSize)) {
+    return false;
+  }
+  pos += elementHidingHashMapSize;
+
+  if (!initHashMap(&elementHidingExceptionSelectorHashMap,
+                   buffer + pos, elementHidingExceptionHashMapSize)) {
+    return false;
+  }
+  pos += elementHidingExceptionHashMapSize;
 
   return true;
 }
