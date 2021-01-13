@@ -1149,8 +1149,8 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
                   hostAnchoredExceptionHashSet,
                   &simpleCosmeticFilters,
                   preserveRules);
-      filterVector.push_back(f);
       if (!f.hasUnsupportedOptions()) {
+        filterVector.push_back(f);
         switch (f.filterType & FTListTypesMask) {
           case FTException:
             if (f.filterType & FTHostOnly) {
@@ -1381,8 +1381,6 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
           newNoFingerprintAntiDomainOnlyExceptionFilters;
 
   for (auto f : filterVector) {
-    if (f.hasUnsupportedOptions())
-      continue;
     switch (f.filterType & FTListTypesMask) {
       case FTException:
         if (f.filterType & FTHostOnly) {
