@@ -134,12 +134,12 @@ bool getElementHidingFilterFrom(HashMap<NoFingerprintDomain, CosmeticFilter> *ha
   // start from the penultimate
   const char *p = host + hostLen - 2;
   const char *start = p + 1;
-  // start matching parent domain
-  // skip the first char '.'
+  // skip past the TLD
   while (*p != '.' && p > host) {
     p--;
   }
   p--;
+  // start matching parent domain
   while (p > host) {
     if (*p == '.') {
       start = p + 1;
@@ -507,9 +507,14 @@ void parseFilter(const char *input, const char *end, Filter *f,
     f->ruleDefinition[ruleTextLength] = '\0';
   }
 
-  data[i] = '\0';
-  f->data = new char[i + 1];
-  memcpy(f->data, data, i + 1);
+  if (i > 0) {
+    data[i] = '\0';
+    f->data = new char[i + 1];
+    memcpy(f->data, data, i + 1);
+  } else {
+    f->data = nullptr;
+  }
+  f->dataLen = i;
 
   char fingerprintBuffer[AdBlockClient::kFingerprintSize + 1];
   fingerprintBuffer[AdBlockClient::kFingerprintSize] = '\0';
@@ -1216,9 +1221,6 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
             new HashSet<NoFingerprintDomain>(100, false);
   }
 
-  const char *p = input;
-  const char *lineStart = p;
-
   int newNumFilters = 0;
   int newNumCosmeticFilters = 0;
   int newNumHtmlFilters = 0;
@@ -1238,15 +1240,18 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
   // record parsing results in a vector
   FilterVector filterVector(20000);
 
+  const char *lineStart = input;
+  const char *p = lineStart + 1;
+
   while (true) {
-    if (isEndOfLine(*p) || *p == '\0') {
+    if ((isEndOfLine(*p) || *p == '\0') && p > lineStart) {
       Filter f;
       parseFilter(lineStart, p, &f, bloomFilter, exceptionBloomFilter,
                   hostAnchoredHashSet,
                   hostAnchoredExceptionHashSet,
                   &simpleCosmeticFilters,
                   preserveRules);
-      if (!f.hasUnsupportedOptions()) {
+      if (f.isValid()) {
         filterVector.push_back(f);
         switch (f.filterType & FTListTypesMask) {
           case FTException:

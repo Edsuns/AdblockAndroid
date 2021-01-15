@@ -376,6 +376,13 @@ bool Filter::hasUnsupportedOptions() const {
     return (filterOption & FOUnsupportedSoSkipCheck) != 0;
 }
 
+bool Filter::isValid() const {
+    return !hasUnsupportedOptions()
+           && !(host == nullptr && domainList == nullptr && data == nullptr)
+           && (dataLen > 1 || filterType != FTNoFilterType)
+           && (filterType & FTComment) == 0;
+}
+
 bool Filter::contextDomainMatchesFilter(const char *contextDomain) {
     // If there are no context domains, then this filter can still apply
     // to all domains.
@@ -688,7 +695,7 @@ uint64_t Filter::hash() const {
     return h(data, dataLen);
 }
 
-uint32_t Filter::Serialize(char *buffer) {
+uint32_t Filter::Serialize(char *buffer) const {
     uint32_t totalSize = 0;
     char sz[64];
     uint32_t dataLenSize = 1 + snprintf(sz, sizeof(sz),

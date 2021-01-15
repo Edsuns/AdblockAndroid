@@ -132,6 +132,8 @@ public:
 
     bool hasUnsupportedOptions() const;
 
+    bool isValid() const;
+
     // Checks to see if the filter options match for the passed in data
     bool matchesOptions(const char *input, FilterOption contextOption,
                         const char *contextDomain = nullptr);
@@ -191,7 +193,7 @@ public:
         return !(*this == rhs);
     }
 
-    uint32_t Serialize(char *buffer);
+    uint32_t Serialize(char *buffer) const;
 
     uint32_t Deserialize(char *buffer, uint32_t bufferSize);
 
