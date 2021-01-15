@@ -43,28 +43,15 @@ Filter::Filter() :
 }
 
 Filter::~Filter() {
-    if (domains) {
-        delete domains;
-    }
-    if (antiDomains) {
-        delete antiDomains;
-    }
+    delete domains;
+    delete antiDomains;
+
     if (!borrowed_data) {
-        if (data) {
-            delete[] data;
-        }
-        if (ruleDefinition) {
-            delete[] ruleDefinition;
-        }
-        if (domainList) {
-            delete[] domainList;
-        }
-        if (tag) {
-            delete[] tag;
-        }
-        if (host) {
-            delete[] host;
-        }
+        delete[] data;
+        delete[] ruleDefinition;
+        delete[] domainList;
+        delete[] tag;
+        delete[] host;
     }
 }
 
@@ -168,8 +155,8 @@ void Filter::swapData(Filter *other) {
     int tempDataLen = dataLen;
     char *tempRuleDefinition = ruleDefinition;
     char *tempDomainList = domainList;
-    char *temptag = tag;
-    int temptagLen = tagLen;
+    char *tempTag = tag;
+    int tempTagLen = tagLen;
     char *tempHost = host;
     int tempHostLen = hostLen;
     bool tempDomainsParsed = domainsParsed;
@@ -198,8 +185,8 @@ void Filter::swapData(Filter *other) {
     other->data = tempData;
     other->dataLen = tempDataLen;
     other->domainList = tempDomainList;
-    other->tag = temptag;
-    other->tagLen = temptagLen;
+    other->tag = tempTag;
+    other->tagLen = tempTagLen;
     other->host = tempHost;
     other->hostLen = tempHostLen;
     other->domainsParsed = tempDomainsParsed;
@@ -717,14 +704,14 @@ uint32_t Filter::Serialize(char *buffer) {
     totalSize += dataLen;
 
     if (host) {
-        int hostLen = this->hostLen == -1 ?
-                      static_cast<int>(strlen(host)) : this->hostLen;
+        int hostLength = this->hostLen == -1 ?
+                         static_cast<int>(strlen(host)) : this->hostLen;
         if (buffer) {
-            memcpy(buffer + totalSize, host, hostLen + 1);
+            memcpy(buffer + totalSize, host, hostLength + 1);
         }
-        totalSize += hostLen;
+        totalSize += hostLength;
     }
-    totalSize += 1;
+    totalSize++;
 
     // Serialize any kind fo list based data here, as long as you can use a
     // separator between lists which is not \0.  Currently using #
@@ -737,6 +724,7 @@ uint32_t Filter::Serialize(char *buffer) {
         }
         totalSize += tagLen + 3;
     }
+
     if (domainList) {
         int domainListLen = static_cast<int>(strlen(domainList));
         if (buffer) {
@@ -744,7 +732,16 @@ uint32_t Filter::Serialize(char *buffer) {
         }
         totalSize += domainListLen;
     }
-    totalSize += 1;
+    totalSize++;
+
+    if (ruleDefinition) {
+        int ruleDefinitionLen = static_cast<int>(strlen(ruleDefinition));
+        if (buffer) {
+            memcpy(buffer + totalSize, ruleDefinition, ruleDefinitionLen + 1);
+        }
+        totalSize += ruleDefinitionLen;
+    }
+    totalSize++;
 
     return totalSize;
 }
@@ -774,13 +771,13 @@ uint32_t Filter::Deserialize(char *buffer, uint32_t bufferSize) {
     data = buffer + consumed;
     consumed += dataLen;
 
-    uint32_t hostLen = static_cast<uint32_t>(strlen(buffer + consumed));
-    if (hostLen != 0) {
+    auto hostLength = static_cast<uint32_t>(strlen(buffer + consumed));
+    if (hostLength != 0) {
         host = buffer + consumed;
     } else {
         host = nullptr;
     }
-    consumed += hostLen + 1;
+    consumed += hostLength + 1;
 
     // If the domain section starts with a # then we're in a tag
     // block.
@@ -797,13 +794,23 @@ uint32_t Filter::Deserialize(char *buffer, uint32_t bufferSize) {
         }
     }
 
-    uint32_t listSectionLen = static_cast<uint32_t>(strlen(buffer + consumed));
+    auto listSectionLen = static_cast<uint32_t>(strlen(buffer + consumed));
     if (listSectionLen != 0) {
         domainList = buffer + consumed;
+        consumed += listSectionLen;
     } else {
         domainList = nullptr;
     }
-    consumed += listSectionLen + 1;
+    consumed++;
+
+    auto ruleDefinitionLen = static_cast<uint32_t>(strlen(buffer + consumed));
+    if (ruleDefinitionLen != 0) {
+        ruleDefinition = buffer + consumed;
+        consumed += ruleDefinitionLen;
+    } else {
+        ruleDefinition = nullptr;
+    }
+    consumed++;
 
     borrowed_data = true;
     domainsParsed = false;

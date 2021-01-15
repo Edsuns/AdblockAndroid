@@ -1587,7 +1587,7 @@ int serializeFilters(char *buffer, size_t bufferSizeAvail,
   char sz[256];
   int bufferSize = 0;
   for (int i = 0; i < numFilters; i++) {
-    int sprintfLen = snprintf(sz, sizeof(sz), "%x,%x,%x",
+    int sprintfLen = snprintf(sz, sizeof(sz), "%x,%x,%x,%x", f->dataLen,
                               static_cast<int>(f->filterType), static_cast<int>(f->filterOption),
                               static_cast<int>(f->antiFilterOption));
     if (buffer) {
@@ -1623,6 +1623,7 @@ int serializeFilters(char *buffer, size_t bufferSizeAvail,
     }
     // Extra null termination
     bufferSize++;
+
     if (f->host) {
       if (buffer) {
         snprintf(buffer + bufferSize, bufferSizeAvail, "%s", f->host);
@@ -1631,6 +1632,16 @@ int serializeFilters(char *buffer, size_t bufferSizeAvail,
     }
     // Extra null termination
     bufferSize++;
+
+    if (f->ruleDefinition) {
+      if (buffer) {
+        snprintf(buffer + bufferSize, bufferSizeAvail, "%s", f->ruleDefinition);
+      }
+      bufferSize += static_cast<int>(strlen(f->ruleDefinition));
+    }
+    // Extra null termination
+    bufferSize++;
+
     f++;
   }
   return bufferSize;
@@ -1855,7 +1866,7 @@ int deserializeFilters(char *buffer, Filter *f, int numFilters) {
   int pos = 0;
   for (int i = 0; i < numFilters; i++) {
     f->borrowed_data = true;
-    sscanf(buffer + pos, "%x,%x,%x",
+    sscanf(buffer + pos, "%x,%x,%x,%x", &f->dataLen,
            reinterpret_cast<unsigned int *>(&f->filterType),
            reinterpret_cast<unsigned int *>(&f->filterOption),
            reinterpret_cast<unsigned int *>(&f->antiFilterOption));
@@ -1899,6 +1910,15 @@ int deserializeFilters(char *buffer, Filter *f, int numFilters) {
       pos += static_cast<int>(strlen(f->host));
     }
     pos++;
+
+    if (*(buffer + pos) == '\0') {
+      f->ruleDefinition = nullptr;
+    } else {
+      f->ruleDefinition = buffer + pos;
+      pos += static_cast<int>(strlen(f->ruleDefinition));
+    }
+    pos++;
+
     f++;
   }
   return pos;
