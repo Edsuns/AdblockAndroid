@@ -47,6 +47,10 @@ public:
                              Filter **matchingFilter,
                              Filter **matchingExceptionFilter);
 
+    char *getElementHidingSelectors(const char *contextUrl) const;
+
+    char *getElementHidingExceptionSelectors(const char *contextUrl) const;
+
     void addTag(const std::string &tag);
 
     void removeTag(const std::string &tag);
