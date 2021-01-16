@@ -15,6 +15,8 @@
 
 #include "../bloom-filter-cpp/BloomFilter.h"
 
+#include "linked_list.h"
+
 #ifdef PERF_STATS
 #include <iostream>
 using std::cout;
@@ -1237,8 +1239,8 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
   // Simple cosmetic filters apply to all sites without exception
   HashSet<CosmeticFilter> simpleCosmeticFilters(1000, false);
 
-  // record parsing results in a vector
-  FilterVector filterVector(20000);
+  // record parsing results in a linked list
+  LinkedList<Filter> filterList;
 
   const char *lineStart = input;
   const char *p = lineStart + 1;
@@ -1252,7 +1254,7 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
                   &simpleCosmeticFilters,
                   preserveRules);
       if (f.isValid()) {
-        filterVector.push_back(f);
+        filterList.push_back(f);
         switch (f.filterType & FTListTypesMask) {
           case FTException:
             if (f.filterType & FTHostOnly) {
@@ -1485,7 +1487,7 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
   CosmeticFilterHashMap elementHidingFilterHashMap;
   CosmeticFilterHashMap elementHidingExceptionFilterHashMap;
 
-  for (auto f : filterVector) {
+  for (auto f : filterList) {
     switch (f.filterType & FTListTypesMask) {
       case FTException:
         if (f.filterType & FTHostOnly) {
