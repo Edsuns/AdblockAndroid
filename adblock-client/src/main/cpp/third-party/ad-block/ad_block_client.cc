@@ -128,8 +128,12 @@ void putElementHidingFilterToHashMap(Filter *filter, CosmeticFilterHashMap *hash
   }
 }
 
-bool getElementHidingFilterFrom(HashMap<NoFingerprintDomain, CosmeticFilter> *hashMap,
-                                const char *url, CosmeticFilter &filter) {
+bool getElementHidingFiltersFrom(HashMap<NoFingerprintDomain, CosmeticFilter> *hashMap,
+                                 const char *url, CosmeticFilterHashSet &filterHashSet) {
+  int urlLen = static_cast<int>(strlen(url));
+  if (!isBlockableProtocol(url, urlLen)) {
+    return false;
+  }
   int hostLen;
   const char *host = getUrlHost(url, &hostLen);
   if (hostLen <= 0) return false;
@@ -141,34 +145,40 @@ bool getElementHidingFilterFrom(HashMap<NoFingerprintDomain, CosmeticFilter> *ha
     p--;
   }
   p--;
-  // start matching parent domain
+  // start matching parent domains
   while (p > host) {
     if (*p == '.') {
       start = p + 1;
       const size_t domainLen = hostLen - (start - host);
       // match parent domain
-      if (hashMap->get(NoFingerprintDomain(start, domainLen), filter)) {
-        return true;
+      CosmeticFilter f;
+      if (hashMap->get(NoFingerprintDomain(start, domainLen), f)) {
+        filterHashSet.Add(f);
       }
     }
     p--;
   }
   // match the host
-  return hashMap->get(NoFingerprintDomain(host, hostLen), filter);
+  CosmeticFilter f;
+  if (hashMap->get(NoFingerprintDomain(host, hostLen), f)) {
+    filterHashSet.Add(f);
+  }
+  return filterHashSet.GetSize();
 }
 
 char *AdBlockClient::getElementHidingSelectors(const char *contextUrl) const {
-  CosmeticFilter filter;
-  if (getElementHidingFilterFrom(elementHidingSelectorHashMap, contextUrl, filter)) {
-    return filter.data;
+  CosmeticFilterHashSet filterHashSet(5);
+  if (getElementHidingFiltersFrom(elementHidingSelectorHashMap, contextUrl, filterHashSet)) {
+    return filterHashSet.toStylesheet(nullptr);
   }
   return nullptr;
 }
 
 char *AdBlockClient::getElementHidingExceptionSelectors(const char *contextUrl) const {
-  CosmeticFilter filter;
-  if (getElementHidingFilterFrom(elementHidingExceptionSelectorHashMap, contextUrl, filter)) {
-    return filter.data;
+  CosmeticFilterHashSet filterHashSet(5);
+  if (getElementHidingFiltersFrom(elementHidingExceptionSelectorHashMap, contextUrl,
+                                  filterHashSet)) {
+    return filterHashSet.toStylesheet(nullptr);
   }
   return nullptr;
 }
@@ -1484,8 +1494,8 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
   noFingerprintAntiDomainOnlyExceptionFilters =
           newNoFingerprintAntiDomainOnlyExceptionFilters;
 
-  CosmeticFilterHashMap elementHidingFilterHashMap;
-  CosmeticFilterHashMap elementHidingExceptionFilterHashMap;
+  CosmeticFilterHashMap elementHidingFilterHashMap(6000);
+  CosmeticFilterHashMap elementHidingExceptionFilterHashMap(2000);
 
   for (auto f : filterList) {
     switch (f.filterType & FTListTypesMask) {
@@ -1553,10 +1563,13 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
   }
 
   if (!elementHidingSelectorHashMap) {
-    elementHidingSelectorHashMap = new HashMap<NoFingerprintDomain, CosmeticFilter>(2000);
+    elementHidingSelectorHashMap =
+            new HashMap<NoFingerprintDomain, CosmeticFilter>(elementHidingFilterHashMap.GetSize());
   }
   if (!elementHidingExceptionSelectorHashMap) {
-    elementHidingExceptionSelectorHashMap = new HashMap<NoFingerprintDomain, CosmeticFilter>(2000);
+    elementHidingExceptionSelectorHashMap =
+            new HashMap<NoFingerprintDomain, CosmeticFilter>(
+                    elementHidingExceptionFilterHashMap.GetSize());
   }
   elementHidingFilterHashMap.toElementHidingSelectorMap(elementHidingSelectorHashMap);
   elementHidingExceptionFilterHashMap

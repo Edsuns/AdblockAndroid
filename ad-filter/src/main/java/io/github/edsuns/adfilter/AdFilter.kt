@@ -14,13 +14,13 @@ import java.io.File
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
-class AdFilter internal constructor(context: Context) {
+class AdFilter internal constructor(appContext: Context) {
 
     private val detector: Detector = Detector()
     internal val binaryDataStore: BinaryDataStore =
-        BinaryDataStore(File(context.filesDir, FILE_STORE_DIR))
+        BinaryDataStore(File(appContext.filesDir, FILE_STORE_DIR))
     private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
-    val viewModel = FilterViewModel(context, filterDataLoader)
+    val viewModel = FilterViewModel(appContext, filterDataLoader)
 
     val hasInstallation: Boolean
         get() = viewModel.sharedPreferences.hasInstallation
@@ -137,7 +137,8 @@ class AdFilter internal constructor(context: Context) {
 
         fun get(context: Context): AdFilter {
             return instance ?: synchronized(this) {
-                instance = instance ?: AdFilter(context)
+                // keep application context rather than any other context to avoid memory leak
+                instance = instance ?: AdFilter(context.applicationContext)
                 instance!!
             }
         }

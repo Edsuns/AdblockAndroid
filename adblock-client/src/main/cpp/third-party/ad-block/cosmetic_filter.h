@@ -70,8 +70,8 @@ public:
 
 class CosmeticFilterHashSet : public HashSet<CosmeticFilter> {
 public:
-    CosmeticFilterHashSet(uint32_t bucket_count = 1000) : HashSet<CosmeticFilter>(bucket_count,
-                                                                                  false) {}
+    CosmeticFilterHashSet(uint32_t bucket_count = 1000)
+            : HashSet<CosmeticFilter>(bucket_count, false) {}
 
     char *toStylesheet(uint32_t *len) {
         *len = fillStylesheetBuffer(nullptr);
@@ -102,20 +102,23 @@ private:
                 hashItem = hashItem->next_;
             }
         }
+        if (len > 0)
+            len++;// end of the string
         return len;
     }
 };
 
 class CosmeticFilterHashMap : public HashMap<NoFingerprintDomain, CosmeticFilterHashSet> {
 public:
-    CosmeticFilterHashMap() : HashMap<NoFingerprintDomain, CosmeticFilterHashSet>(2000) {}
+    CosmeticFilterHashMap(uint32_t bucket_count)
+            : HashMap<NoFingerprintDomain, CosmeticFilterHashSet>(bucket_count) {}
 
     void putCosmeticFilter(const NoFingerprintDomain &key, const CosmeticFilter &value) {
         CosmeticFilterHashSet existing_hash_set;
         if (get(key, existing_hash_set)) {
             existing_hash_set.Add(value);
         } else {
-            CosmeticFilterHashSet *created_hash_set = new CosmeticFilterHashSet(50);
+            CosmeticFilterHashSet *created_hash_set = new CosmeticFilterHashSet(30);
             created_hash_set->Add(value);
             put(key, created_hash_set);
         }
