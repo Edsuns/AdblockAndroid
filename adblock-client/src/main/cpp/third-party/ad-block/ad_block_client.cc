@@ -1712,8 +1712,8 @@ char *AdBlockClient::serialize(int *totalSize,
   uint32_t elementHidingHashMapSize = 0;
   char *elementHidingHashMapBuffer = nullptr;
   if (elementHidingSelectorHashMap) {
-    elementHidingHashMapBuffer = elementHidingSelectorHashMap->SerializeOut(
-            &elementHidingHashMapSize);
+    elementHidingHashMapBuffer =
+            elementHidingSelectorHashMap->SerializeOut(&elementHidingHashMapSize);
   }
 
   uint32_t elementHidingExceptionHashMapSize = 0;
@@ -1773,6 +1773,8 @@ char *AdBlockClient::serialize(int *totalSize,
   *totalSize += noFingerprintAntiDomainHashSetSize;
   *totalSize += noFingerprintDomainExceptionHashSetSize;
   *totalSize += noFingerprintAntiDomainExceptionHashSetSize;
+  *totalSize += elementHidingHashMapSize;
+  *totalSize += elementHidingExceptionHashMapSize;
 
   // Allocate it
   int pos = 0;

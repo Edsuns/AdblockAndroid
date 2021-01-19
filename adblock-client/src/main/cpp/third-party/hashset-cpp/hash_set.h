@@ -280,10 +280,13 @@ public:
 
         uint32_t multi_set = 0;
         sscanf(buffer + pos, "%x,%x", &bucket_count_, &multi_set);
+        pos += static_cast<uint32_t>(strlen(buffer + pos)) + 1;
         multi_set_ = multi_set != 0;
+        if (bucket_count_ == 0) {
+            return pos;// at this moment, pos == buffer_size
+        }
         buckets_ = new HashItem<T> *[bucket_count_];
         memset(buckets_, 0, sizeof(HashItem<T> *) * bucket_count_);
-        pos += static_cast<uint32_t>(strlen(buffer + pos)) + 1;
         if (pos >= buffer_size) {
             return 0;
         }

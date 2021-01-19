@@ -45,15 +45,49 @@ public:
     }
 
     uint32_t Serialize(char *buffer) {
-        return _key->Serialize(buffer) + _value->Serialize(buffer);
+        int totalSize = 0;
+        char printBuffer[128];
+        int keySize = _key->Serialize(nullptr);
+        int valueSize = _value->Serialize(nullptr);
+
+        int printLen = 1 + snprintf(printBuffer, sizeof(printBuffer), "%x,%x", keySize, valueSize);
+        if (buffer) {
+            memcpy(buffer, printBuffer, printLen);
+        }
+        totalSize += printLen;
+
+        if (buffer) {
+            _key->Serialize(buffer + totalSize);
+        }
+        totalSize += keySize;
+
+        if (buffer) {
+            _value->Serialize(buffer + totalSize);
+        }
+        totalSize += valueSize;
+
+        return totalSize;
     }
 
     uint32_t Deserialize(char *buffer, uint32_t buffer_size) {
+        int pos = 0;
+        int keySize = 0;
+        int valueSize = 0;
+        sscanf(buffer, "%x,%x", &keySize, &valueSize);
+        pos += static_cast<uint32_t>(strlen(buffer)) + 1;
+
         delete _key;
         delete _value;
         _key = new K();
         _value = new V();
-        return _key->Deserialize(buffer, buffer_size) + _value->Deserialize(buffer, buffer_size);
+
+        _key->Deserialize(buffer + pos, buffer_size);
+        pos += keySize;
+
+        _value->Deserialize(buffer + pos, buffer_size);
+        pos += valueSize;
+
+        return pos;
     }
 
 private:

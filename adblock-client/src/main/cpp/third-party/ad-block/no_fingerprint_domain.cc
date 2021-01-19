@@ -62,7 +62,7 @@ uint32_t NoFingerprintDomain::Serialize(char *buffer) {
   uint32_t totalSize = 0;
   char sz[64];
   uint32_t dataLenSize = 1 + snprintf(sz, sizeof(sz),
-                                      "%xx", dataLen);
+                                      "%x", dataLen);
   if (buffer) {
     memcpy(buffer + totalSize, sz, dataLenSize);
   }
