@@ -114,9 +114,8 @@ public:
             : HashMap<NoFingerprintDomain, CosmeticFilterHashSet>(bucket_count) {}
 
     void putCosmeticFilter(const NoFingerprintDomain &key, const CosmeticFilter &value) {
-        CosmeticFilterHashSet existing_hash_set;
-        if (get(key, existing_hash_set)) {
-            existing_hash_set.Add(value);
+        if (CosmeticFilterHashSet *existing_hash_set = get(key)) {
+            existing_hash_set->Add(value);
         } else {
             CosmeticFilterHashSet *created_hash_set = new CosmeticFilterHashSet(30);
             created_hash_set->Add(value);

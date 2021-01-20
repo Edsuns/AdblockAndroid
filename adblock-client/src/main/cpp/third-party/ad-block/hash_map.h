@@ -33,11 +33,11 @@ public:
     }
 
     bool operator==(const MapNode<K, V> &keyValue) const {
-        return _key == keyValue._key;
+        return *_key == *keyValue._key;
     }
 
     bool operator!=(const MapNode<K, V> &keyValue) const {
-        return _key != keyValue._key;
+        return !(*_key == *keyValue._key);
     }
 
     void Update(const MapNode<K, V> &keyValue) {
@@ -101,13 +101,13 @@ class HashMap : public HashSet<MapNode<K, V>> {
 public:
     HashMap(uint32_t bucket_count) : HashSet<MapNode<K, V>>(bucket_count, false) {}
 
-    bool get(const K &key, V &value) {
+    // some types can't be converted to a address, so here returns the pointer directly
+    V *get(const K &key) {
         MapNode<K, V> *node = this->Find(MapNode<K, V>(key));
         if (node) {
-            value = *node->getValue();
-            return true;
+            return node->getValue();
         }
-        return false;
+        return nullptr;
     }
 
     bool put(const K &key, V *value) {

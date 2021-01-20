@@ -151,17 +151,15 @@ bool getElementHidingFiltersFrom(HashMap<NoFingerprintDomain, CosmeticFilter> *h
       start = p + 1;
       const size_t domainLen = hostLen - (start - host);
       // match parent domain
-      CosmeticFilter f;
-      if (hashMap->get(NoFingerprintDomain(start, domainLen), f)) {
-        filterHashSet.Add(f);
+      if (CosmeticFilter *f = hashMap->get(NoFingerprintDomain(start, domainLen))) {
+        filterHashSet.Add(*f);
       }
     }
     p--;
   }
   // match the host
-  CosmeticFilter f;
-  if (hashMap->get(NoFingerprintDomain(host, hostLen), f)) {
-    filterHashSet.Add(f);
+  if (CosmeticFilter *f = hashMap->get(NoFingerprintDomain(host, hostLen))) {
+    filterHashSet.Add(*f);
   }
   return filterHashSet.GetSize();
 }
