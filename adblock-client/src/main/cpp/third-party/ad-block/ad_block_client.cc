@@ -187,14 +187,21 @@ inline bool isFingerprintChar(char c) {
   return c != '|' && c != '*' && c != '^';
 }
 
-bool isBadFingerprint(const char *fingerprint, const char *fingerprintEnd) {
+static HashSet<NoFingerprintDomain> createBadFingerprintsHashSet() {
+  HashSet<NoFingerprintDomain> hashSet(15000, false);
   for (auto &badFingerprint : badFingerprints) {
-    if (!strncmp(badFingerprint, fingerprint,
-                 fingerprintEnd - fingerprint)) {
-      return true;
-    }
+    hashSet.Add(NoFingerprintDomain(badFingerprint, AdBlockClient::kFingerprintSize));
   }
-  return false;
+  return hashSet;
+}
+
+// NoFingerprintDomain is used to keep BadFingerprint
+// because it supports for borrowed data and has implemented hash function.
+static HashSet<NoFingerprintDomain> staticBadFingerprintsHashSet = createBadFingerprintsHashSet();
+
+bool isBadFingerprint(const char *fingerprint, const char *fingerprintEnd) {
+  auto len = static_cast<uint32_t>(fingerprintEnd - fingerprint);
+  return staticBadFingerprintsHashSet.Exists(NoFingerprintDomain(fingerprint, len));
 }
 
 bool hasBadSubstring(const char *fingerprint, const char *fingerprintEnd) {
