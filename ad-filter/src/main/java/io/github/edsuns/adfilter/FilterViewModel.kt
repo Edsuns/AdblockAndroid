@@ -24,11 +24,11 @@ class FilterViewModel internal constructor(
 
     val isEnabled: MutableLiveData<Boolean> by lazy { MutableLiveData(sharedPreferences.isEnabled) }
 
-    internal val workManager: WorkManager = WorkManager.getInstance(context)
+    private val workManager: WorkManager = WorkManager.getInstance(context)
 
     val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_FILTER_WORK)
 
-    internal val filterMap: MutableLiveData<LinkedHashMap<String, Filter>> by lazy {
+    private val filterMap: MutableLiveData<LinkedHashMap<String, Filter>> by lazy {
         MutableLiveData(Json.decodeFromString(sharedPreferences.filterMap))
     }
 
@@ -159,13 +159,13 @@ class FilterViewModel internal constructor(
         workManager.cancelUniqueWork(id)
     }
 
-    private fun flushFilter() {
+    fun flushFilter() {
         // refresh
         filterMap.postValue(filterMap.value)
         saveFilterMap()
     }
 
-    internal fun saveFilterMap() {
+    private fun saveFilterMap() {
         sharedPreferences.filterMap = Json.encodeToString(filterMap.value)
         Timber.v("Save sharedPreferences.filterMap")
     }

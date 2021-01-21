@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <mutex>
 #include "./base.h"
 #include "./context_domain.h"
 
@@ -230,6 +231,8 @@ protected:
 
     // Parses a single option
     void parseOption(const char *input, int len);
+
+    std::mutex lock;
 };
 
 bool isThirdPartyHost(const char *baseContextHost,

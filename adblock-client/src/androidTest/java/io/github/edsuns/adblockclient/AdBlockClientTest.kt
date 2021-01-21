@@ -16,8 +16,7 @@
 
 package io.github.edsuns.adblockclient
 
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 
 class AdBlockClientTest {
@@ -79,6 +78,35 @@ class AdBlockClientTest {
         val testee = AdBlockClient(id)
         testee.loadProcessedData(processedData)
         assertFalse(testee.matches(trackerUrl, trackerUrl, resourceType))
+    }
+
+    @Test
+    fun whenGetSelectorsForNonTrackerUrlThenOnlyObtainGenericSelectors() {
+        val original = AdBlockClient(id)
+        original.loadBasicData(data())
+        val processedData = original.getProcessedData()
+        val testee = AdBlockClient(id)
+        testee.loadProcessedData(processedData)
+        val selectors =
+            testee.getElementHidingSelectors(nonTrackerUrl) ?: throw NullPointerException()
+        assertEquals(2, selectors.split(", ").size)
+        assertTrue(selectors.contains("#videoad"))
+        assertTrue(selectors.contains("#videoads"))
+    }
+
+    @Test
+    fun whenGetSelectorsWithExceptionsThenItDoNotContainsExceptions() {
+        val original = AdBlockClient(id)
+        original.loadBasicData(data())
+        val processedData = original.getProcessedData()
+        val testee = AdBlockClient(id)
+        testee.loadProcessedData(processedData)
+        val selectors =
+            testee.getElementHidingSelectors(documentUrl) ?: throw NullPointerException()
+        assertEquals(2, selectors.split(", ").size)
+        assertTrue(selectors.contains("#videoad"))
+        assertTrue(selectors.contains(".video_ads"))
+        assertFalse(selectors.contains("#videoads"))
     }
 
     private fun data(): ByteArray =

@@ -80,8 +80,8 @@ public:
 
     char *toStylesheet(uint32_t *len) {
         *len = fillStylesheetBuffer(nullptr);
-        char *buffer = new char[*len];
-        memset(buffer, 0, *len);
+        char *buffer = new char[*len + 1];
+        memset(buffer, 0, *len + 1);
         fillStylesheetBuffer(buffer);
         return buffer;
     }
@@ -107,8 +107,6 @@ private:
                 hashItem = hashItem->next_;
             }
         }
-        if (len > 0)
-            len++;// end of the string
         return len;
     }
 };

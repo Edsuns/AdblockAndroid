@@ -29,8 +29,8 @@ NoFingerprintDomain::NoFingerprintDomain(const NoFingerprintDomain &other) {
     data = other.data;
   } else {
     if (other.data) {
-      data = new char[dataLen];
-      memcpy(data, other.data, dataLen);
+      data = new char[dataLen + 1];
+      memcpy(data, other.data, dataLen + 1);
     } else {
       data = nullptr;
     }

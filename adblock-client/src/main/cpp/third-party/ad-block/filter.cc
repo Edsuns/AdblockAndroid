@@ -109,8 +109,8 @@ Filter::Filter(const Filter &other) {
         ruleDefinition = other.ruleDefinition;
     } else {
         if (other.data) {
-            data = new char[dataLen];
-            memcpy(data, other.data, dataLen);
+            data = new char[dataLen + 1];
+            memcpy(data, other.data, dataLen + 1);
         } else {
             data = nullptr;
         }
@@ -122,8 +122,8 @@ Filter::Filter(const Filter &other) {
             domainList = nullptr;
         }
         if (other.tagLen > 0) {
-            tag = new char[other.tagLen];
-            memcpy(tag, other.tag, other.tagLen);
+            tag = new char[other.tagLen + 1];
+            memcpy(tag, other.tag, other.tagLen + 1);
             tagLen = other.tagLen;
         } else {
             tag = nullptr;
@@ -654,6 +654,10 @@ bool Filter::matches(const char *input, int inputLen,
 
 void Filter::parseDomains(const char *domainList) {
     if (!domainList || domainsParsed) {
+        return;
+    }
+    std::lock_guard<std::mutex> synchronize(lock);
+    if (domainsParsed) {
         return;
     }
     int startOffset = 0;

@@ -28,7 +28,6 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_releaseClient(JNIEnv *env,
     delete[] processedData;
 }
 
-
 extern "C"
 JNIEXPORT jlong
 JNICALL
@@ -64,7 +63,6 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_loadProcessedData(JNIEnv *env,
     // Instead we send back a ptr ref so we can delete it later in the release method
     return (long) dataChars;
 }
-
 
 extern "C"
 JNIEXPORT jbyteArray
@@ -126,4 +124,21 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_matches(JNIEnv *env,
     env->ReleaseStringUTFChars(firstPartyDomain, firstPartyDomainChars);
 
     return matches;
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_io_github_edsuns_adblockclient_AdBlockClient_getElementHidingSelectors(JNIEnv *env,
+                                                                            jobject /* this */,
+                                                                            jlong clientPointer,
+                                                                            jstring url) {
+    jboolean isUrlCopy;
+    const char *urlChars = env->GetStringUTFChars(url, &isUrlCopy);
+
+    auto *client = (AdBlockClient *) clientPointer;
+    const char *selectors = client->getElementHidingSelectors(urlChars);
+
+    env->ReleaseStringUTFChars(url, urlChars);
+
+    return env->NewStringUTF(selectors);
 }

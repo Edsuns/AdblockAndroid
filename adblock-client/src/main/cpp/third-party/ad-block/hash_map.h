@@ -122,7 +122,7 @@ public:
         }
 
         while (true) {
-            if (*hash_item->hash_item_storage_ == MapNode<K, V>(key)) {
+            if (*hash_item->hash_item_storage_->getKey() == key) {
                 // update the node
                 delete hash_item->hash_item_storage_;
                 hash_item->hash_item_storage_ = new MapNode<K, V>(key, value);

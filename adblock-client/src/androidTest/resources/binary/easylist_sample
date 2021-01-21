@@ -14,4 +14,9 @@
 ! 
 ! -----------------------General advert blocking filters-----------------------!
 ! *** easylist:easylist/easylist_general_block.txt ***
+###videoad
+###videoads
+example.com##.video_ads
+example.com#@##videoads
+sub.example.com#@##videoad
 ||imasdk.googleapis.com^$third-party

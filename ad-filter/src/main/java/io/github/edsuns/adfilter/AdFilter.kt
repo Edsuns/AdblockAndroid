@@ -41,7 +41,6 @@ class AdFilter internal constructor(appContext: Context) {
         viewModel.workInfo.observeForever { list -> processWorkInfo(list) }
     }
 
-    @Synchronized
     private fun processWorkInfo(workInfoList: List<WorkInfo>) {
         workInfoList.forEach { workInfo ->
             val filterId = viewModel.downloadFilterIdMap[workInfo.id.toString()]
@@ -56,32 +55,29 @@ class AdFilter internal constructor(appContext: Context) {
         val isInstallation = workInfo.tags.contains(TAG_INSTALLATION)
         var downloadState = filter.downloadState
         if (isInstallation) {
-            // fix sometimes there are bad states cause by short interval between updates
-            if (downloadState != DownloadState.SUCCESS) {
-                downloadState =
-                    when (state) {
-                        WorkInfo.State.RUNNING -> DownloadState.INSTALLING
-                        WorkInfo.State.SUCCEEDED -> {
-                            val alreadyUpToDate =
-                                workInfo.outputData.getBoolean(KEY_ALREADY_UP_TO_DATE, false)
-                            if (!alreadyUpToDate) {
-                                filter.filtersCount =
-                                    workInfo.outputData.getInt(KEY_FILTERS_COUNT, 0)
-                                workInfo.outputData.getString(KEY_RAW_CHECKSUM)?.let {
-                                    filter.checksum = it
-                                }
-                                if (filter.isEnabled || !filter.hasDownloaded()) {
-                                    viewModel.enableFilter(filter)
-                                }
+            downloadState =
+                when (state) {
+                    WorkInfo.State.RUNNING -> DownloadState.INSTALLING
+                    WorkInfo.State.SUCCEEDED -> {
+                        val alreadyUpToDate =
+                            workInfo.outputData.getBoolean(KEY_ALREADY_UP_TO_DATE, false)
+                        if (!alreadyUpToDate) {
+                            filter.filtersCount =
+                                workInfo.outputData.getInt(KEY_FILTERS_COUNT, 0)
+                            workInfo.outputData.getString(KEY_RAW_CHECKSUM)?.let {
+                                filter.checksum = it
                             }
-                            filter.updateTime = System.currentTimeMillis()
-                            DownloadState.SUCCESS
+                            if (filter.isEnabled || !filter.hasDownloaded()) {
+                                viewModel.enableFilter(filter)
+                            }
                         }
-                        WorkInfo.State.FAILED -> DownloadState.FAILED
-                        WorkInfo.State.CANCELLED -> DownloadState.CANCELLED
-                        else -> downloadState
+                        filter.updateTime = System.currentTimeMillis()
+                        DownloadState.SUCCESS
                     }
-            }
+                    WorkInfo.State.FAILED -> DownloadState.FAILED
+                    WorkInfo.State.CANCELLED -> DownloadState.CANCELLED
+                    else -> downloadState
+                }
         } else {
             downloadState = when (state) {
                 WorkInfo.State.ENQUEUED -> DownloadState.ENQUEUED
@@ -94,14 +90,10 @@ class AdFilter internal constructor(appContext: Context) {
             viewModel.downloadFilterIdMap.remove(workInfo.id.toString())
             // save shared preferences
             viewModel.sharedPreferences.downloadFilterIdMap = viewModel.downloadFilterIdMap
-            viewModel.workManager.pruneWork()
         }
         if (downloadState != filter.downloadState) {
             filter.downloadState = downloadState
-            // don't use postValue() here
-            // ensures the LiveData is updating by only one thread
-            viewModel.filterMap.value = viewModel.filterMap.value
-            viewModel.saveFilterMap()
+            viewModel.flushFilter()
         }
     }
 

@@ -47,9 +47,11 @@ public:
                              Filter **matchingFilter,
                              Filter **matchingExceptionFilter);
 
-    char *getElementHidingSelectors(const char *contextUrl) const;
+    char *getElementHidingSelectors(const char *host, int hostLen) const;
 
-    char *getElementHidingExceptionSelectors(const char *contextUrl) const;
+    char *getElementHidingExceptionSelectors(const char *host, int hostLen) const;
+
+    const char *getElementHidingSelectors(const char *contextUrl);
 
     void addTag(const std::string &tag);
 
@@ -110,6 +112,7 @@ public:
     HashSet<NoFingerprintDomain> *noFingerprintDomainExceptionHashSet;
     HashSet<NoFingerprintDomain> *noFingerprintAntiDomainExceptionHashSet;
 
+    CosmeticFilter *genericElementHidingSelectors;
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingSelectorHashMap;
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingExceptionSelectorHashMap;
 
@@ -150,6 +153,7 @@ protected:
     template<class K, class V>
     bool initHashMap(HashMap<K, V> **, char *buffer, int len);
 
+    HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingSelectorsCache;
     char *deserializedBuffer;
     std::set<std::string> tags;
 };

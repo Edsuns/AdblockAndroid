@@ -61,8 +61,10 @@ class AdBlockClient(override val id: String) : Client {
 
     private external fun getFiltersCount(clientPointer: Long): Int
 
-    override fun matches(url: String, documentUrl: String, resourceType: ResourceType): Boolean =
-        matches(nativeClientPointer, url, documentUrl.baseHost() ?: "", resourceType.filterOption)
+    override fun matches(url: String, documentUrl: String, resourceType: ResourceType): Boolean {
+        val firstPartyDomain = documentUrl.baseHost() ?: return false
+        return matches(nativeClientPointer, url, firstPartyDomain, resourceType.filterOption)
+    }
 
     private external fun matches(
         clientPointer: Long,
@@ -70,6 +72,11 @@ class AdBlockClient(override val id: String) : Client {
         firstPartyDomain: String,
         filterOption: Int
     ): Boolean
+
+    fun getElementHidingSelectors(url: String): String? =
+        getElementHidingSelectors(nativeClientPointer, url)
+
+    private external fun getElementHidingSelectors(clientPointer: Long, url: String): String?
 
     @Suppress("unused", "protectedInFinal")
     protected fun finalize() {
