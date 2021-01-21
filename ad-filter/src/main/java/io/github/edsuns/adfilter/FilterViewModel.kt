@@ -28,7 +28,7 @@ class FilterViewModel internal constructor(
 
     val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_FILTER_WORK)
 
-    private val filterMap: MutableLiveData<LinkedHashMap<String, Filter>> by lazy {
+    internal val filterMap: MutableLiveData<LinkedHashMap<String, Filter>> by lazy {
         MutableLiveData(Json.decodeFromString(sharedPreferences.filterMap))
     }
 
@@ -45,6 +45,13 @@ class FilterViewModel internal constructor(
                 if (list == null || list.isEmpty()) {
                     it.downloadState = DownloadState.FAILED
                     flushFilter()
+                } else {
+                    if (list[0].state == WorkInfo.State.ENQUEUED
+                        && it.downloadState != DownloadState.ENQUEUED
+                    ) {
+                        it.downloadState = DownloadState.ENQUEUED
+                        flushFilter()
+                    }
                 }
             }
         }
@@ -141,6 +148,8 @@ class FilterViewModel internal constructor(
             downloadFilterIdMap[download.id.toString()] = it.id
             downloadFilterIdMap[install.id.toString()] = it.id
             sharedPreferences.downloadFilterIdMap = downloadFilterIdMap
+            // mark the beginning of the download
+            it.downloadState = DownloadState.NONE
             // start the work
             continuation.enqueue()
         }
@@ -150,13 +159,13 @@ class FilterViewModel internal constructor(
         workManager.cancelUniqueWork(id)
     }
 
-    internal fun flushFilter() {
+    private fun flushFilter() {
         // refresh
         filterMap.postValue(filterMap.value)
         saveFilterMap()
     }
 
-    private fun saveFilterMap() {
+    internal fun saveFilterMap() {
         sharedPreferences.filterMap = Json.encodeToString(filterMap.value)
         Timber.v("Save sharedPreferences.filterMap")
     }

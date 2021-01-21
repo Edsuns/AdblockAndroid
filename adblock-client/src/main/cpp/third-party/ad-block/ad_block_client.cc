@@ -167,7 +167,7 @@ bool getElementHidingFiltersFrom(HashMap<NoFingerprintDomain, CosmeticFilter> *h
 char *AdBlockClient::getElementHidingSelectors(const char *contextUrl) const {
   CosmeticFilterHashSet filterHashSet(5);
   if (getElementHidingFiltersFrom(elementHidingSelectorHashMap, contextUrl, filterHashSet)) {
-    return filterHashSet.toStylesheet(nullptr);
+    return filterHashSet.toStylesheet();
   }
   return nullptr;
 }
@@ -176,7 +176,7 @@ char *AdBlockClient::getElementHidingExceptionSelectors(const char *contextUrl) 
   CosmeticFilterHashSet filterHashSet(5);
   if (getElementHidingFiltersFrom(elementHidingExceptionSelectorHashMap, contextUrl,
                                   filterHashSet)) {
-    return filterHashSet.toStylesheet(nullptr);
+    return filterHashSet.toStylesheet();
   }
   return nullptr;
 }

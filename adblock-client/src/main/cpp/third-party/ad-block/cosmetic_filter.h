@@ -73,6 +73,11 @@ public:
     CosmeticFilterHashSet(uint32_t bucket_count = 1000)
             : HashSet<CosmeticFilter>(bucket_count, false) {}
 
+    char *toStylesheet() {
+        uint32_t len;
+        return toStylesheet(&len);
+    }
+
     char *toStylesheet(uint32_t *len) {
         *len = fillStylesheetBuffer(nullptr);
         char *buffer = new char[*len];
@@ -128,8 +133,7 @@ public:
             HashItem<MapNode<NoFingerprintDomain, CosmeticFilterHashSet>> *hashItem = buckets_[bucketIndex];
             while (hashItem) {
                 MapNode<NoFingerprintDomain, CosmeticFilterHashSet> *node = hashItem->hash_item_storage_;
-                uint32_t len;
-                char *selector = node->getValue()->toStylesheet(&len);
+                char *selector = node->getValue()->toStylesheet();
                 selectorMap->put(*node->getKey(), new CosmeticFilter(selector));
                 delete[] selector;
                 hashItem = hashItem->next_;
