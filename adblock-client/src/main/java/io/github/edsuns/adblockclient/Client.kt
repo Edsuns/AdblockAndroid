@@ -22,4 +22,6 @@ interface Client {
 
     fun matches(url: String, documentUrl: String, resourceType: ResourceType): Boolean
 
+    fun getElementHidingSelectors(url: String): String?
+
 }

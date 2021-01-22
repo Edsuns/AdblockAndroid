@@ -73,7 +73,7 @@ class AdBlockClient(override val id: String) : Client {
         filterOption: Int
     ): Boolean
 
-    fun getElementHidingSelectors(url: String): String? =
+    override fun getElementHidingSelectors(url: String): String? =
         getElementHidingSelectors(nativeClientPointer, url)
 
     private external fun getElementHidingSelectors(clientPointer: Long, url: String): String?

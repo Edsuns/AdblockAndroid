@@ -13,6 +13,7 @@ interface AbstractDetector {
     fun removeClient(id: String)
     fun clearAllClient()
     fun shouldBlock(url: String, documentUrl: String, resourceType: ResourceType): Boolean
+    fun getElementHidingSelectors(documentUrl: String): String
 }
 
 internal class Detector : AbstractDetector {
@@ -43,5 +44,19 @@ internal class Detector : AbstractDetector {
         return clients.any {
             it.matches(url, documentUrl, resourceType)
         }
+    }
+
+    override fun getElementHidingSelectors(documentUrl: String): String {
+        val builder = StringBuilder()
+        for ((index, client) in clients.withIndex()) {
+            val selector = client.getElementHidingSelectors(documentUrl) ?: continue
+            if (selector.isNotBlank()) {
+                if (index > 0) {
+                    builder.append(", ")
+                }
+                builder.append(selector)
+            }
+        }
+        return builder.toString()
     }
 }
