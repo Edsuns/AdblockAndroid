@@ -159,6 +159,29 @@ bool getElementHidingFiltersFrom(HashMap<NoFingerprintDomain, CosmeticFilter> *h
   return filterHashSet.GetSize();
 }
 
+static const char validSelectorChars[18] = "#.:-*=~+>/'\"|()[]";
+
+// only support English characters temporarily
+bool isValidSelector(const char *start, const char *end) {
+  const char *p = start, *q;
+  for (; p != end; p++) {
+    if ((*p >= '0' && *p <= '9') || (*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z')) {
+      continue;
+    }
+    q = validSelectorChars;
+    while (*q != '\0') {
+      if (*p == *q) {
+        break;
+      }
+      q++;
+    }
+    if (*q == '\0') {
+      return false;
+    }
+  }
+  return true;
+}
+
 char *removeException(char *src, uint32_t srcLen, char *exception) {
   char buffer[srcLen];
   memset(buffer, 0, srcLen);
@@ -191,7 +214,7 @@ char *removeException(char *src, uint32_t srcLen, char *exception) {
       eStart = eEnd;
       eLen = 0;
     }
-    if (!contains) {
+    if (!contains && isValidSelector(sStart, sEnd)) {
       if (len > 0) {
         memcpy(buffer + len, ", ", 2);
         len += 2;
