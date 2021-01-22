@@ -112,6 +112,7 @@ public:
     HashSet<NoFingerprintDomain> *noFingerprintDomainExceptionHashSet;
     HashSet<NoFingerprintDomain> *noFingerprintAntiDomainExceptionHashSet;
 
+    bool isGenericElementHidingEnabled;
     CosmeticFilter *genericElementHidingSelectors;
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingSelectorHashMap;
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingExceptionSelectorHashMap;

@@ -268,11 +268,16 @@ const char *AdBlockClient::getElementHidingSelectors(const char *contextUrl) {
   }
   char *selectors = getElementHidingSelectors(host, hostLen);
   if (selectors) {
-    buffer.append(selectors).append(", ");
+    buffer.append(selectors);
   }
-  auto genericLen = static_cast<uint32_t>(strlen(genericElementHidingSelectors->data));
-  if (genericLen > 0) {
-    buffer.append(genericElementHidingSelectors->data);
+  if (isGenericElementHidingEnabled) {
+    if (buffer.length() > 0) {
+      buffer.append(", ");
+    }
+    auto genericLen = static_cast<uint32_t>(strlen(genericElementHidingSelectors->data));
+    if (genericLen > 0) {
+      buffer.append(genericElementHidingSelectors->data);
+    }
   }
   uint32_t len = buffer.length();
   char *combine = const_cast<char *>(buffer.c_str());
@@ -714,7 +719,8 @@ AdBlockClient::AdBlockClient() : filters(nullptr),
                                  elementHidingSelectorHashMap(nullptr),
                                  elementHidingExceptionSelectorHashMap(nullptr),
                                  genericElementHidingSelectors(nullptr),
-                                 elementHidingSelectorsCache(nullptr) {
+                                 elementHidingSelectorsCache(nullptr),
+                                 isGenericElementHidingEnabled(false) {
 }
 
 AdBlockClient::~AdBlockClient() {
