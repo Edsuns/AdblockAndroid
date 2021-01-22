@@ -67,6 +67,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         // Zooms out the content to fit on screen by width. For example, showing images.
         settings.loadWithOverviewMode = true
         settings.useWideViewPort = true
+        AdFilter.get().setupWebView(webView)
 
         progressAnimator = SmoothProgressAnimator(binding.loadProgress)
 

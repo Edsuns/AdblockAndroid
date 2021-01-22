@@ -20,6 +20,7 @@ class AdFilter internal constructor(appContext: Context) {
     internal val binaryDataStore: BinaryDataStore =
         BinaryDataStore(File(appContext.filesDir, FILE_STORE_DIR))
     private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
+    private val elementHiding: ElementHiding = ElementHiding(detector)
     val viewModel = FilterViewModel(appContext, filterDataLoader)
 
     val hasInstallation: Boolean
@@ -124,6 +125,16 @@ class AdFilter internal constructor(appContext: Context) {
                 WebResourceResponse(null, null, null)
             else
                 return@runBlocking null
+        }
+    }
+
+    fun setupWebView(webView: WebView) {
+        webView.addJavascriptInterface(elementHiding, ElementHiding.JS_BRIDGE_NAME)
+    }
+
+    fun performElementHiding(webView: WebView?, newProgress: Int) {
+        if (viewModel.isEnabled.value == true) {
+            elementHiding.perform(webView, newProgress)
         }
     }
 
