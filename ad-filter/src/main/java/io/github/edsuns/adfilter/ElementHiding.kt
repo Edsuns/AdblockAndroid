@@ -26,24 +26,14 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
         js
     }
 
-    private var progress: Int = 0
-
-    fun perform(webView: WebView?, newProgress: Int) {
-        if (newProgress > progress || newProgress == 10) {
-            webView?.let {
-                it.evaluateJavascript(eleHidingJS, null)
-                progress = 100
-                Timber.v("Evaluated element hiding Javascript when progress $newProgress")
-            }
-        }
-        if (newProgress < 30) {
-            progress = newProgress
-        }
+    fun perform(webView: WebView?, url: String?) {
+        webView?.evaluateJavascript(eleHidingJS, null)
+        Timber.v("Evaluated element hiding Javascript for $url")
     }
 
     private fun randomAlphanumericString(): String {
         val charPool: List<Char> = ('a'..'z') + ('A'..'Z')
-        val outputStrLength = (8..36).shuffled().first()
+        val outputStrLength = (10..36).shuffled().first()
 
         return (1..outputStrLength)
             .map { kotlin.random.Random.nextInt(0, charPool.size) }

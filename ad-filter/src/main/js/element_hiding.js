@@ -11,8 +11,8 @@ var hideElements = function () {
     // hide by injecting CSS stylesheet
     {{DEBUG}} console.log('starting injecting eh css rules for ' + document.location.href);
     var styleSheet = {{BRIDGE}}.getEleHidingStyleSheet(document.location.href);
-    {{DEBUG}} console.log('stylesheet length: ' + styleSheet.length);
     if (styleSheet) {
+        {{DEBUG}} console.log('stylesheet length: ' + styleSheet.length);
         var head = document.getElementsByTagName('head')[0];
         var style = document.createElement('style');
         head.appendChild(style);

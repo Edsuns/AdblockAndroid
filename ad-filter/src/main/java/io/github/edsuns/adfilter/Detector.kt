@@ -48,10 +48,10 @@ internal class Detector : AbstractDetector {
 
     override fun getElementHidingSelectors(documentUrl: String): String {
         val builder = StringBuilder()
-        for ((index, client) in clients.withIndex()) {
-            val selector = client.getElementHidingSelectors(documentUrl) ?: continue
-            if (selector.isNotBlank()) {
-                if (index > 0) {
+        for (client in clients) {
+            val selector = client.getElementHidingSelectors(documentUrl)
+            if (!selector.isNullOrBlank()) {
+                if (builder.isNotEmpty()) {
                     builder.append(", ")
                 }
                 builder.append(selector)

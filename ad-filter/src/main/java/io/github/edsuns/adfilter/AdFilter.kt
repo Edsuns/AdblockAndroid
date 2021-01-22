@@ -132,9 +132,9 @@ class AdFilter internal constructor(appContext: Context) {
         webView.addJavascriptInterface(elementHiding, ElementHiding.JS_BRIDGE_NAME)
     }
 
-    fun performElementHiding(webView: WebView?, newProgress: Int) {
+    fun performElementHiding(webView: WebView?, url: String?) {
         if (viewModel.isEnabled.value == true) {
-            elementHiding.perform(webView, newProgress)
+            elementHiding.perform(webView, url)
         }
     }
 
