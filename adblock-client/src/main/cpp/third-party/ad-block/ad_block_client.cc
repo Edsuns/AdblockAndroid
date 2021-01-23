@@ -1742,64 +1742,9 @@ bool AdBlockClient::tagExists(const std::string &tag) const {
 // written or needed
 int serializeFilters(char *buffer, size_t bufferSizeAvail,
                      Filter *f, int numFilters) {
-  char sz[256];
   int bufferSize = 0;
   for (int i = 0; i < numFilters; i++) {
-    int sprintfLen = snprintf(sz, sizeof(sz), "%x,%x,%x,%x", f->dataLen,
-                              static_cast<int>(f->filterType), static_cast<int>(f->filterOption),
-                              static_cast<int>(f->antiFilterOption));
-    if (buffer) {
-      snprintf(buffer + bufferSize, bufferSizeAvail, "%s", sz);
-    }
-    bufferSize += sprintfLen;
-    // Extra null termination
-    bufferSize++;
-
-    if (f->data) {
-      if (buffer) {
-        snprintf(buffer + bufferSize, bufferSizeAvail, "%s", f->data);
-      }
-      bufferSize += static_cast<int>(strlen(f->data));
-    }
-    bufferSize++;
-
-    if (f->tagLen > 0) {
-      if (buffer) {
-        buffer[bufferSize] = '~';
-        buffer[bufferSize + 1] = '#';
-        memcpy(buffer + bufferSize + 2, f->tag, f->tagLen);
-        buffer[bufferSize + 2 + f->tagLen] = ',';
-      }
-      bufferSize += f->tagLen + 3;
-    }
-
-    if (f->domainList) {
-      if (buffer) {
-        snprintf(buffer + bufferSize, bufferSizeAvail, "%s", f->domainList);
-      }
-      bufferSize += static_cast<int>(strlen(f->domainList));
-    }
-    // Extra null termination
-    bufferSize++;
-
-    if (f->host) {
-      if (buffer) {
-        snprintf(buffer + bufferSize, bufferSizeAvail, "%s", f->host);
-      }
-      bufferSize += static_cast<int>(strlen(f->host));
-    }
-    // Extra null termination
-    bufferSize++;
-
-    if (f->ruleDefinition) {
-      if (buffer) {
-        snprintf(buffer + bufferSize, bufferSizeAvail, "%s", f->ruleDefinition);
-      }
-      bufferSize += static_cast<int>(strlen(f->ruleDefinition));
-    }
-    // Extra null termination
-    bufferSize++;
-
+    bufferSize += f->Serialize(buffer ? (buffer + bufferSize) : nullptr);
     f++;
   }
   return bufferSize;
@@ -2036,60 +1981,7 @@ char *AdBlockClient::serialize(int *totalSize,
 int deserializeFilters(char *buffer, Filter *f, int numFilters) {
   int pos = 0;
   for (int i = 0; i < numFilters; i++) {
-    f->borrowed_data = true;
-    sscanf(buffer + pos, "%x,%x,%x,%x", &f->dataLen,
-           reinterpret_cast<unsigned int *>(&f->filterType),
-           reinterpret_cast<unsigned int *>(&f->filterOption),
-           reinterpret_cast<unsigned int *>(&f->antiFilterOption));
-    pos += static_cast<int>(strlen(buffer + pos)) + 1;
-
-    if (*(buffer + pos) == '\0') {
-      f->data = nullptr;
-    } else {
-      f->data = buffer + pos;
-      pos += static_cast<int>(strlen(f->data));
-    }
-    pos++;
-
-    // If the domain section starts with a # then we're in a tag
-    // block.
-    if (buffer[pos] == '~' && buffer[pos + 1] == '#') {
-      pos += 2;
-      f->tag = buffer + pos;
-      f->tagLen = 0;
-      while (buffer[pos + f->tagLen] != '\0') {
-        if (buffer[pos + f->tagLen] == ',') {
-          pos += f->tagLen + 1;
-          break;
-        }
-        f->tagLen++;
-      }
-    }
-
-    if (*(buffer + pos) == '\0') {
-      f->domainList = nullptr;
-    } else {
-      f->domainList = buffer + pos;
-      pos += static_cast<int>(strlen(f->domainList));
-    }
-    pos++;
-
-    if (*(buffer + pos) == '\0') {
-      f->host = nullptr;
-    } else {
-      f->host = buffer + pos;
-      pos += static_cast<int>(strlen(f->host));
-    }
-    pos++;
-
-    if (*(buffer + pos) == '\0') {
-      f->ruleDefinition = nullptr;
-    } else {
-      f->ruleDefinition = buffer + pos;
-      pos += static_cast<int>(strlen(f->ruleDefinition));
-    }
-    pos++;
-
+    pos += f->Deserialize(buffer + pos, 1024 * 16);
     f++;
   }
   return pos;
