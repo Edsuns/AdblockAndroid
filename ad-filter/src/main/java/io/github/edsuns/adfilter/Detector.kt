@@ -12,7 +12,7 @@ interface AbstractDetector {
     fun addClient(client: Client)
     fun removeClient(id: String)
     fun clearAllClient()
-    fun shouldBlock(url: String, documentUrl: String, resourceType: ResourceType): Boolean
+    fun shouldBlock(url: String, documentUrl: String, resourceType: ResourceType): String?
     fun getElementHidingSelectors(documentUrl: String): String
 }
 
@@ -40,10 +40,14 @@ internal class Detector : AbstractDetector {
         url: String,
         documentUrl: String,
         resourceType: ResourceType
-    ): Boolean {
-        return clients.any {
-            it.matches(url, documentUrl, resourceType)
+    ): String? {
+        for (client in clients) {
+            val matched = client.matches(url, documentUrl, resourceType)
+            if (matched.shouldBlock) {
+                return matched.matchedRule ?: ""
+            }
         }
+        return null
     }
 
     override fun getElementHidingSelectors(documentUrl: String): String {

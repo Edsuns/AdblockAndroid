@@ -61,7 +61,7 @@ class InstallationWorker(context: Context, params: WorkerParameters) : Worker(
 
     private fun persistFilterData(id: String, rawBytes: ByteArray): Int {
         val client = AdBlockClient(id)
-        client.loadBasicData(rawBytes)
+        client.loadBasicData(rawBytes, true)
         binaryDataStore.saveData(id, client.getProcessedData())
         return client.getFiltersCount()
     }

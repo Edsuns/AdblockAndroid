@@ -32,32 +32,38 @@ class AdBlockClientTest {
     @Test
     fun whenBasicDataLoadedThenTrackerIsBlocked() {
         val testee = AdBlockClient(id)
-        testee.loadBasicData(data())
-        assertTrue(testee.matches(trackerUrl, documentUrl, resourceType))
+        testee.loadBasicData(data(), true)
+        val result = testee.matches(trackerUrl, documentUrl, resourceType)
+        assertTrue(result.shouldBlock)
+        assertFalse(result.matchedRule.isNullOrBlank())
     }
 
     @Test
     fun whenBasicDataLoadedThenNonTrackerIsNotBlocked() {
         val testee = AdBlockClient(id)
         testee.loadBasicData(data())
-        assertFalse(testee.matches(nonTrackerUrl, documentUrl, resourceType))
+        val result = testee.matches(nonTrackerUrl, documentUrl, resourceType)
+        assertFalse(result.shouldBlock)
     }
 
     @Test
     fun whenBasicDataLoadedWithThirdPartyOptionThenFirstPartyIsNotBlocked() {
         val testee = AdBlockClient(id)
         testee.loadBasicData(data())
-        assertFalse(testee.matches(trackerUrl, trackerUrl, resourceType))
+        val result = testee.matches(trackerUrl, trackerUrl, resourceType)
+        assertFalse(result.shouldBlock)
     }
 
     @Test
     fun whenProcessedDataLoadedThenTrackerIsBlocked() {
         val original = AdBlockClient(id)
-        original.loadBasicData(data())
+        original.loadBasicData(data(), true)
         val processedData = original.getProcessedData()
         val testee = AdBlockClient(id)
         testee.loadProcessedData(processedData)
-        assertTrue(testee.matches(trackerUrl, documentUrl, resourceType))
+        val result = testee.matches(trackerUrl, documentUrl, resourceType)
+        assertTrue(result.shouldBlock)
+        assertFalse(result.matchedRule.isNullOrBlank())
     }
 
     @Test
@@ -67,7 +73,8 @@ class AdBlockClientTest {
         val processedData = original.getProcessedData()
         val testee = AdBlockClient(id)
         testee.loadProcessedData(processedData)
-        assertFalse(testee.matches(nonTrackerUrl, documentUrl, resourceType))
+        val result = testee.matches(nonTrackerUrl, documentUrl, resourceType)
+        assertFalse(result.shouldBlock)
     }
 
     @Test
@@ -77,7 +84,8 @@ class AdBlockClientTest {
         val processedData = original.getProcessedData()
         val testee = AdBlockClient(id)
         testee.loadProcessedData(processedData)
-        assertFalse(testee.matches(trackerUrl, trackerUrl, resourceType))
+        val result = testee.matches(trackerUrl, trackerUrl, resourceType)
+        assertFalse(result.shouldBlock)
     }
 
     @Test
@@ -87,6 +95,7 @@ class AdBlockClientTest {
         val processedData = original.getProcessedData()
         val testee = AdBlockClient(id)
         testee.loadProcessedData(processedData)
+        testee.setGenericElementHidingEnabled(true)
         val selectors =
             testee.getElementHidingSelectors(nonTrackerUrl) ?: throw NullPointerException()
         assertEquals(2, selectors.split(", ").size)
@@ -101,6 +110,7 @@ class AdBlockClientTest {
         val processedData = original.getProcessedData()
         val testee = AdBlockClient(id)
         testee.loadProcessedData(processedData)
+        testee.setGenericElementHidingEnabled(true)
         val selectors =
             testee.getElementHidingSelectors(documentUrl) ?: throw NullPointerException()
         assertEquals(2, selectors.split(", ").size)

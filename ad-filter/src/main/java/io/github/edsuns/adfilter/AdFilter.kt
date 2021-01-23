@@ -110,21 +110,22 @@ class AdFilter internal constructor(appContext: Context) {
     fun shouldIntercept(
         webView: WebView,
         request: WebResourceRequest
-    ): WebResourceResponse? {
+    ): MatchedRule {
         return runBlocking {
+            val url = request.url.toString()
             if (request.isForMainFrame) {
-                return@runBlocking null
+                return@runBlocking MatchedRule(null, url, null)
             }
 
-            val url = request.url.toString()
             val documentUrl =
-                withContext(Dispatchers.Main) { webView.url } ?: return@runBlocking null
+                withContext(Dispatchers.Main) { webView.url }
+                    ?: return@runBlocking MatchedRule(null, url, null)
 
-            val shouldBlock = detector.shouldBlock(url, documentUrl, ResourceType.from(request))
-            if (shouldBlock)
-                WebResourceResponse(null, null, null)
+            val rule = detector.shouldBlock(url, documentUrl, ResourceType.from(request))
+            if (rule != null)
+                MatchedRule(rule, url, WebResourceResponse(null, null, null))
             else
-                return@runBlocking null
+                return@runBlocking MatchedRule(null, url, null)
         }
     }
 

@@ -20,10 +20,11 @@ class WebClient(private val webViewClientListener: WebViewClientListener) : WebV
         view: WebView?,
         request: WebResourceRequest?
     ): WebResourceResponse? {
-        val shouldBlock = filter.shouldIntercept(view!!, request!!)
-        if (shouldBlock != null)
-            webViewClientListener.requestBlocked(request.url.toString())
-        return shouldBlock
+        val result = filter.shouldIntercept(view!!, request!!)
+        if (result.shouldBlock) {
+            webViewClientListener.requestBlocked(result)
+        }
+        return result.resourceResponse
     }
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {

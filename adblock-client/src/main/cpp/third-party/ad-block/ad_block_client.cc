@@ -159,24 +159,21 @@ bool getElementHidingFiltersFrom(HashMap<NoFingerprintDomain, CosmeticFilter> *h
   return filterHashSet.GetSize();
 }
 
-static const char validSelectorChars[18] = "#.:-*=~+>/'\"|()[]";
+static const char invalidSelectorChars[5] = ",;{}";
 
-// only support English characters temporarily
+// currently only English characters are supported
 bool isValidSelector(const char *start, const char *end) {
   const char *p = start, *q;
   for (; p != end; p++) {
-    if ((*p >= '0' && *p <= '9') || (*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z')) {
-      continue;
-    }
-    q = validSelectorChars;
+    q = invalidSelectorChars;
     while (*q != '\0') {
       if (*p == *q) {
-        break;
+        return false;
       }
       q++;
     }
-    if (*q == '\0') {
-      return false;
+    if (*p >= 32 && *p <= 126) {
+      continue;
     }
   }
   return true;

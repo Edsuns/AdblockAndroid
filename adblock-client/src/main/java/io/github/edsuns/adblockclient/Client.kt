@@ -20,7 +20,7 @@ interface Client {
 
     val id: String
 
-    fun matches(url: String, documentUrl: String, resourceType: ResourceType): Boolean
+    fun matches(url: String, documentUrl: String, resourceType: ResourceType): MatchResult
 
     fun getElementHidingSelectors(url: String): String?
 

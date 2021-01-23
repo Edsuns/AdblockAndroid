@@ -29,18 +29,29 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_releaseClient(JNIEnv *env,
 }
 
 extern "C"
+JNIEXPORT void JNICALL
+Java_io_github_edsuns_adblockclient_AdBlockClient_setGenericElementHidingEnabled(JNIEnv *env,
+                                                                                 jobject /* this */,
+                                                                                 jlong clientPointer,
+                                                                                 jboolean enabled) {
+    auto *client = (AdBlockClient *) clientPointer;
+    client->isGenericElementHidingEnabled = enabled;
+}
+
+extern "C"
 JNIEXPORT jlong
 JNICALL
 Java_io_github_edsuns_adblockclient_AdBlockClient_loadBasicData(JNIEnv *env,
                                                                 jobject,
                                                                 jlong clientPointer,
-                                                                jbyteArray data) {
+                                                                jbyteArray data,
+                                                                jboolean preserveRules) {
     int dataLength = env->GetArrayLength(data);
     char *dataChars = new char[dataLength];
     env->GetByteArrayRegion(data, 0, dataLength, reinterpret_cast<jbyte *>(dataChars));
 
     auto *client = (AdBlockClient *) clientPointer;
-    client->parse(dataChars);
+    client->parse(dataChars, preserveRules);
 
     return (long) dataChars;
 }
@@ -103,12 +114,9 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_getFiltersCount(JNIEnv *env, j
 }
 
 extern "C"
-JNIEXPORT jboolean
-JNICALL
-Java_io_github_edsuns_adblockclient_AdBlockClient_matches(JNIEnv *env,
-                                                          jobject /* this */,
-                                                          jlong clientPointer,
-                                                          jstring url,
+JNIEXPORT jobject JNICALL
+Java_io_github_edsuns_adblockclient_AdBlockClient_matches(JNIEnv *env, jobject /* this */,
+                                                          jlong clientPointer, jstring url,
                                                           jstring firstPartyDomain,
                                                           jint filterOption) {
     jboolean isUrlCopy;
@@ -118,12 +126,29 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_matches(JNIEnv *env,
     const char *firstPartyDomainChars = env->GetStringUTFChars(firstPartyDomain, &isDocumentCopy);
 
     auto *client = (AdBlockClient *) clientPointer;
-    bool matches = client->matches(urlChars, (FilterOption) filterOption, firstPartyDomainChars);
+
+    Filter *matchedFilter;
+    Filter *matchedExceptionFilter;
+    bool shouldBlock = client->matches(urlChars, (FilterOption) filterOption, firstPartyDomainChars,
+                                       &matchedFilter, &matchedExceptionFilter);
+
+    char *matchedRule = matchedFilter ? matchedFilter->ruleDefinition : nullptr;
+    char *matchedExceptionRule = matchedExceptionFilter ?
+                                 matchedExceptionFilter->ruleDefinition : nullptr;
+
+    // create java MatchResult
+    jclass match_result_class = env->FindClass("io/github/edsuns/adblockclient/MatchResult");
+    jmethodID init_id = env->GetMethodID(match_result_class, "<init>",
+                                         "(ZLjava/lang/String;Ljava/lang/String;)V");
+    jobject matchResult = env->NewObject(match_result_class, init_id,
+                                         shouldBlock,
+                                         env->NewStringUTF(matchedRule),
+                                         env->NewStringUTF(matchedExceptionRule));
 
     env->ReleaseStringUTFChars(url, urlChars);
     env->ReleaseStringUTFChars(firstPartyDomain, firstPartyDomainChars);
 
-    return matches;
+    return matchResult;
 }
 
 extern "C"

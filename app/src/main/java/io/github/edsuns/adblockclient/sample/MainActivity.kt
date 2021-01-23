@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import io.github.edsuns.adblockclient.sample.databinding.ActivityMainBinding
 import io.github.edsuns.adfilter.AdFilter
 import io.github.edsuns.adfilter.FilterViewModel
+import io.github.edsuns.adfilter.MatchedRule
 import io.github.edsuns.smoothprogress.SmoothProgressAnimator
 import timber.log.Timber
 
@@ -114,15 +115,15 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         }
     }
 
-    override fun requestBlocked(url: String) {
+    override fun requestBlocked(rule: MatchedRule) {
         runOnUiThread {
-            val requestUrl = url.stripParamsAndAnchor()
+            val requestUrl = rule.resourceUrl.stripParamsAndAnchor()
             val pageUrl = webView.url
             val blockedSet = blockedCountMap[pageUrl] ?: hashSetOf()
             blockedSet.add(requestUrl)
             pageUrl?.let { blockedCountMap[pageUrl] = blockedSet }
             binding.countText.text = blockedSet.size.toString()
-            Timber.v("Web request blocked: $requestUrl")
+            Timber.v("Web request $requestUrl blocked by rule \"${rule.rule}\"")
         }
     }
 

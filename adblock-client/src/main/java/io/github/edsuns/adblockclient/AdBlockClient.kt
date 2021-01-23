@@ -35,14 +35,23 @@ class AdBlockClient(override val id: String) : Client {
 
     private external fun createClient(): Long
 
-    fun loadBasicData(data: ByteArray) {
+    fun loadBasicData(data: ByteArray, preserveRules: Boolean = false) {
         val timestamp = System.currentTimeMillis()
         Timber.d("Loading basic data for $id")
-        rawDataPointer = loadBasicData(nativeClientPointer, data)
+        rawDataPointer = loadBasicData(nativeClientPointer, data, preserveRules)
         Timber.d("Loading basic data for $id completed in ${System.currentTimeMillis() - timestamp}ms")
     }
 
-    private external fun loadBasicData(clientPointer: Long, data: ByteArray): Long
+    fun setGenericElementHidingEnabled(enabled: Boolean) =
+        setGenericElementHidingEnabled(nativeClientPointer, enabled)
+
+    private external fun setGenericElementHidingEnabled(clientPointer: Long, enabled: Boolean)
+
+    private external fun loadBasicData(
+        clientPointer: Long,
+        data: ByteArray,
+        preserveRules: Boolean
+    ): Long
 
     fun loadProcessedData(data: ByteArray) {
         val timestamp = System.currentTimeMillis()
@@ -61,8 +70,12 @@ class AdBlockClient(override val id: String) : Client {
 
     private external fun getFiltersCount(clientPointer: Long): Int
 
-    override fun matches(url: String, documentUrl: String, resourceType: ResourceType): Boolean {
-        val firstPartyDomain = documentUrl.baseHost() ?: return false
+    override fun matches(
+        url: String,
+        documentUrl: String,
+        resourceType: ResourceType
+    ): MatchResult {
+        val firstPartyDomain = documentUrl.baseHost() ?: return MatchResult(false, null, null)
         return matches(nativeClientPointer, url, firstPartyDomain, resourceType.filterOption)
     }
 
@@ -71,7 +84,7 @@ class AdBlockClient(override val id: String) : Client {
         url: String,
         firstPartyDomain: String,
         filterOption: Int
-    ): Boolean
+    ): MatchResult
 
     override fun getElementHidingSelectors(url: String): String? =
         getElementHidingSelectors(nativeClientPointer, url)
