@@ -43,11 +43,18 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
 
     @JavascriptInterface
     fun getEleHidingStyleSheet(documentUrl: String): String? {
-        val selectors = detector.getElementHidingSelectors(documentUrl)
-        if (selectors.isBlank()) {
+        var selectors = detector.getElementHidingSelectors(documentUrl)
+        var customSelectors = detector.getCustomElementHidingSelectors(documentUrl)
+        if (selectors.isBlank() && customSelectors.isBlank()) {
             return null
         }
-        return selectors + HIDING_CSS
+        if (selectors.isNotBlank()) {
+            selectors += HIDING_CSS
+        }
+        if (customSelectors.isNotBlank()) {
+            customSelectors += HIDING_CSS
+        }
+        return selectors + customSelectors
     }
 
     companion object {

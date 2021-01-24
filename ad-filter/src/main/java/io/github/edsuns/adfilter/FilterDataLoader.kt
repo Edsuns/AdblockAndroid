@@ -21,6 +21,31 @@ internal class FilterDataLoader(
         }
     }
 
+    fun loadWhitelist(id: String) {
+        if (binaryDataStore.hasData(id)) {
+            val client = AdBlockClient(id)
+            client.loadProcessedData(binaryDataStore.loadData(id))
+            detector.whitelistClient = client
+        } else {
+            Timber.v("Couldn't find client processed data: $id")
+        }
+    }
+
+    fun loadBlacklist(id: String) {
+        if (binaryDataStore.hasData(id)) {
+            val client = AdBlockClient(id)
+            client.loadProcessedData(binaryDataStore.loadData(id))
+            detector.blacklistClient = client
+        } else {
+            Timber.v("Couldn't find client processed data: $id")
+        }
+    }
+
+    fun unloadCustomFilters() {
+        detector.whitelistClient = null
+        detector.blacklistClient = null
+    }
+
     fun unload(id: String) {
         detector.removeClient(id)
     }

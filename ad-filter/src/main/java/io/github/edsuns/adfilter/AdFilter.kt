@@ -21,6 +21,7 @@ class AdFilter internal constructor(appContext: Context) {
         BinaryDataStore(File(appContext.filesDir, FILE_STORE_DIR))
     private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
     private val elementHiding: ElementHiding = ElementHiding(detector)
+    val customFilters = CustomFilters(binaryDataStore, filterDataLoader)
     val viewModel = FilterViewModel(appContext, filterDataLoader)
 
     val hasInstallation: Boolean
@@ -34,8 +35,10 @@ class AdFilter internal constructor(appContext: Context) {
                         viewModel.enableFilter(it)
                     }
                 }
+                customFilters.load()
             } else {
                 filterDataLoader.unloadAll()
+                customFilters.unload()
             }
             viewModel.sharedPreferences.isEnabled = enable
         }

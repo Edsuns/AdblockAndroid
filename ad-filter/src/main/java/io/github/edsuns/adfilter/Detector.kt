@@ -1,6 +1,7 @@
 package io.github.edsuns.adfilter
 
 import io.github.edsuns.adblockclient.Client
+import io.github.edsuns.adblockclient.MatchResult
 import io.github.edsuns.adblockclient.ResourceType
 import timber.log.Timber
 import java.util.concurrent.CopyOnWriteArrayList
@@ -14,11 +15,22 @@ interface AbstractDetector {
     fun clearAllClient()
     fun shouldBlock(url: String, documentUrl: String, resourceType: ResourceType): String?
     fun getElementHidingSelectors(documentUrl: String): String
+    fun getCustomElementHidingSelectors(documentUrl: String): String
 }
 
 internal class Detector : AbstractDetector {
 
     private val clients = CopyOnWriteArrayList<Client>()
+    internal var whitelistClient: Client? = null
+        set(value) {
+            field = value
+            Timber.v("Whitelist client changed")
+        }
+    internal var blacklistClient: Client? = null
+        set(value) {
+            field = value
+            Timber.v("Blacklist client changed")
+        }
 
     override fun addClient(client: Client) {
         clients.removeAll { it.id == client.id }
@@ -36,18 +48,35 @@ internal class Detector : AbstractDetector {
         Timber.v("Client count: ${clients.size} (after clearAllClient)")
     }
 
+    /**
+     * returns not null if should block the web resource
+     */
     override fun shouldBlock(
         url: String,
         documentUrl: String,
         resourceType: ResourceType
     ): String? {
-        for (client in clients) {
-            val matched = client.matches(url, documentUrl, resourceType)
-            if (matched.shouldBlock) {
-                return matched.matchedRule ?: ""
+        blacklistClient?.matches(url, documentUrl, resourceType)?.let {
+            if (it.shouldBlock) {
+                return it.matchedRule ?: ""
             }
         }
-        return null
+        whitelistClient?.matches(url, documentUrl, resourceType)?.let {
+            if (it.shouldBlock) {
+                return null// don't block whitelist
+            }
+        }
+        var matchResult: MatchResult? = null
+        for (client in clients) {
+            val match: MatchResult = client.matches(url, documentUrl, resourceType)
+            if (match.matchedExceptionRule != null) {
+                return null// don't block exception
+            }
+            if (match.shouldBlock) {
+                matchResult = match
+            }
+        }
+        return if (matchResult?.shouldBlock == true) matchResult.matchedRule ?: "" else null
     }
 
     override fun getElementHidingSelectors(documentUrl: String): String {
@@ -62,5 +91,9 @@ internal class Detector : AbstractDetector {
             }
         }
         return builder.toString()
+    }
+
+    override fun getCustomElementHidingSelectors(documentUrl: String): String {
+        return blacklistClient?.getElementHidingSelectors(documentUrl) ?: ""
     }
 }
