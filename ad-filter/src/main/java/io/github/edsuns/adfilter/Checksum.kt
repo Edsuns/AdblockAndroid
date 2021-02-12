@@ -8,8 +8,9 @@ import android.util.Base64
  * Reference: [validateChecksum.py](https://hg.adblockplus.org/adblockplus/file/tip/validateChecksum.py)
  */
 class Checksum(val filter: String) {
+    // here don't use '$' as the end of a line
     private val checksumRegexp = Regex(
-        "^\\s*!\\s*checksum[\\s\\-:]+([\\w+/=]+).*\\n",
+        "^\\s*!\\s*checksum[\\s\\-:]+([\\w+/=]+).*\\r?\\n",
         setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)
     )
 
