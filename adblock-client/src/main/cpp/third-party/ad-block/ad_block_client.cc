@@ -172,14 +172,17 @@ bool isValidSelector(const char *start, const char *end) {
       }
       q++;
     }
-    if (*p >= 32 && *p <= 126) {
-      continue;
+    if (*p < 32 || *p > 126) {
+      return false;
     }
   }
   return true;
 }
 
 char *removeException(char *src, uint32_t srcLen, char *exception) {
+  if (srcLen == 0) {
+    srcLen = 1;
+  }
   char buffer[srcLen];
   memset(buffer, 0, srcLen);
   char *sStart = src, *sEnd = src, *eStart, *eEnd;
