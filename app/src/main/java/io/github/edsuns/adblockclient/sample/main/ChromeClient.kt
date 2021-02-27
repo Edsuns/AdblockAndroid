@@ -1,4 +1,4 @@
-package io.github.edsuns.adblockclient.sample
+package io.github.edsuns.adblockclient.sample.main
 
 import android.webkit.WebChromeClient
 import android.webkit.WebView

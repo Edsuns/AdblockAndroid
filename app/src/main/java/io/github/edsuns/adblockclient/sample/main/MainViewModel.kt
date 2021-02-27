@@ -1,7 +1,9 @@
-package io.github.edsuns.adblockclient.sample
+package io.github.edsuns.adblockclient.sample.main
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import io.github.edsuns.adblockclient.sample.main.blocking.BlockingInfo
+import io.github.edsuns.adblockclient.sample.stripParamsAndAnchor
 import io.github.edsuns.adfilter.MatchedRule
 import timber.log.Timber
 

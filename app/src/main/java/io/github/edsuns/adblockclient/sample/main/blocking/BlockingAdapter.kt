@@ -1,10 +1,11 @@
-package io.github.edsuns.adblockclient.sample
+package io.github.edsuns.adblockclient.sample.main.blocking
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import io.github.edsuns.adblockclient.sample.R
 
 /**
  * Created by Edsuns@qq.com on 2021/2/27.

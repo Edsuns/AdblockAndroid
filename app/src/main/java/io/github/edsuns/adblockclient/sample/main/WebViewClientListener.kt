@@ -1,4 +1,4 @@
-package io.github.edsuns.adblockclient.sample
+package io.github.edsuns.adblockclient.sample.main
 
 import android.graphics.Bitmap
 import io.github.edsuns.adfilter.MatchedRule

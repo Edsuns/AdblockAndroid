@@ -16,7 +16,7 @@
         android:theme="@style/AppTheme"
         tools:targetApi="n">
         <activity
-            android:name=".MainActivity"
+            android:name=".main.MainActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize"
             android:launchMode="singleTask"
             android:theme="@style/AppTheme.NoActionBar">
@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SettingsActivity" />
+        <activity android:name=".settings.SettingsActivity" />
     </application>
 
 </manifest>

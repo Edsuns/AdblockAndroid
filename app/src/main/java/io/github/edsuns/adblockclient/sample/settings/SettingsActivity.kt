@@ -1,4 +1,4 @@
-package io.github.edsuns.adblockclient.sample
+package io.github.edsuns.adblockclient.sample.settings
 
 import android.app.AlertDialog
 import android.app.Dialog
@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import io.github.edsuns.adblockclient.sample.R
 import io.github.edsuns.adblockclient.sample.databinding.ActivitySettingsBinding
 import io.github.edsuns.adfilter.AdFilter
 import io.github.edsuns.adfilter.DownloadState

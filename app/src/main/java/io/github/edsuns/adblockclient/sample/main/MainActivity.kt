@@ -1,4 +1,4 @@
-package io.github.edsuns.adblockclient.sample
+package io.github.edsuns.adblockclient.sample.main
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -12,7 +12,12 @@ import android.webkit.WebView
 import android.widget.PopupMenu
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import io.github.edsuns.adblockclient.sample.R
 import io.github.edsuns.adblockclient.sample.databinding.ActivityMainBinding
+import io.github.edsuns.adblockclient.sample.hideKeyboard
+import io.github.edsuns.adblockclient.sample.main.blocking.BlockingInfoDialogFragment
+import io.github.edsuns.adblockclient.sample.settings.SettingsActivity
+import io.github.edsuns.adblockclient.sample.smartUrlFilter
 import io.github.edsuns.adfilter.AdFilter
 import io.github.edsuns.adfilter.FilterViewModel
 import io.github.edsuns.adfilter.MatchedRule

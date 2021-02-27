@@ -1,4 +1,4 @@
-package io.github.edsuns.adblockclient.sample
+package io.github.edsuns.adblockclient.sample.main.blocking
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -8,7 +8,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import io.github.edsuns.adblockclient.sample.R
 import io.github.edsuns.adblockclient.sample.databinding.FragmentBlockingBottomSheetBinding
+import io.github.edsuns.adblockclient.sample.main.MainViewModel
 
 /**
  * Created by Edsuns@qq.com on 2021/2/27.

@@ -1,4 +1,4 @@
-package io.github.edsuns.adblockclient.sample
+package io.github.edsuns.adblockclient.sample.main.blocking
 
 /**
  * Created by Edsuns@qq.com on 2021/2/27.
