@@ -151,6 +151,23 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_matches(JNIEnv *env, jobject /
     return matchResult;
 }
 
+// replacement for NewStringUTF()
+// won't throw JNI ERROR: input is not valid Modified UTF-8
+jstring bytesToStringUTF(JNIEnv *env, const char *src) {
+
+    if (!src) {
+        return nullptr;
+    }
+    jsize len = strlen(src);
+    jstring encoding = env->NewStringUTF("UTF-8");
+    jclass stringCls = env->FindClass("java/lang/String");
+    jmethodID methodId = env->GetMethodID(stringCls, "<init>", "([BLjava/lang/String;)V");
+    jbyteArray bytes = env->NewByteArray(len);
+    env->SetByteArrayRegion(bytes, 0, len, (jbyte *) src);
+
+    return (jstring) env->NewObject(stringCls, methodId, bytes, encoding);
+}
+
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_io_github_edsuns_adblockclient_AdBlockClient_getElementHidingSelectors(JNIEnv *env,
@@ -165,5 +182,5 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_getElementHidingSelectors(JNIE
 
     env->ReleaseStringUTFChars(url, urlChars);
 
-    return env->NewStringUTF(selectors);
+    return bytesToStringUTF(env, selectors);
 }

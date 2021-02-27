@@ -35,6 +35,9 @@ class AdBlockClient(override val id: String) : Client {
 
     private external fun createClient(): Long
 
+    /**
+     * @param data requires UTF-8 bytes
+     */
     fun loadBasicData(data: ByteArray, preserveRules: Boolean = false) {
         val timestamp = System.currentTimeMillis()
         Timber.d("Loading basic data for $id")
