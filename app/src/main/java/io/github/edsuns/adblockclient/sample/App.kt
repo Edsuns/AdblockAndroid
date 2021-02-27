@@ -18,8 +18,8 @@ class App : Application() {
         val viewModel = filter.viewModel
         if (!filter.hasInstallation) {
             val map = mapOf(
-                "EasyList" to "https://easylist.to/easylist/easylist.txt",
-                "EasyPrivacy" to "https://easylist.to/easylist/easyprivacy.txt",
+                "EasyList" to "https://easylist-downloads.adblockplus.org/easylist.txt",
+                "EasyPrivacy" to "https://easylist-downloads.adblockplus.org/easyprivacy.txt",
                 "EasyList China" to "https://easylist-downloads.adblockplus.org/easylistchina.txt"
             )
             for ((key, value) in map) {
