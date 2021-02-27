@@ -25,4 +25,9 @@
     <string name="installing">Installing…</string>
     <string name="cancelled">Cancelled</string>
     <string name="url_copied">URL copied to clipboard</string>
+    <string name="blocked">Blocked</string>
+    <string name="empty">Empty</string>
+    <string name="requests">request(s)</string>
+    <string name="times_blocked">time(s) blocked</string>
+    <string name="connections">Connection(s)</string>
 </resources>

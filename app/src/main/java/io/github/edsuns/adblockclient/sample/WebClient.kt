@@ -21,9 +21,7 @@ class WebClient(private val webViewClientListener: WebViewClientListener) : WebV
         request: WebResourceRequest?
     ): WebResourceResponse? {
         val result = filter.shouldIntercept(view!!, request!!)
-        if (result.shouldBlock) {
-            webViewClientListener.requestBlocked(result)
-        }
+        webViewClientListener.onShouldInterceptRequest(result)
         return result.resourceResponse
     }
 

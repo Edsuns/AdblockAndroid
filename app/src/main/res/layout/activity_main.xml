@@ -27,6 +27,7 @@
                     android:id="@+id/countText"
                     android:layout_width="52dp"
                     android:layout_height="match_parent"
+                    android:background="?selectableItemBackgroundBorderless"
                     android:textColor="@android:color/holo_red_light"
                     android:gravity="center"
                     android:text="@string/count_none"

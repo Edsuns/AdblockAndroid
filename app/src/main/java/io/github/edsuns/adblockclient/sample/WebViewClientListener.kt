@@ -9,5 +9,5 @@ import io.github.edsuns.adfilter.MatchedRule
 interface WebViewClientListener {
     fun onPageStarted(url: String?, favicon: Bitmap?)
     fun progressChanged(newProgress: Int)
-    fun requestBlocked(rule: MatchedRule)
+    fun onShouldInterceptRequest(rule: MatchedRule)
 }

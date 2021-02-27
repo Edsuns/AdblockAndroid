@@ -10,21 +10,25 @@ import android.view.inputmethod.EditorInfo
 import android.webkit.URLUtil
 import android.webkit.WebView
 import android.widget.PopupMenu
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import io.github.edsuns.adblockclient.sample.databinding.ActivityMainBinding
 import io.github.edsuns.adfilter.AdFilter
 import io.github.edsuns.adfilter.FilterViewModel
 import io.github.edsuns.adfilter.MatchedRule
 import io.github.edsuns.smoothprogress.SmoothProgressAnimator
-import timber.log.Timber
 
 class MainActivity : AppCompatActivity(), WebViewClientListener {
-    private lateinit var viewModel: FilterViewModel
+
+    private lateinit var filterViewModel: FilterViewModel
+
+    private val viewModel: MainViewModel by viewModels()
+
     private lateinit var binding: ActivityMainBinding
     private lateinit var webView: WebView
     private lateinit var progressAnimator: SmoothProgressAnimator
 
-    private val blockedCountMap: HashMap<String, HashSet<String>> = hashMapOf()
+    private lateinit var blockingInfoDialogFragment: BlockingInfoDialogFragment
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +36,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        viewModel = AdFilter.get().viewModel
+        filterViewModel = AdFilter.get().viewModel
 
         val popupMenu = PopupMenu(
             this,
@@ -57,6 +61,19 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         binding.menuButton.setOnClickListener {
             menuForward.isVisible = webView.canGoForward()
             popupMenu.show()
+        }
+
+        blockingInfoDialogFragment = BlockingInfoDialogFragment.newInstance()
+
+        binding.countText.setOnClickListener {
+            if (filterViewModel.isEnabled.value == true) {
+                blockingInfoDialogFragment.show(
+                    supportFragmentManager,
+                    null
+                )
+            } else {
+                startActivity(Intent(this, SettingsActivity::class.java))
+            }
         }
 
         webView = binding.webView
@@ -93,38 +110,41 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             return@setOnEditorActionListener false
         }
 
-        viewModel.isEnabled.observe(this, {
+        filterViewModel.isEnabled.observe(this, {
             binding.countText.text =
                 if (it) getString(R.string.count_none) else getString(R.string.off)
         })
+
+        viewModel.blockingInfoMap.observe(this, { updateBlockedCount() })
     }
 
     override fun onPageStarted(url: String?, favicon: Bitmap?) {
-        if (viewModel.isEnabled.value == true)
+        if (filterViewModel.isEnabled.value == true)
             runOnUiThread {
-                val pageUrl = webView.url
-                val blockedSet = blockedCountMap[pageUrl] ?: hashSetOf()
-                binding.countText.text = blockedSet.size.toString()
+                url?.let { viewModel.currentPageUrl = it }
+                updateBlockedCount()
             }
     }
 
     override fun progressChanged(newProgress: Int) {
         runOnUiThread {
+            webView.url?.let { viewModel.currentPageUrl = it }
             progressAnimator.progress = newProgress
             binding.urlEditText.setText(webView.url)
+            if (newProgress == 10) {
+                updateBlockedCount()
+            }
         }
     }
 
-    override fun requestBlocked(rule: MatchedRule) {
-        runOnUiThread {
-            val requestUrl = rule.resourceUrl.stripParamsAndAnchor()
-            val pageUrl = webView.url
-            val blockedSet = blockedCountMap[pageUrl] ?: hashSetOf()
-            blockedSet.add(requestUrl)
-            pageUrl?.let { blockedCountMap[pageUrl] = blockedSet }
-            binding.countText.text = blockedSet.size.toString()
-            Timber.v("Web request $requestUrl blocked by rule \"${rule.rule}\"")
-        }
+    private fun updateBlockedCount() {
+        val blockedUrlMap =
+            viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl)?.blockedUrlMap
+        binding.countText.text = (blockedUrlMap?.size ?: 0).toString()
+    }
+
+    override fun onShouldInterceptRequest(rule: MatchedRule) {
+        viewModel.logRequest(rule)
     }
 
     override fun onBackPressed() {
