@@ -9,3 +9,5 @@ data class MatchResult(
     val matchedRule: String?,
     val matchedExceptionRule: String?
 )
+
+val MatchResult.isException: Boolean get() = matchedExceptionRule != null

@@ -19,7 +19,7 @@ class MainViewModel : ViewModel() {
     var currentPageUrl: String = ""
 
     fun logRequest(matchedRule: MatchedRule) {
-        val data = blockingInfoMap.value ?: HashMap()
+        val data = _blockingInfoMap
         val blockingInfo = data[currentPageUrl] ?: BlockingInfo()
         data[currentPageUrl] = blockingInfo
         if (matchedRule.shouldBlock) {

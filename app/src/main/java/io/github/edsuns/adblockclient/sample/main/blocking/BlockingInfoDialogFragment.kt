@@ -66,11 +66,6 @@ class BlockingInfoDialogFragment : BottomSheetDialogFragment() {
         return binding.root
     }
 
-    override fun onStart() {
-        super.onStart()
-        updateRecyclerView()
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

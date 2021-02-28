@@ -120,9 +120,8 @@ class AdFilter internal constructor(appContext: Context) {
                 return@runBlocking MatchedRule(null, url, null)
             }
 
-            val documentUrl =
-                withContext(Dispatchers.Main) { webView.url }
-                    ?: return@runBlocking MatchedRule(null, url, null)
+            val documentUrl = withContext(Dispatchers.Main) { webView.url }
+                ?: return@runBlocking MatchedRule(null, url, null)
 
             val rule = detector.shouldBlock(url, documentUrl, ResourceType.from(request))
             if (rule != null)

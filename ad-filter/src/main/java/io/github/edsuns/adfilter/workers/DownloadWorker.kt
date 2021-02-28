@@ -26,7 +26,12 @@ class DownloadWorker(context: Context, params: WorkerParameters) : Worker(
         val url = inputData.getString(KEY_DOWNLOAD_URL) ?: return Result.failure()
         Timber.v("Start download: $url $id")
         try {
-            val bodyBytes = HttpRequest(url).get().bodyBytes
+            val request = HttpRequest(url).get()
+            if (request.isBadStatus) {
+                Timber.v("Failed to download (${request.status}): $url $id")
+                return Result.failure(inputData)
+            }
+            val bodyBytes = request.bodyBytes
             val dataName = "_$id"
             binaryDataStore.saveData(dataName, bodyBytes)
             return Result.success(

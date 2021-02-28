@@ -3,6 +3,7 @@ package io.github.edsuns.adfilter
 import io.github.edsuns.adblockclient.Client
 import io.github.edsuns.adblockclient.MatchResult
 import io.github.edsuns.adblockclient.ResourceType
+import io.github.edsuns.adblockclient.isException
 import timber.log.Timber
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -69,7 +70,7 @@ internal class Detector : AbstractDetector {
         var matchResult: MatchResult? = null
         for (client in clients) {
             val match: MatchResult = client.matches(url, documentUrl, resourceType)
-            if (match.matchedExceptionRule != null) {
+            if (match.isException) {
                 return null// don't block exception
             }
             if (match.shouldBlock) {
