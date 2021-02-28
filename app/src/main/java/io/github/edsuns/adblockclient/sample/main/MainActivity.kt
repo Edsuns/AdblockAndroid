@@ -72,10 +72,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
         binding.countText.setOnClickListener {
             if (filterViewModel.isEnabled.value == true) {
-                blockingInfoDialogFragment.show(
-                    supportFragmentManager,
-                    null
-                )
+                blockingInfoDialogFragment.show(supportFragmentManager, null)
             } else {
                 startActivity(Intent(this, SettingsActivity::class.java))
             }
@@ -124,11 +121,10 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
     }
 
     override fun onPageStarted(url: String?, favicon: Bitmap?) {
-        if (filterViewModel.isEnabled.value == true)
-            runOnUiThread {
-                url?.let { viewModel.currentPageUrl = it }
-                updateBlockedCount()
-            }
+        runOnUiThread {
+            url?.let { viewModel.currentPageUrl = it }
+            updateBlockedCount()
+        }
     }
 
     override fun progressChanged(newProgress: Int) {
@@ -143,9 +139,11 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
     }
 
     private fun updateBlockedCount() {
-        val blockedUrlMap =
-            viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl)?.blockedUrlMap
-        binding.countText.text = (blockedUrlMap?.size ?: 0).toString()
+        if (filterViewModel.isEnabled.value == true) {
+            val blockedUrlMap =
+                viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl)?.blockedUrlMap
+            binding.countText.text = (blockedUrlMap?.size ?: 0).toString()
+        }
     }
 
     override fun onShouldInterceptRequest(rule: MatchedRule) {

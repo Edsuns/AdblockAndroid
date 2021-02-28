@@ -34,6 +34,8 @@ class BlockingInfoDialogFragment : BottomSheetDialogFragment() {
     ): View {
         _binding = FragmentBlockingBottomSheetBinding.inflate(inflater, container, false)
 
+        binding.dismissBtn.setOnClickListener { dismiss() }
+
         val recyclerView = binding.blockedList
         recyclerViewAdapter = BlockedListAdapter(inflater)
         recyclerView.adapter = recyclerViewAdapter
@@ -42,7 +44,7 @@ class BlockingInfoDialogFragment : BottomSheetDialogFragment() {
             val blockingInfo = it[viewModel.currentPageUrl]
             if (blockingInfo != null) {
                 val blockedUrlCount = blockingInfo.blockedUrlMap.size
-                if (blockedUrlCount > 0) {
+                if (blockingInfo.allRequests > 0) {
                     binding.title.text =
                         "${getString(R.string.blocked)} $blockedUrlCount ${
                             getString(
@@ -60,6 +62,7 @@ class BlockingInfoDialogFragment : BottomSheetDialogFragment() {
             }
             updateRecyclerView()
         })
+
         return binding.root
     }
 
