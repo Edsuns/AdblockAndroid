@@ -280,12 +280,11 @@ void Filter::parseOption(const char *input, int len) {
         *pFilterOption = static_cast<FilterOption>(*pFilterOption | FOOther);
     } else if (!strncmp(pStart, "elemhide", len)) {
         *pFilterOption = static_cast<FilterOption>(*pFilterOption | FOElemHide);
-    } else if (!strncmp(pStart, "third-party", len)) {
+    } else if (!strncmp(pStart, "third-party", len) || !strncmp(pStart, "3p", len)) {
         *pFilterOption = static_cast<FilterOption>(*pFilterOption | FOThirdParty);
     } else if (!strncmp(pStart, "first-party", len)) {
         // Same as ~third-party
-        *pFilterOption = static_cast<FilterOption>(
-                *pFilterOption | FONotThirdParty);
+        *pFilterOption = static_cast<FilterOption>(*pFilterOption | FONotThirdParty);
     } else if (!strncmp(pStart, "ping", len)) {
         *pFilterOption = static_cast<FilterOption>(*pFilterOption | FOPing);
     } else if (!strncmp(pStart, "popup", len)) {
