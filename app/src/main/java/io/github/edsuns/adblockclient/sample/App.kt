@@ -20,7 +20,8 @@ class App : Application() {
             val map = mapOf(
                 "EasyList" to "https://easylist-downloads.adblockplus.org/easylist.txt",
                 "EasyPrivacy" to "https://easylist-downloads.adblockplus.org/easyprivacy.txt",
-                "EasyList China" to "https://easylist-downloads.adblockplus.org/easylistchina.txt"
+                "AdGuard Tracking Protection" to "https://filters.adtidy.org/extension/chromium/filters/3.txt",
+                "AdGuard Chinese" to "https://filters.adtidy.org/extension/chromium/filters/224.txt"
             )
             for ((key, value) in map) {
                 val f = viewModel.addFilter(key, value)
