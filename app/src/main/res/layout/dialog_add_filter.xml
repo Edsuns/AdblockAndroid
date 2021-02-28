@@ -3,17 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:layout_marginTop="15dp"
+    android:layout_marginBottom="5dp"
     android:paddingStart="25dp"
     android:paddingEnd="25dp">
-
-    <EditText
-        android:id="@+id/filterNameEdit"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/name"
-        android:inputType="text"
-        android:imeOptions="actionDone"
-        android:maxLines="1" />
 
     <EditText
         android:id="@+id/filterUrlEdit"

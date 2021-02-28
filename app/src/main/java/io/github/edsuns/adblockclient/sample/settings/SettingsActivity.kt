@@ -74,19 +74,15 @@ class SettingsActivity : AppCompatActivity() {
             .setPositiveButton(
                 android.R.string.ok
             ) { _, _ ->
-                val nameEdit: EditText = dialogView.findViewById(R.id.filterNameEdit)
                 val urlEdit: EditText = dialogView.findViewById(R.id.filterUrlEdit)
                 val url = urlEdit.text.toString()
-                if (nameEdit.text.isNotBlank() && urlEdit.text.isNotBlank()
-                    && URLUtil.isNetworkUrl(url)
-                ) {
-                    val filter =
-                        viewModel.addFilter(nameEdit.text.toString(), url)
+                if (urlEdit.text.isNotBlank() && URLUtil.isNetworkUrl(url)) {
+                    val filter = viewModel.addFilter("", url)
                     viewModel.download(filter.id)
                 } else {
                     Toast.makeText(
                         this,
-                        R.string.invalid_name_or_url, Toast.LENGTH_SHORT
+                        R.string.invalid_url, Toast.LENGTH_SHORT
                     ).show()
                 }
             }
@@ -99,9 +95,7 @@ class SettingsActivity : AppCompatActivity() {
             onBackPressed()
             return true
         }
-        val nameEdit: EditText = dialogView.findViewById(R.id.filterNameEdit)
         val urlEdit: EditText = dialogView.findViewById(R.id.filterUrlEdit)
-        nameEdit.setText("")
         urlEdit.setText("")
         addFilterDialog.show()
         return true
@@ -139,7 +133,7 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: FilterViewHolder, position: Int) {
             filterList[position].let { filter ->
-                holder.filterName.text = filter.name
+                holder.filterName.text = if (filter.name.isBlank()) filter.url else filter.name
                 holder.filterUrl.text = filter.url
                 holder.switch.isChecked = filter.isEnabled
                 holder.switch.isEnabled = filter.filtersCount > 0
@@ -187,8 +181,7 @@ class SettingsActivity : AppCompatActivity() {
                             .setView(renameDialogView)
                             .setNegativeButton(android.R.string.cancel, null)
                             .setPositiveButton(android.R.string.ok) { _, _ ->
-                                if (renameEdit.text.isNotBlank())
-                                    viewModel.renameFilter(it.id, renameEdit.text.toString())
+                                viewModel.renameFilter(it.id, renameEdit.text.toString())
                             }
                             .show()
                     }

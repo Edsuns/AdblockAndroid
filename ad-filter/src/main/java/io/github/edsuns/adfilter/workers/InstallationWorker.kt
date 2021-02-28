@@ -24,6 +24,7 @@ class InstallationWorker(context: Context, params: WorkerParameters) : Worker(
         val checkLicense = inputData.getBoolean(KEY_CHECK_LICENSE, false)
         val rawData = binaryDataStore.loadData(downloadedDataName)
         val dataStr = String(rawData)
+        val name = extractTitle(dataStr)
         val checksum = Checksum(dataStr)
         // reject filter that doesn't include both checksum and license if checkLicense is true
         if (checksum.checksumIn == null && checkLicense && !validateLicense(dataStr)) {
@@ -36,20 +37,26 @@ class InstallationWorker(context: Context, params: WorkerParameters) : Worker(
         }
         if (checksum.validate(rawChecksum)) {
             Timber.v("Filter is up to date: $id")
-            return Result.success(workDataOf(KEY_ALREADY_UP_TO_DATE to true))
+            return Result.success(
+                workDataOf(
+                    KEY_FILTER_NAME to name,
+                    KEY_ALREADY_UP_TO_DATE to true
+                )
+            )
         }
         val filtersCount = persistFilterData(id, rawData)
         binaryDataStore.clearData(downloadedDataName)
         return Result.success(
             workDataOf(
                 KEY_FILTERS_COUNT to filtersCount,
+                KEY_FILTER_NAME to name,
                 KEY_RAW_CHECKSUM to checksum.checksumCalc
             )
         )
     }
 
     private val licenseRegexp = Regex(
-        "^\\s*!\\s*licen[sc]e[\\s\\-:]+([\\S ]+)\\n",
+        "^\\s*!\\s*licen[sc]e[\\s\\-:]+([\\S ]+)$",
         setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)
     )
 
@@ -58,6 +65,13 @@ class InstallationWorker(context: Context, params: WorkerParameters) : Worker(
      * Returning false often means that the filter is invalid.
      */
     private fun validateLicense(data: String): Boolean = licenseRegexp.containsMatchIn(data)
+
+    private val titleRegexp = Regex(
+        "^\\s*!\\s*title[\\s\\-:]+([\\S ]+)$",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)
+    )
+
+    private fun extractTitle(data: String): String? = titleRegexp.find(data)?.groupValues?.get(1)
 
     private fun persistFilterData(id: String, rawBytes: ByteArray): Int {
         val client = AdBlockClient(id)

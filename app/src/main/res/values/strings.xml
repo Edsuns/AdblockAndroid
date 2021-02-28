@@ -7,7 +7,7 @@
     <string name="off">OFF</string>
     <string name="name">Name</string>
     <string name="url">URL</string>
-    <string name="invalid_name_or_url">Invalid Name or Url!</string>
+    <string name="invalid_url">Invalid URL!</string>
     <string name="downloading">Downloading…</string>
     <string name="failed_to_download">Download Failed</string>
     <string name="not_downloaded">Not Downloaded</string>

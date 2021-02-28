@@ -68,12 +68,15 @@ class AdFilter internal constructor(appContext: Context) {
                         if (!alreadyUpToDate) {
                             filter.filtersCount =
                                 workInfo.outputData.getInt(KEY_FILTERS_COUNT, 0)
-                            workInfo.outputData.getString(KEY_RAW_CHECKSUM)?.let {
-                                filter.checksum = it
-                            }
+                            workInfo.outputData.getString(KEY_RAW_CHECKSUM)
+                                ?.let { filter.checksum = it }
                             if (filter.isEnabled || !filter.hasDownloaded()) {
                                 viewModel.enableFilter(filter)
                             }
+                        }
+                        if (filter.name.isBlank()) {
+                            workInfo.outputData.getString(KEY_FILTER_NAME)
+                                ?.let { filter.name = it }
                         }
                         filter.updateTime = System.currentTimeMillis()
                         DownloadState.SUCCESS
