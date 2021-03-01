@@ -126,13 +126,20 @@ class AdFilter internal constructor(appContext: Context) {
             val documentUrl = withContext(Dispatchers.Main) { webView.url }
                 ?: return@runBlocking MatchedRule(null, url, null)
 
-            val rule = detector.shouldBlock(url, documentUrl, ResourceType.from(request))
-            if (rule != null)
+            val resourceType = ResourceType.from(request)
+            val rule = detector.shouldBlock(url, documentUrl, resourceType)
+
+            return@runBlocking if (rule != null) {
+                if (resourceType.isVisibleResource()) {
+                    elementHiding.elemhideBlockedResource(webView, url)
+                }
                 MatchedRule(rule, url, WebResourceResponse(null, null, null))
-            else
-                return@runBlocking MatchedRule(null, url, null)
+            } else MatchedRule(null, url, null)
         }
     }
+
+    private fun ResourceType.isVisibleResource(): Boolean =
+        this === ResourceType.IMAGE || this === ResourceType.MEDIA || this === ResourceType.SUBDOCUMENT
 
     fun setupWebView(webView: WebView) {
         webView.addJavascriptInterface(elementHiding, ElementHiding.JS_BRIDGE_NAME)
