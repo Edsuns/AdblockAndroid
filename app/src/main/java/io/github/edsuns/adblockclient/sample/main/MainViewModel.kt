@@ -16,12 +16,13 @@ class MainViewModel : ViewModel() {
 
     val blockingInfoMap = MutableLiveData(_blockingInfoMap)
 
-    var currentPageUrl: String = ""
+    var currentPageUrl: MutableLiveData<String> = MutableLiveData()
 
     fun logRequest(matchedRule: MatchedRule) {
+        val pageUrl = currentPageUrl.value ?: return
         val data = _blockingInfoMap
-        val blockingInfo = data[currentPageUrl] ?: BlockingInfo()
-        data[currentPageUrl] = blockingInfo
+        val blockingInfo = data[pageUrl] ?: BlockingInfo()
+        data[pageUrl] = blockingInfo
         if (matchedRule.shouldBlock) {
             val requestUrl = matchedRule.resourceUrl.stripParamsAndAnchor()
             blockingInfo.blockedUrlMap[requestUrl] = matchedRule.rule ?: ""

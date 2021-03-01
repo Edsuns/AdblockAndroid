@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
     private lateinit var blockingInfoDialogFragment: BlockingInfoDialogFragment
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -44,11 +44,11 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         filterViewModel = AdFilter.get().viewModel
 
         val popupMenu = PopupMenu(
-            this,
-            binding.menuButton,
-            Gravity.NO_GRAVITY,
-            R.attr.actionOverflowMenuStyle,
-            0
+                this,
+                binding.menuButton,
+                Gravity.NO_GRAVITY,
+                R.attr.actionOverflowMenuStyle,
+                0
         )
         popupMenu.inflate(R.menu.menu_main)
         popupMenu.setOnMenuItemClickListener {
@@ -92,18 +92,25 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         progressAnimator = SmoothProgressAnimator(binding.loadProgress)
 
         val urlText = binding.urlEditText
+        webView.setOnTouchListener { v, _ ->
+            if (urlText.isFocused) {
+                urlText.hideKeyboard()
+                v.requestFocus()
+            }
+            false
+        }
         urlText.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_GO
-                || event.keyCode == KeyEvent.KEYCODE_ENTER
-                && event.action == KeyEvent.ACTION_DOWN
+                    || event.keyCode == KeyEvent.KEYCODE_ENTER
+                    && event.action == KeyEvent.ACTION_DOWN
             ) {
                 val urlIn = urlText.text.toString()
                 webView.loadUrl(
-                    urlIn.smartUrlFilter() ?: URLUtil.composeSearchUrl(
-                        urlIn,
-                        "https://www.bing.com/search?q={}",
-                        "{}"
-                    )
+                        urlIn.smartUrlFilter() ?: URLUtil.composeSearchUrl(
+                                urlIn,
+                                "https://www.bing.com/search?q={}",
+                                "{}"
+                        )
                 )
                 webView.requestFocus()
                 urlText.hideKeyboard()
@@ -111,27 +118,37 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             }
             return@setOnEditorActionListener false
         }
+        urlText.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                urlText.setText(viewModel.currentPageUrl.value)
+            }
+        }
 
-        filterViewModel.isEnabled.observe(this, {
-            binding.countText.text =
-                if (it) getString(R.string.count_none) else getString(R.string.off)
+        viewModel.currentPageUrl.observe(this, {
+            if (it != null && !urlText.isFocused) {
+                urlText.setText(it)
+            }
         })
 
         viewModel.blockingInfoMap.observe(this, { updateBlockedCount() })
+
+        filterViewModel.isEnabled.observe(this, {
+            binding.countText.text =
+                    if (it) getString(R.string.count_none) else getString(R.string.off)
+        })
     }
 
     override fun onPageStarted(url: String?, favicon: Bitmap?) {
         runOnUiThread {
-            url?.let { viewModel.currentPageUrl = it }
+            url?.let { viewModel.currentPageUrl.value = it }
             updateBlockedCount()
         }
     }
 
     override fun progressChanged(newProgress: Int) {
         runOnUiThread {
-            webView.url?.let { viewModel.currentPageUrl = it }
+            webView.url?.let { viewModel.currentPageUrl.value = it }
             progressAnimator.progress = newProgress
-            binding.urlEditText.setText(webView.url)
             if (newProgress == 10) {
                 updateBlockedCount()
             }
@@ -141,7 +158,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
     private fun updateBlockedCount() {
         if (filterViewModel.isEnabled.value == true) {
             val blockedUrlMap =
-                viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl)?.blockedUrlMap
+                    viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl.value)?.blockedUrlMap
             binding.countText.text = (blockedUrlMap?.size ?: 0).toString()
         }
     }

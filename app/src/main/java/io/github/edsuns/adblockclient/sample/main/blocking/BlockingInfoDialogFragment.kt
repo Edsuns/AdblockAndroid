@@ -41,20 +41,21 @@ class BlockingInfoDialogFragment : BottomSheetDialogFragment() {
         recyclerView.adapter = recyclerViewAdapter
         recyclerView.layoutManager = LinearLayoutManager(context)
         viewModel.blockingInfoMap.observe(viewLifecycleOwner, {
-            val blockingInfo = it[viewModel.currentPageUrl]
+            val pageUrl = viewModel.currentPageUrl.value ?: return@observe
+            val blockingInfo = it[pageUrl]
             if (blockingInfo != null) {
                 val blockedUrlCount = blockingInfo.blockedUrlMap.size
                 if (blockingInfo.allRequests > 0) {
                     binding.title.text =
-                        "${getString(R.string.blocked)} $blockedUrlCount ${
-                            getString(
-                                R.string.connections
-                            )
-                        }"
+                            "${getString(R.string.blocked)} $blockedUrlCount ${
+                                getString(
+                                        R.string.connections
+                                )
+                            }"
                     binding.titleDescription.text =
-                        "${blockingInfo.blockedRequests} ${getString(R.string.times_blocked)} / ${blockingInfo.allRequests} ${
-                            getString(R.string.requests)
-                        }"
+                            "${blockingInfo.blockedRequests} ${getString(R.string.times_blocked)} / ${blockingInfo.allRequests} ${
+                                getString(R.string.requests)
+                            }"
                 } else {
                     binding.title.text = getString(R.string.empty)
                     binding.titleDescription.text = ""
@@ -73,7 +74,7 @@ class BlockingInfoDialogFragment : BottomSheetDialogFragment() {
 
     private fun updateRecyclerView() {
         val blockedUrlMap =
-            viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl)?.blockedUrlMap
+                viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl.value)?.blockedUrlMap
         if (blockedUrlMap != null) {
             recyclerViewAdapter.data = blockedUrlMap
             recyclerViewAdapter.notifyDataSetChanged()
