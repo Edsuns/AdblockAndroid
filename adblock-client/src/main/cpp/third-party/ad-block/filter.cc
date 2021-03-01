@@ -377,9 +377,9 @@ bool Filter::hasUnsupportedOptions() const {
 
 bool Filter::isValid() const {
     return !hasUnsupportedOptions()
-           && !(host == nullptr && domainList == nullptr && data == nullptr)
-           && (dataLen > 1 || filterType != FTNoFilterType)
-           && (filterType & FTComment) == 0;
+        && !(host == nullptr && domainList == nullptr && data == nullptr)
+        && (dataLen > 1 || filterType != FTNoFilterType)// valid FTNoFilterType rule: dataLen > 1
+        && (filterType & FTComment) == 0;
 }
 
 bool Filter::contextDomainMatchesFilter(const char *contextDomain) {
