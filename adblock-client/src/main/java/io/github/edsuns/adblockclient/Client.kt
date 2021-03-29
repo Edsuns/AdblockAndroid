@@ -24,4 +24,6 @@ interface Client {
 
     fun getElementHidingSelectors(url: String): String?
 
+    fun getCssRules(url: String): Array<String>?
+
 }

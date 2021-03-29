@@ -8,6 +8,7 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.webkit.URLUtil
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.PopupMenu
 import androidx.activity.viewModels
@@ -44,11 +45,11 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         filterViewModel = AdFilter.get().viewModel
 
         val popupMenu = PopupMenu(
-                this,
-                binding.menuButton,
-                Gravity.NO_GRAVITY,
-                R.attr.actionOverflowMenuStyle,
-                0
+            this,
+            binding.menuButton,
+            Gravity.NO_GRAVITY,
+            R.attr.actionOverflowMenuStyle,
+            0
         )
         popupMenu.inflate(R.menu.menu_main)
         popupMenu.setOnMenuItemClickListener {
@@ -83,10 +84,15 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         webView.webChromeClient = ChromeClient(this)
         val settings = webView.settings
         settings.javaScriptEnabled = true
+        settings.databaseEnabled = true
         settings.domStorageEnabled = true
         // Zooms out the content to fit on screen by width. For example, showing images.
+        settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING
         settings.loadWithOverviewMode = true
         settings.useWideViewPort = true
+        // allow Mixed Content
+        settings.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+
         AdFilter.get().setupWebView(webView)
 
         progressAnimator = SmoothProgressAnimator(binding.loadProgress)
@@ -101,16 +107,16 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         }
         urlText.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_GO
-                    || event.keyCode == KeyEvent.KEYCODE_ENTER
-                    && event.action == KeyEvent.ACTION_DOWN
+                || event.keyCode == KeyEvent.KEYCODE_ENTER
+                && event.action == KeyEvent.ACTION_DOWN
             ) {
                 val urlIn = urlText.text.toString()
                 webView.loadUrl(
-                        urlIn.smartUrlFilter() ?: URLUtil.composeSearchUrl(
-                                urlIn,
-                                "https://www.bing.com/search?q={}",
-                                "{}"
-                        )
+                    urlIn.smartUrlFilter() ?: URLUtil.composeSearchUrl(
+                        urlIn,
+                        "https://www.bing.com/search?q={}",
+                        "{}"
+                    )
                 )
                 webView.requestFocus()
                 urlText.hideKeyboard()
@@ -134,7 +140,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
         filterViewModel.isEnabled.observe(this, {
             binding.countText.text =
-                    if (it) getString(R.string.count_none) else getString(R.string.off)
+                if (it) getString(R.string.count_none) else getString(R.string.off)
         })
     }
 
@@ -158,7 +164,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
     private fun updateBlockedCount() {
         if (filterViewModel.isEnabled.value == true) {
             val blockedUrlMap =
-                    viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl.value)?.blockedUrlMap
+                viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl.value)?.blockedUrlMap
             binding.countText.text = (blockedUrlMap?.size ?: 0).toString()
         }
     }

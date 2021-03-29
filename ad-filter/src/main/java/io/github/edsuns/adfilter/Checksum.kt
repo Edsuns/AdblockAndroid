@@ -36,7 +36,7 @@ class Checksum(val filter: String) {
     private fun normalize(data: String): String {
         var normalize = data.replace("\r", "")
         normalize = Regex("\n+").replace(normalize, "\n")
-        normalize = checksumRegexp.replace(normalize, "")
+        normalize = checksumRegexp.replaceFirst(normalize, "")
         return normalize
     }
 }

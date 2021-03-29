@@ -77,6 +77,14 @@ public:
         size++;
     }
 
+    void concat(LinkedList<T> *other) {
+        Node<T> *temp = other->head;
+        while (temp) {
+            push_back(*temp->data);
+            temp = temp->next;
+        }
+    }
+
     void clear() {
         Node<T> *item = head;
         while (item) {
@@ -91,11 +99,11 @@ public:
         return size;
     }
 
-    ListIterator<T> begin() {
+    ListIterator<T> begin() const {
         return ListIterator<T>(head);
     }
 
-    ListIterator<T> end() {
+    ListIterator<T> end() const {
         return ListIterator<T>(nullptr);
     }
 

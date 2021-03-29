@@ -184,3 +184,28 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_getElementHidingSelectors(JNIE
 
     return bytesToStringUTF(env, selectors);
 }
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_io_github_edsuns_adblockclient_AdBlockClient_getCssRules(JNIEnv *env,
+                                                              jobject /* this */,
+                                                              jlong clientPointer,
+                                                              jstring url) {
+    jboolean isUrlCopy;
+    const char *urlChars = env->GetStringUTFChars(url, &isUrlCopy);
+
+    auto *client = (AdBlockClient *) clientPointer;
+    const LinkedList<std::string> *rules = client->getCssRules(urlChars);
+
+    auto array = env->NewObjectArray(rules->length(),
+                                     env->FindClass("java/lang/String"), nullptr);
+    int i = 0;
+    for (auto r : *rules) {
+        env->SetObjectArrayElement(array, i, env->NewStringUTF(r.c_str()));
+        i++;
+    }
+
+    env->ReleaseStringUTFChars(url, urlChars);
+
+    return array;
+}

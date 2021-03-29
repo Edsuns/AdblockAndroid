@@ -4,6 +4,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import com.anthonycr.mezzanine.FileStream
 import com.anthonycr.mezzanine.MezzanineGenerator
+import org.json.JSONArray
 import timber.log.Timber
 import java.net.MalformedURLException
 import java.net.URL
@@ -91,6 +92,20 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
             .joinToString("")
     }
 
+    private fun List<String>.joinString(): String {
+        val builder = StringBuilder()
+        for (s in this) {
+            builder.append(s)
+        }
+        return builder.toString()
+    }
+
+    private fun getAllCssRules(documentUrl: String): List<String> {
+        val rules = ArrayList(detector.getCssRules(documentUrl))
+        rules.addAll(detector.getCustomCssRules(documentUrl))
+        return rules
+    }
+
     @JavascriptInterface
     fun getEleHidingStyleSheet(documentUrl: String): String? {
         var selectors = detector.getElementHidingSelectors(documentUrl)
@@ -104,8 +119,12 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
         if (customSelectors.isNotBlank()) {
             customSelectors += HIDING_CSS
         }
-        return selectors + customSelectors
+        return selectors + customSelectors + getAllCssRules(documentUrl).joinString()
     }
+
+    // TODO: planing to use this function to inject every rule separately
+    @JavascriptInterface
+    fun getCssRules(documentUrl: String): String = JSONArray(getAllCssRules(documentUrl)).toString()
 
     /**
      * Extract path with query from URL

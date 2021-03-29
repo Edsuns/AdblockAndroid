@@ -9,6 +9,7 @@
 #include <string>
 #include <set>
 #include "./filter.h"
+#include "cosmetic_filter.h"
 
 class CosmeticFilter;
 
@@ -53,6 +54,8 @@ public:
 
     const char *getElementHidingSelectors(const char *contextUrl);
 
+    const LinkedList<std::string> *getCssRules(const char *contextUrl);
+
     void addTag(const std::string &tag);
 
     void removeTag(const std::string &tag);
@@ -80,7 +83,6 @@ public:
     static bool getFingerprint(char *buffer, const Filter &f);
 
     Filter *filters;
-    Filter *cosmeticFilters;
     Filter *htmlFilters;
     Filter *exceptionFilters;
     Filter *noFingerprintFilters;
@@ -116,6 +118,8 @@ public:
     CosmeticFilter *genericElementHidingSelectors;
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingSelectorHashMap;
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingExceptionSelectorHashMap;
+
+    HashMap<NoFingerprintDomain, CosmeticFilterHashSet> *cssRulesMap;
 
     // Used only in the perf program to create a list of bad fingerprints
     BadFingerprintsHashSet *badFingerprintsHashSet;
@@ -155,6 +159,7 @@ protected:
     bool initHashMap(HashMap<K, V> **, char *buffer, int len);
 
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingSelectorsCache;
+    HashMap<NoFingerprintDomain, LinkedList<std::string>> *cssRulesCache;
     char *deserializedBuffer;
     std::set<std::string> tags;
 };

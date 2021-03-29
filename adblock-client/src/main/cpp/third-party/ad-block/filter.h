@@ -32,9 +32,11 @@ enum FilterType {
     // E.g. example.org$$script[data-src="banner"] to delete
     // script element with matching attr
     FTHTMLFiltering = 02000,
+    FTCss = 04000,
+    FTCssException = 010000,
     FTListTypesMask = FTException | FTElementHiding |
                       FTElementHidingException | FTEmpty | FTComment |
-                      FTHTMLFiltering,
+                      FTHTMLFiltering | FTCss | FTCssException,
 };
 
 enum FilterOption {

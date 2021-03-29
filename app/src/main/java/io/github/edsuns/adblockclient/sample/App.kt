@@ -18,10 +18,11 @@ class App : Application() {
         val viewModel = filter.viewModel
         if (!filter.hasInstallation) {
             val map = mapOf(
-                "EasyList" to "https://easylist-downloads.adblockplus.org/easylist.txt",
-                "EasyPrivacy" to "https://easylist-downloads.adblockplus.org/easyprivacy.txt",
+                "EasyList" to "https://filters.adtidy.org/extension/chromium/filters/101.txt",
+                "EasyPrivacy" to "https://filters.adtidy.org/extension/chromium/filters/118.txt",
                 "AdGuard Tracking Protection" to "https://filters.adtidy.org/extension/chromium/filters/3.txt",
-                "AdGuard Chinese" to "https://filters.adtidy.org/extension/chromium/filters/224.txt"
+                "AdGuard Chinese" to "https://filters.adtidy.org/extension/chromium/filters/224.txt",
+                "NoCoin Filter List" to "https://filters.adtidy.org/extension/chromium/filters/242.txt"
             )
             for ((key, value) in map) {
                 val f = viewModel.addFilter(key, value)

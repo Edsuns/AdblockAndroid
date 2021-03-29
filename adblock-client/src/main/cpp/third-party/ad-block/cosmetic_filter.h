@@ -7,10 +7,12 @@
 #define COSMETIC_FILTER_H_
 
 #include <math.h>
-#include <string.h>
+#include <string>
 #include "../hashset-cpp/hash_set.h"
 #include "hash_map.h"
 #include "no_fingerprint_domain.h"
+
+#include "linked_list.h"
 
 class CosmeticFilter {
 public:
@@ -84,6 +86,19 @@ public:
         memset(buffer, 0, *len + 1);
         fillStylesheetBuffer(buffer);
         return buffer;
+    }
+
+    LinkedList<std::string> *toCssList() {
+        LinkedList<std::string> *list = new LinkedList<std::string>();
+        for (uint32_t bucketIndex = 0; bucketIndex < bucket_count_; bucketIndex++) {
+            HashItem<CosmeticFilter> *hashItem = buckets_[bucketIndex];
+            while (hashItem) {
+                CosmeticFilter *cosmeticFilter = hashItem->hash_item_storage_;
+                list->push_back(std::string(cosmeticFilter->data));
+                hashItem = hashItem->next_;
+            }
+        }
+        return list;
     }
 
 private:

@@ -17,6 +17,8 @@ interface AbstractDetector {
     fun shouldBlock(url: String, documentUrl: String, resourceType: ResourceType): String?
     fun getElementHidingSelectors(documentUrl: String): String
     fun getCustomElementHidingSelectors(documentUrl: String): String
+    fun getCssRules(documentUrl: String): List<String>
+    fun getCustomCssRules(documentUrl: String): List<String>
 }
 
 internal class Detector : AbstractDetector {
@@ -96,5 +98,18 @@ internal class Detector : AbstractDetector {
 
     override fun getCustomElementHidingSelectors(documentUrl: String): String {
         return blacklistClient?.getElementHidingSelectors(documentUrl) ?: ""
+    }
+
+    override fun getCssRules(documentUrl: String): List<String> {
+        val result = ArrayList<String>()
+        for (client in clients) {
+            val rules = client.getCssRules(documentUrl) ?: continue
+            result.addAll(rules)
+        }
+        return result
+    }
+
+    override fun getCustomCssRules(documentUrl: String): List<String> {
+        return blacklistClient?.getCssRules(documentUrl)?.toList() ?: emptyList()
     }
 }

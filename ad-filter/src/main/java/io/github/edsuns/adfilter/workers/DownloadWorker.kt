@@ -11,6 +11,7 @@ import io.github.edsuns.adfilter.KEY_FILTER_ID
 import io.github.edsuns.net.HttpRequest
 import timber.log.Timber
 import java.io.IOException
+import java.nio.charset.StandardCharsets
 
 /**
  * Created by Edsuns@qq.com on 2021/1/1.
@@ -26,12 +27,14 @@ class DownloadWorker(context: Context, params: WorkerParameters) : Worker(
         val url = inputData.getString(KEY_DOWNLOAD_URL) ?: return Result.failure()
         Timber.v("Start download: $url $id")
         try {
-            val request = HttpRequest(url).get()
+            val request = HttpRequest(url).timeout(10000).get()
             if (request.isBadStatus) {
                 Timber.v("Failed to download (${request.status}): $url $id")
                 return Result.failure(inputData)
             }
-            val bodyBytes = request.bodyBytes
+            // convert to UTF-8 if needed
+            val bodyBytes =
+                if (request.encoding == StandardCharsets.UTF_8) request.bodyBytes else request.body.toByteArray()
             val dataName = "_$id"
             binaryDataStore.saveData(dataName, bodyBytes)
             return Result.success(
