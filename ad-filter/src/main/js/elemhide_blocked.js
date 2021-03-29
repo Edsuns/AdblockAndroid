@@ -4,27 +4,44 @@ Excluding redefinition of the functions here for performance reason
 (assuming functions code is not changed between invocations).
 */
 if (typeof (hideElement) !== typeof (Function)) {
-  function hideElement(element) {
-    function doHide() {
-      let propertyName = "display";
-      let propertyValue = "none";
-      if (element.localName == "frame") {
-        propertyName = "visibility";
-        propertyValue = "hidden";
-      }
+  function hideElement(element, url) {
+    let propertyName = "display";
+    let propertyValue = "none";
+    if (element.localName == "frame") {
+      propertyName = "visibility";
+      propertyValue = "hidden";
+    }
+    let originalPriority = element.style.getPropertyValue(propertyName);
+    let originalValue = element.style.getPropertyPriority(propertyName);
 
+    function doHide() {
       if (element.style.getPropertyValue(propertyName) != propertyValue ||
         element.style.getPropertyPriority(propertyName) != "important") {
         element.style.setProperty(propertyName, propertyValue, "important");
       }
     }
 
+    function restore() {
+      element.style.setProperty(propertyName, originalValue, originalPriority);
+    }
+
     doHide();
 
-    new MutationObserver(doHide).observe(element,
+    function callback(mutationsList, observer) {
+      for (const mutation of mutationsList) {
+        if (mutation.attributeName == "src" && mutation.target.src != url) {
+          observer.disconnect();// disconnect before restore
+          restore();
+          return;
+        }
+      }
+      doHide();// do hide only when src isn't changed
+    }
+
+    new MutationObserver(callback).observe(element,
       {
         attributes: true,
-        attributeFilter: ["style"]
+        attributeFilter: ["style", "src"]
       });
   }
 
@@ -41,7 +58,7 @@ if (typeof (hideElement) !== typeof (Function)) {
     if (elements.length > 0) {
       for (let element of elements) {
         if (element.src == url) {
-          hideElement(element);
+          hideElement(element, url);
         }
       }
       {{DEBUG}} console.log("Elemhide executed for blocked resource " + url);
