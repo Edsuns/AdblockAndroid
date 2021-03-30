@@ -18,9 +18,15 @@ class MainViewModel : ViewModel() {
 
     var currentPageUrl: MutableLiveData<String> = MutableLiveData()
 
+    var dirtyBlockingInfo = false
+
     fun logRequest(matchedRule: MatchedRule) {
         val pageUrl = currentPageUrl.value ?: return
         val data = _blockingInfoMap
+        if (dirtyBlockingInfo) {
+            data.clear()
+            dirtyBlockingInfo = false
+        }
         val blockingInfo = data[pageUrl] ?: BlockingInfo()
         data[pageUrl] = blockingInfo
         if (matchedRule.shouldBlock) {

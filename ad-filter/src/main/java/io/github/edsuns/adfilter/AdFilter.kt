@@ -41,6 +41,8 @@ class AdFilter internal constructor(appContext: Context) {
                 customFilters.unload()
             }
             viewModel.sharedPreferences.isEnabled = enable
+            // notify onDirty
+            viewModel._onDirty.value = None.Value
         }
         viewModel.workInfo.observeForever { list -> processWorkInfo(list) }
     }

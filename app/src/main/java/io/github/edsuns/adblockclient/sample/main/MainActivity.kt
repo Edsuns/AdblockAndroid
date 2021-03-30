@@ -73,7 +73,9 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
         binding.countText.setOnClickListener {
             if (filterViewModel.isEnabled.value == true) {
-                blockingInfoDialogFragment.show(supportFragmentManager, null)
+                if (!blockingInfoDialogFragment.isAdded) {// fix `IllegalStateException: Fragment already added` when double click
+                    blockingInfoDialogFragment.show(supportFragmentManager, null)
+                }
             } else {
                 startActivity(Intent(this, SettingsActivity::class.java))
             }
@@ -141,6 +143,11 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         filterViewModel.isEnabled.observe(this, {
             binding.countText.text =
                 if (it) getString(R.string.count_none) else getString(R.string.off)
+        })
+
+        filterViewModel.onDirty.observe(this, {
+            webView.clearCache(false)
+            viewModel.dirtyBlockingInfo = true
         })
     }
 

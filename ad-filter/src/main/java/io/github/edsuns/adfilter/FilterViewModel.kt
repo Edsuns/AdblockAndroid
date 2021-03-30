@@ -36,6 +36,10 @@ class FilterViewModel internal constructor(
 
     val downloadFilterIdMap: HashMap<String, String> by lazy { sharedPreferences.downloadFilterIdMap }
 
+    internal val _onDirty: MutableLiveData<None> = MutableLiveData()
+
+    val onDirty: LiveData<None> = _onDirty
+
     init {
         workManager.pruneWork()
         // clear bad running download state
@@ -99,12 +103,16 @@ class FilterViewModel internal constructor(
         if (isEnabled.value == true && filter.filtersCount > 0) {
             filterDataLoader.load(filter.id)
             filter.isEnabled = true
+            // notify onDirty
+            _onDirty.value = None.Value
         }
     }
 
     private fun disableFilter(filter: Filter) {
         filterDataLoader.unload(filter.id)
         filter.isEnabled = false
+        // notify onDirty
+        _onDirty.value = None.Value
     }
 
     fun renameFilter(id: String, name: String) {
