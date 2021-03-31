@@ -7,7 +7,7 @@ import timber.log.Timber
  * Created by Edsuns@qq.com on 2020/10/24.
  */
 internal class FilterDataLoader(
-    private val detector: Detector,
+    val detector: Detector,
     private val binaryDataStore: BinaryDataStore
 ) {
 
@@ -15,35 +15,14 @@ internal class FilterDataLoader(
         if (binaryDataStore.hasData(id)) {
             val client = AdBlockClient(id)
             client.loadProcessedData(binaryDataStore.loadData(id))
-            detector.addClient(client)
+            if (id == ID_CUSTOM) {
+                detector.customFilterClient = client
+            } else {
+                detector.addClient(client)
+            }
         } else {
             Timber.v("Couldn't find client processed data: $id")
         }
-    }
-
-    fun loadWhitelist(id: String) {
-        if (binaryDataStore.hasData(id)) {
-            val client = AdBlockClient(id)
-            client.loadProcessedData(binaryDataStore.loadData(id))
-            detector.whitelistClient = client
-        } else {
-            Timber.v("Couldn't find client processed data: $id")
-        }
-    }
-
-    fun loadBlacklist(id: String) {
-        if (binaryDataStore.hasData(id)) {
-            val client = AdBlockClient(id)
-            client.loadProcessedData(binaryDataStore.loadData(id))
-            detector.blacklistClient = client
-        } else {
-            Timber.v("Couldn't find client processed data: $id")
-        }
-    }
-
-    fun unloadCustomFilters() {
-        detector.whitelistClient = null
-        detector.blacklistClient = null
     }
 
     fun unload(id: String) {
@@ -58,5 +37,31 @@ internal class FilterDataLoader(
         binaryDataStore.clearData(id)
         binaryDataStore.clearData("_$id")
         unload(id)
+    }
+
+    fun isCustomFilterEnabled() = detector.customFilterClient != null
+
+    fun getRawCustomFilter(): RuleIterator {
+        if (binaryDataStore.hasData(RAW_CUSTOM)) {
+            return RuleIterator(String(binaryDataStore.loadData(RAW_CUSTOM)))
+        }
+        return RuleIterator()
+    }
+
+    fun loadCustomFilter(rawData: ByteArray) {
+        binaryDataStore.saveData(RAW_CUSTOM, rawData)
+        val client = AdBlockClient(ID_CUSTOM)
+        client.loadBasicData(rawData, true)
+        binaryDataStore.saveData(ID_CUSTOM, client.getProcessedData())
+        load(ID_CUSTOM)
+    }
+
+    fun unloadCustomFilter() {
+        detector.customFilterClient = null
+    }
+
+    companion object {
+        const val RAW_CUSTOM = "_blacklist"
+        const val ID_CUSTOM = "blacklist"
     }
 }

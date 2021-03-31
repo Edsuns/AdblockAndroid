@@ -28,6 +28,12 @@ class FilterViewModel internal constructor(
 
     val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_FILTER_WORK)
 
+    val enabledFilterCount: LiveData<Int> = MutableLiveData()
+
+    internal fun updateEnabledFilterCount() {
+        (enabledFilterCount as MutableLiveData).value = filterDataLoader.detector.clients.size
+    }
+
     private val filterMap: MutableLiveData<LinkedHashMap<String, Filter>> by lazy {
         MutableLiveData(Json.decodeFromString(sharedPreferences.filterMap))
     }
@@ -36,9 +42,7 @@ class FilterViewModel internal constructor(
 
     val downloadFilterIdMap: HashMap<String, String> by lazy { sharedPreferences.downloadFilterIdMap }
 
-    internal val _onDirty: MutableLiveData<None> = MutableLiveData()
-
-    val onDirty: LiveData<None> = _onDirty
+    val onDirty: LiveData<None> = MutableLiveData()
 
     init {
         workManager.pruneWork()
@@ -103,16 +107,18 @@ class FilterViewModel internal constructor(
         if (isEnabled.value == true && filter.filtersCount > 0) {
             filterDataLoader.load(filter.id)
             filter.isEnabled = true
+            updateEnabledFilterCount()
             // notify onDirty
-            _onDirty.value = None.Value
+            (onDirty as MutableLiveData).value = None.Value
         }
     }
 
     private fun disableFilter(filter: Filter) {
         filterDataLoader.unload(filter.id)
         filter.isEnabled = false
+        updateEnabledFilterCount()
         // notify onDirty
-        _onDirty.value = None.Value
+        (onDirty as MutableLiveData).value = None.Value
     }
 
     fun renameFilter(id: String, name: String) {
@@ -120,6 +126,18 @@ class FilterViewModel internal constructor(
             it.name = name
             flushFilter()
         }
+    }
+
+    fun isCustomFilterEnabled(): Boolean = filterDataLoader.isCustomFilterEnabled()
+
+    fun enableCustomFilter() {
+        if (!isCustomFilterEnabled()) {
+            filterDataLoader.load(FilterDataLoader.ID_CUSTOM)
+        }
+    }
+
+    fun disableCustomFilter() {
+        filterDataLoader.unloadCustomFilter()
     }
 
     fun download(id: String) {

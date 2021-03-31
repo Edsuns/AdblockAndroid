@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         blockingInfoDialogFragment = BlockingInfoDialogFragment.newInstance()
 
         binding.countText.setOnClickListener {
-            if (filterViewModel.isEnabled.value == true) {
+            if (isFilterOn()) {
                 if (!blockingInfoDialogFragment.isAdded) {// fix `IllegalStateException: Fragment already added` when double click
                     blockingInfoDialogFragment.show(supportFragmentManager, null)
                 }
@@ -142,6 +142,8 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
         filterViewModel.isEnabled.observe(this, { updateBlockedCount() })
 
+        filterViewModel.enabledFilterCount.observe(this, { updateBlockedCount() })
+
         filterViewModel.onDirty.observe(this, {
             webView.clearCache(false)
             viewModel.dirtyBlockingInfo = true
@@ -167,9 +169,14 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         }
     }
 
+    private fun isFilterOn(): Boolean {
+        val enabledFilterCount = filterViewModel.enabledFilterCount.value ?: 0
+        return filterViewModel.isEnabled.value == true && enabledFilterCount > 0
+    }
+
     private fun updateBlockedCount() {
         when {
-            filterViewModel.isEnabled.value != true -> {
+            !isFilterOn() && !filterViewModel.isCustomFilterEnabled() -> {
                 binding.countText.text = getString(R.string.off)
             }
             viewModel.dirtyBlockingInfo -> {

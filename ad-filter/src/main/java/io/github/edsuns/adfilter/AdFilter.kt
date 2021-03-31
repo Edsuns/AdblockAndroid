@@ -4,6 +4,7 @@ import android.content.Context
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
+import androidx.lifecycle.MutableLiveData
 import androidx.work.WorkInfo
 import io.github.edsuns.adblockclient.ResourceType
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +22,7 @@ class AdFilter internal constructor(appContext: Context) {
         BinaryDataStore(File(appContext.filesDir, FILE_STORE_DIR))
     private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
     private val elementHiding: ElementHiding = ElementHiding(detector)
-    val customFilters = CustomFilters(binaryDataStore, filterDataLoader)
+    val customFilter = CustomFilter(filterDataLoader)
     val viewModel = FilterViewModel(appContext, filterDataLoader)
 
     val hasInstallation: Boolean
@@ -35,14 +36,15 @@ class AdFilter internal constructor(appContext: Context) {
                         viewModel.enableFilter(it)
                     }
                 }
-                customFilters.load()
+                filterDataLoader.load(FilterDataLoader.ID_CUSTOM)
             } else {
                 filterDataLoader.unloadAll()
-                customFilters.unload()
+                filterDataLoader.unloadCustomFilter()
             }
+            viewModel.updateEnabledFilterCount()
             viewModel.sharedPreferences.isEnabled = enable
             // notify onDirty
-            viewModel._onDirty.value = None.Value
+            (viewModel.onDirty as MutableLiveData).value = None.Value
         }
         viewModel.workInfo.observeForever { list -> processWorkInfo(list) }
     }

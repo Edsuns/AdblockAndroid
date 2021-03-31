@@ -59,7 +59,7 @@ class RuleIterator internal constructor(data: String? = null) {
 
     fun comment(rule: String) {
         if (contains(rule)) {
-            dataBuilder.replace(Regex("^(!\\s+)?$rule\\n$"), "! $rule")
+            dataBuilder.replace(Regex("^(!\\s+)?${Regex.escape(rule)}\\n$"), "! $rule")
         }
     }
 
@@ -68,11 +68,11 @@ class RuleIterator internal constructor(data: String? = null) {
         if (isComment(rule)) {
             mRule = rule.substring(2).trim()
         }
-        dataBuilder.replace(Regex("^!\\s+$mRule\\n$", RegexOption.MULTILINE), mRule)
+        dataBuilder.replace(Regex("^!\\s+${Regex.escape(mRule)}\\n$", RegexOption.MULTILINE), mRule)
     }
 
     fun remove(rule: String) {
-        dataBuilder.replace(Regex("^$rule\\n$", RegexOption.MULTILINE), "")
+        dataBuilder.replace(Regex("^${Regex.escape(rule)}\\n$", RegexOption.MULTILINE), "")
     }
 
     companion object {

@@ -23,13 +23,9 @@ interface AbstractDetector {
 
 internal class Detector : AbstractDetector {
 
-    private val clients = CopyOnWriteArrayList<Client>()
-    internal var whitelistClient: Client? = null
-        set(value) {
-            field = value
-            Timber.v("Whitelist client changed")
-        }
-    internal var blacklistClient: Client? = null
+    val clients = CopyOnWriteArrayList<Client>()
+
+    internal var customFilterClient: Client? = null
         set(value) {
             field = value
             Timber.v("Blacklist client changed")
@@ -59,14 +55,12 @@ internal class Detector : AbstractDetector {
         documentUrl: String,
         resourceType: ResourceType
     ): String? {
-        blacklistClient?.matches(url, documentUrl, resourceType)?.let {
+        customFilterClient?.matches(url, documentUrl, resourceType)?.let {
+            if (it.isException) {
+                return null// don't block exception
+            }
             if (it.shouldBlock) {
                 return it.matchedRule ?: ""
-            }
-        }
-        whitelistClient?.matches(url, documentUrl, resourceType)?.let {
-            if (it.shouldBlock) {
-                return null// don't block whitelist
             }
         }
         var matchResult: MatchResult? = null
@@ -97,7 +91,7 @@ internal class Detector : AbstractDetector {
     }
 
     override fun getCustomElementHidingSelectors(documentUrl: String): String {
-        return blacklistClient?.getElementHidingSelectors(documentUrl) ?: ""
+        return customFilterClient?.getElementHidingSelectors(documentUrl) ?: ""
     }
 
     override fun getCssRules(documentUrl: String): List<String> {
@@ -110,6 +104,6 @@ internal class Detector : AbstractDetector {
     }
 
     override fun getCustomCssRules(documentUrl: String): List<String> {
-        return blacklistClient?.getCssRules(documentUrl)?.toList() ?: emptyList()
+        return customFilterClient?.getCssRules(documentUrl)?.toList() ?: emptyList()
     }
 }
