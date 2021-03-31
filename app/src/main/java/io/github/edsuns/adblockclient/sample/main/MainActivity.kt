@@ -140,14 +140,12 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
         viewModel.blockingInfoMap.observe(this, { updateBlockedCount() })
 
-        filterViewModel.isEnabled.observe(this, {
-            binding.countText.text =
-                if (it) getString(R.string.count_none) else getString(R.string.off)
-        })
+        filterViewModel.isEnabled.observe(this, { updateBlockedCount() })
 
         filterViewModel.onDirty.observe(this, {
             webView.clearCache(false)
             viewModel.dirtyBlockingInfo = true
+            updateBlockedCount()
         })
     }
 
@@ -163,16 +161,25 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             webView.url?.let { viewModel.currentPageUrl.value = it }
             progressAnimator.progress = newProgress
             if (newProgress == 10) {
+                viewModel.clearDirty()
                 updateBlockedCount()
             }
         }
     }
 
     private fun updateBlockedCount() {
-        if (filterViewModel.isEnabled.value == true) {
-            val blockedUrlMap =
-                viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl.value)?.blockedUrlMap
-            binding.countText.text = (blockedUrlMap?.size ?: 0).toString()
+        when {
+            filterViewModel.isEnabled.value != true -> {
+                binding.countText.text = getString(R.string.off)
+            }
+            viewModel.dirtyBlockingInfo -> {
+                binding.countText.text = getString(R.string.count_none)
+            }
+            else -> {
+                val blockedUrlMap =
+                    viewModel.blockingInfoMap.value?.get(viewModel.currentPageUrl.value)?.blockedUrlMap
+                binding.countText.text = (blockedUrlMap?.size ?: 0).toString()
+            }
         }
     }
 

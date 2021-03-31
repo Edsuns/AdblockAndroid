@@ -1797,12 +1797,8 @@ int serializeFilters(char *buffer, size_t bufferSizeAvail,
 }
 
 // Returns a newly allocated buffer, caller must manually delete[] the buffer
-char *AdBlockClient::serialize(int *totalSize,
-                               bool ignoreCosmeticFilters,
-                               bool ignoreHtmlFilters) const {
+char *AdBlockClient::serialize(int *totalSize, bool ignoreHtmlFilters) const {
   *totalSize = 0;
-  int adjustedNumCosmeticFilters =
-      ignoreCosmeticFilters ? 0 : numCosmeticFilters;
   int adjustedNumHtmlFilters = ignoreHtmlFilters ? 0 : numHtmlFilters;
 
   uint32_t hostAnchoredHashSetSize = 0;
@@ -1884,7 +1880,7 @@ char *AdBlockClient::serialize(int *totalSize,
                              "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
                              numFilters,
                              numExceptionFilters,
-                             adjustedNumCosmeticFilters,
+                             numCosmeticFilters,
                              adjustedNumHtmlFilters,
                              numNoFingerprintFilters,
                              numNoFingerprintExceptionFilters,

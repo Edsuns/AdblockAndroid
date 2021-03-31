@@ -84,7 +84,7 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_getProcessedData(JNIEnv *env,
     auto *client = (AdBlockClient *) clientPointer;
 
     int size;
-    char *data = client->serialize(&size, false, false);
+    char *data = client->serialize(&size, false);
 
     jbyteArray dataBytes = env->NewByteArray(size);
     env->SetByteArrayRegion(dataBytes, 0, size, reinterpret_cast<jbyte *>(data));

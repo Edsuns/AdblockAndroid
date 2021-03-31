@@ -20,13 +20,16 @@ class MainViewModel : ViewModel() {
 
     var dirtyBlockingInfo = false
 
+    fun clearDirty() {
+        if (dirtyBlockingInfo) {
+            _blockingInfoMap.clear()
+            dirtyBlockingInfo = false
+        }
+    }
+
     fun logRequest(matchedRule: MatchedRule) {
         val pageUrl = currentPageUrl.value ?: return
         val data = _blockingInfoMap
-        if (dirtyBlockingInfo) {
-            data.clear()
-            dirtyBlockingInfo = false
-        }
         val blockingInfo = data[pageUrl] ?: BlockingInfo()
         data[pageUrl] = blockingInfo
         if (matchedRule.shouldBlock) {

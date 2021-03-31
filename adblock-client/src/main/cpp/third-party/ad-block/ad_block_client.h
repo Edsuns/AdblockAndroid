@@ -64,9 +64,7 @@ public:
 
     // Serializes a the parsed data and bloom filter data into a single buffer.
     // The returned buffer should be deleted.
-    char *serialize(int *size,
-                    bool ignoreCosmeticFilters = true,
-                    bool ignoreHtmlFilters = true) const;
+    char *serialize(int *size, bool ignoreHtmlFilters = true) const;
 
     // Deserializes the buffer, a size is not needed since a serialized.
     // buffer is self described
