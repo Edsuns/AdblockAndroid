@@ -11,7 +11,6 @@ BloomFilter::BloomFilter(unsigned int bitsPerElement,
         hashFns(nullptr), numHashFns(0), byteBufferSize(0), buffer(nullptr) {
     this->hashFns = hashFns;
     this->numHashFns = numHashFns;
-    lastHashes = new uint64_t[numHashFns];
     byteBufferSize = bitsPerElement * estimatedNumElements / 8 + 1;
     bitBufferSize = byteBufferSize * 8;
     buffer = new char[byteBufferSize];
@@ -24,7 +23,6 @@ BloomFilter::BloomFilter(const char *buffer, int byteBufferSize,
         hashFns(nullptr), numHashFns(0), byteBufferSize(0), buffer(nullptr) {
     this->hashFns = hashFns;
     this->numHashFns = numHashFns;
-    lastHashes = new uint64_t[numHashFns];
     this->byteBufferSize = byteBufferSize;
     bitBufferSize = byteBufferSize * 8;
     this->buffer = new char[byteBufferSize];
@@ -35,9 +33,6 @@ BloomFilter::~BloomFilter() {
     if (buffer) {
         delete[] buffer;
     }
-    if (lastHashes) {
-        delete[] lastHashes;
-    }
 }
 
 void BloomFilter::setBit(unsigned int bitLocation) {
@@ -45,7 +40,7 @@ void BloomFilter::setBit(unsigned int bitLocation) {
 }
 
 bool BloomFilter::isBitSet(unsigned int bitLocation) {
-    return !!(buffer[bitLocation / 8] & 1 << bitLocation % 8);
+    return (buffer[bitLocation / 8] & 1 << bitLocation % 8) != 0;
 }
 
 void BloomFilter::add(const char *input, int len) {
@@ -71,7 +66,7 @@ bool BloomFilter::exists(const char *sz) {
 }
 
 void BloomFilter::getHashesForCharCodes(const char *input, int inputLen,
-                                        uint64_t *lastHashes, uint64_t *newHashes,
+                                        const uint64_t *lastHashes, uint64_t *newHashes,
                                         unsigned char lastCharCode) {
     for (int i = 0; i < numHashFns; i++) {
         if (lastHashes) {
@@ -85,21 +80,24 @@ void BloomFilter::getHashesForCharCodes(const char *input, int inputLen,
 
 bool BloomFilter::substringExists(const char *data, int dataLen,
                                   int substringLength) {
+    bool result = false;
+    auto *lastHashes = new uint64_t[numHashFns];// fix data races
     unsigned char lastCharCode = 0;
     for (int i = 0; i < dataLen - substringLength + 1; i++) {
-        getHashesForCharCodes(data + i, substringLength, i == 0
-                                                         ? nullptr : lastHashes, lastHashes,
-                              lastCharCode);
+        getHashesForCharCodes(data + i, substringLength,
+                              i == 0 ? nullptr : lastHashes, lastHashes, lastCharCode);
         bool allSet = true;
         for (int j = 0; j < numHashFns; j++) {
             allSet = allSet && isBitSet(lastHashes[j] % bitBufferSize);
         }
         if (allSet) {
-            return true;
+            result = true;
+            break;
         }
         lastCharCode = data[i];
     }
-    return false;
+    delete[] lastHashes;// don't forget to release the memory
+    return result;
 }
 
 bool BloomFilter::substringExists(const char *data, int substringLength) {

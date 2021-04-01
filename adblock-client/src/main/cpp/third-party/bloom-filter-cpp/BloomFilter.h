@@ -92,7 +92,6 @@ public:
 
 private:
     HashFn *hashFns;
-    uint64_t *lastHashes;
     int numHashFns;
     unsigned int byteBufferSize;
     unsigned int bitBufferSize;
@@ -116,7 +115,7 @@ private:
      *  with lastHashes.
      */
     void getHashesForCharCodes(const char *input, int inputLen,
-                               uint64_t *lastHashes, uint64_t *newHashes,
+                               const uint64_t *lastHashes, uint64_t *newHashes,
                                unsigned char lastCharCode);
 };
 
