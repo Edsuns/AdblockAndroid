@@ -21,6 +21,7 @@ class App : Application() {
                 "EasyList" to "https://filters.adtidy.org/extension/chromium/filters/101.txt",
                 "EasyPrivacy" to "https://filters.adtidy.org/extension/chromium/filters/118.txt",
                 "AdGuard Tracking Protection" to "https://filters.adtidy.org/extension/chromium/filters/3.txt",
+                "AdGuard Annoyances" to "https://filters.adtidy.org/extension/chromium/filters/14.txt",
                 "AdGuard Chinese" to "https://filters.adtidy.org/extension/chromium/filters/224.txt",
                 "NoCoin Filter List" to "https://filters.adtidy.org/extension/chromium/filters/242.txt"
             )

@@ -1,9 +1,10 @@
-package io.github.edsuns.adfilter
+package io.github.edsuns.adfilter.script
 
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import com.anthonycr.mezzanine.FileStream
 import com.anthonycr.mezzanine.MezzanineGenerator
+import io.github.edsuns.adfilter.AbstractDetector
 import org.json.JSONArray
 import timber.log.Timber
 import java.net.MalformedURLException
@@ -24,20 +25,14 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
         fun js(): String
     }
 
-    private val hiddenFlag = randomAlphanumericString()
-
     private val eleHidingJS by lazy {
-        var js = MezzanineGenerator.EleHidingInjection().js()
-        js = js.replace(DEBUG_FLAG, if (BuildConfig.DEBUG) "" else "//")
-        js = js.replace(JS_BRIDGE, JS_BRIDGE_NAME)
-        js = js.replace(HIDDEN_FLAG, hiddenFlag)
-        js
+        val js = MezzanineGenerator.EleHidingInjection().js()
+        ScriptInjection.parseScript(js, JS_BRIDGE_NAME)
     }
 
     private val elemhideBlockedJs by lazy {
-        var js = MezzanineGenerator.ElemhideBlockedInjection().js()
-        js = js.replace(DEBUG_FLAG, if (BuildConfig.DEBUG) "" else "//")
-        js
+        val js = MezzanineGenerator.ElemhideBlockedInjection().js()
+        ScriptInjection.parseScript(js, JS_BRIDGE_NAME)
     }
 
     internal fun elemhideBlockedResource(webView: WebView?, resourceUrl: String?) {
@@ -61,7 +56,7 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
             .append(filenameWithQuery)
             .append("']")
 
-        // all UI views including AdblockWebView can be touched from UI thread only
+        // all UI views including WebView can be touched from UI thread only
         webView?.post {
             val scriptBuilder = StringBuilder(elemhideBlockedJs)
                 .append("\n\n")
@@ -80,16 +75,6 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
     fun perform(webView: WebView?, url: String?) {
         webView?.evaluateJavascript(eleHidingJS, null)
         Timber.v("Evaluated element hiding Javascript for $url")
-    }
-
-    private fun randomAlphanumericString(): String {
-        val charPool: List<Char> = ('a'..'z') + ('A'..'Z')
-        val outputStrLength = (10..36).shuffled().first()
-
-        return (1..outputStrLength)
-            .map { kotlin.random.Random.nextInt(0, charPool.size) }
-            .map(charPool::get)
-            .joinToString("")
     }
 
     private fun List<String>.joinString(): String {
@@ -135,7 +120,7 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
     @Throws(MalformedURLException::class)
     fun extractPathWithQuery(urlString: String?): String {
         val url = URL(urlString)
-        val sb = java.lang.StringBuilder(url.path)
+        val sb = StringBuilder(url.path)
         if (url.query != null) {
             sb.append("?")
             sb.append(url.query)
@@ -170,9 +155,6 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
         private val U2028 = String(byteArrayOf(0xE2.toByte(), 0x80.toByte(), 0xA8.toByte()))
         private val U2029 = String(byteArrayOf(0xE2.toByte(), 0x80.toByte(), 0xA9.toByte()))
 
-        private const val DEBUG_FLAG = "{{DEBUG}}"
-        private const val JS_BRIDGE = "{{BRIDGE}}"
-        private const val HIDDEN_FLAG = "{{HIDDEN_FLAG}}"
         const val JS_BRIDGE_NAME = "getEleHidingStyleSheet"
         private const val HIDING_CSS = "{display: none !important; visibility: hidden !important;}"
     }

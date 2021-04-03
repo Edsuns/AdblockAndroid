@@ -26,4 +26,6 @@ interface Client {
 
     fun getCssRules(url: String): Array<String>?
 
+    fun getScriptlets(url: String): Array<String>?
+
 }

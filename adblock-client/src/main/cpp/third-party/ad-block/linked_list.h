@@ -78,10 +78,12 @@ public:
     }
 
     void concat(LinkedList<T> *other) {
-        Node<T> *temp = other->head;
-        while (temp) {
-            push_back(*temp->data);
-            temp = temp->next;
+        if (other) {
+            Node<T> *temp = other->head;
+            while (temp) {
+                push_back(*temp->data);
+                temp = temp->next;
+            }
         }
     }
 

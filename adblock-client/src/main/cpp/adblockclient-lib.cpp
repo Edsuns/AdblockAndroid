@@ -101,6 +101,7 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_getFiltersCount(JNIEnv *env, j
     int count = client->numFilters
                 + client->numCosmeticFilters
                 + client->numHtmlFilters
+                + client->numScriptletFilters
                 + client->numExceptionFilters
                 + client->numNoFingerprintFilters
                 + client->numNoFingerprintExceptionFilters
@@ -185,6 +186,20 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_getElementHidingSelectors(JNIE
     return bytesToStringUTF(env, selectors);
 }
 
+jobjectArray toStringArray(JNIEnv *env, const LinkedList<std::string> *rules) {
+    if (!rules) {
+        return nullptr;
+    }
+    auto array = env->NewObjectArray(rules->length(),
+                                     env->FindClass("java/lang/String"), nullptr);
+    int i = 0;
+    for (auto r : *rules) {
+        env->SetObjectArrayElement(array, i, env->NewStringUTF(r.c_str()));
+        i++;
+    }
+    return array;
+}
+
 extern "C"
 JNIEXPORT jobjectArray JNICALL
 Java_io_github_edsuns_adblockclient_AdBlockClient_getCssRules(JNIEnv *env,
@@ -197,15 +212,24 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_getCssRules(JNIEnv *env,
     auto *client = (AdBlockClient *) clientPointer;
     const LinkedList<std::string> *rules = client->getCssRules(urlChars);
 
-    auto array = env->NewObjectArray(rules->length(),
-                                     env->FindClass("java/lang/String"), nullptr);
-    int i = 0;
-    for (auto r : *rules) {
-        env->SetObjectArrayElement(array, i, env->NewStringUTF(r.c_str()));
-        i++;
-    }
+    env->ReleaseStringUTFChars(url, urlChars);
+
+    return toStringArray(env, rules);
+}
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_io_github_edsuns_adblockclient_AdBlockClient_getScriptlets(JNIEnv *env,
+                                                                jobject /* this */,
+                                                                jlong clientPointer,
+                                                                jstring url) {
+    jboolean isUrlCopy;
+    const char *urlChars = env->GetStringUTFChars(url, &isUrlCopy);
+
+    auto *client = (AdBlockClient *) clientPointer;
+    const LinkedList<std::string> *rules = client->getScriptlets(urlChars);
 
     env->ReleaseStringUTFChars(url, urlChars);
 
-    return array;
+    return toStringArray(env, rules);
 }

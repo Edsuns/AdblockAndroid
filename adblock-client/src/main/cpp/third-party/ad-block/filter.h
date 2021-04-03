@@ -34,9 +34,10 @@ enum FilterType {
     FTHTMLFiltering = 02000,
     FTCss = 04000,
     FTCssException = 010000,
+    FTScriptlet = 020000,
     FTListTypesMask = FTException | FTElementHiding |
                       FTElementHidingException | FTEmpty | FTComment |
-                      FTHTMLFiltering | FTCss | FTCssException,
+                      FTHTMLFiltering | FTCss | FTCssException | FTScriptlet,
 };
 
 enum FilterOption {

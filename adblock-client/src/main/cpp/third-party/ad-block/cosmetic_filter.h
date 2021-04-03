@@ -88,7 +88,7 @@ public:
         return buffer;
     }
 
-    LinkedList<std::string> *toCssList() {
+    LinkedList<std::string> *toStringList() {
         LinkedList<std::string> *list = new LinkedList<std::string>();
         for (uint32_t bucketIndex = 0; bucketIndex < bucket_count_; bucketIndex++) {
             HashItem<CosmeticFilter> *hashItem = buckets_[bucketIndex];

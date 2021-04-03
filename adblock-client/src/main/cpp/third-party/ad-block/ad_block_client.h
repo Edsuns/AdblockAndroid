@@ -56,6 +56,8 @@ public:
 
     const LinkedList<std::string> *getCssRules(const char *contextUrl);
 
+    const LinkedList<std::string> *getScriptlets(const char *contextUrl);
+
     void addTag(const std::string &tag);
 
     void removeTag(const std::string &tag);
@@ -93,6 +95,7 @@ public:
     int numFilters;
     int numCosmeticFilters;
     int numHtmlFilters;
+    int numScriptletFilters;
     int numExceptionFilters;
     int numNoFingerprintFilters;
     int numNoFingerprintExceptionFilters;
@@ -118,6 +121,8 @@ public:
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingExceptionSelectorHashMap;
 
     HashMap<NoFingerprintDomain, CosmeticFilterHashSet> *cssRulesMap;
+
+    HashMap<NoFingerprintDomain, CosmeticFilterHashSet> *scriptletMap;
 
     // Used only in the perf program to create a list of bad fingerprints
     BadFingerprintsHashSet *badFingerprintsHashSet;
@@ -158,6 +163,7 @@ protected:
 
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingSelectorsCache;
     HashMap<NoFingerprintDomain, LinkedList<std::string>> *cssRulesCache;
+    HashMap<NoFingerprintDomain, LinkedList<std::string>> *scriptletCache;
     char *deserializedBuffer;
     std::set<std::string> tags;
 };

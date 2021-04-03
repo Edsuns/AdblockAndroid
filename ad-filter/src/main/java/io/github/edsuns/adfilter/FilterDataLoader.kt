@@ -61,7 +61,7 @@ internal class FilterDataLoader(
     }
 
     companion object {
-        const val RAW_CUSTOM = "_blacklist"
-        const val ID_CUSTOM = "blacklist"
+        const val RAW_CUSTOM = "_custom"
+        const val ID_CUSTOM = "custom"
     }
 }

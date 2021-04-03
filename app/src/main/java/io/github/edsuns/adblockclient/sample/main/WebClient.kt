@@ -26,7 +26,7 @@ class WebClient(private val webViewClientListener: WebViewClientListener) : WebV
     }
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-        filter.performElementHiding(view, url)
+        filter.performScript(view, url)
         webViewClientListener.onPageStarted(url, favicon)
     }
 }

@@ -19,6 +19,8 @@ interface AbstractDetector {
     fun getCustomElementHidingSelectors(documentUrl: String): String
     fun getCssRules(documentUrl: String): List<String>
     fun getCustomCssRules(documentUrl: String): List<String>
+    fun getScriptlets(documentUrl: String): List<String>?
+    fun getCustomScriptlets(documentUrl: String): List<String>?
 }
 
 internal class Detector : AbstractDetector {
@@ -105,5 +107,18 @@ internal class Detector : AbstractDetector {
 
     override fun getCustomCssRules(documentUrl: String): List<String> {
         return customFilterClient?.getCssRules(documentUrl)?.toList() ?: emptyList()
+    }
+
+    override fun getScriptlets(documentUrl: String): List<String> {
+        val result = ArrayList<String>()
+        for (client in clients) {
+            val rules = client.getScriptlets(documentUrl) ?: continue
+            result.addAll(rules)
+        }
+        return result
+    }
+
+    override fun getCustomScriptlets(documentUrl: String): List<String> {
+        return customFilterClient?.getScriptlets(documentUrl)?.toList() ?: emptyList()
     }
 }

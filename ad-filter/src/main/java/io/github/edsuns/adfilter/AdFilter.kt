@@ -7,6 +7,8 @@ import android.webkit.WebView
 import androidx.lifecycle.MutableLiveData
 import androidx.work.WorkInfo
 import io.github.edsuns.adblockclient.ResourceType
+import io.github.edsuns.adfilter.script.ElementHiding
+import io.github.edsuns.adfilter.script.Scriptlet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -22,6 +24,7 @@ class AdFilter internal constructor(appContext: Context) {
         BinaryDataStore(File(appContext.filesDir, FILE_STORE_DIR))
     private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
     private val elementHiding: ElementHiding = ElementHiding(detector)
+    private val scriptlet: Scriptlet = Scriptlet(detector)
     val customFilter = CustomFilter(filterDataLoader)
     val viewModel = FilterViewModel(appContext, filterDataLoader)
 
@@ -147,11 +150,13 @@ class AdFilter internal constructor(appContext: Context) {
 
     fun setupWebView(webView: WebView) {
         webView.addJavascriptInterface(elementHiding, ElementHiding.JS_BRIDGE_NAME)
+        webView.addJavascriptInterface(scriptlet, Scriptlet.JS_BRIDGE_NAME)
     }
 
-    fun performElementHiding(webView: WebView?, url: String?) {
+    fun performScript(webView: WebView?, url: String?) {
         if (viewModel.isEnabled.value == true) {
             elementHiding.perform(webView, url)
+            scriptlet.perform(webView, url)
         }
     }
 

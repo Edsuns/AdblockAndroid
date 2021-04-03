@@ -92,12 +92,17 @@ class AdBlockClient(override val id: String) : Client {
     override fun getElementHidingSelectors(url: String): String? =
         getElementHidingSelectors(nativeClientPointer, url)
 
-    private external fun getElementHidingSelectors(clientPointer: Long, url: String): String?
-
     override fun getCssRules(url: String): Array<String>? =
         getCssRules(nativeClientPointer, url)
 
+    override fun getScriptlets(url: String): Array<String>? =
+        getScriptlets(nativeClientPointer, url)
+
+    private external fun getElementHidingSelectors(clientPointer: Long, url: String): String?
+
     private external fun getCssRules(clientPointer: Long, url: String): Array<String>?
+
+    private external fun getScriptlets(clientPointer: Long, url: String): Array<String>?
 
     @Suppress("unused", "protectedInFinal")
     protected fun finalize() {
