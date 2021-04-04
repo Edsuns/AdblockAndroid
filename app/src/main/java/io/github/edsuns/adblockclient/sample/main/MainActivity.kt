@@ -151,6 +151,21 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         })
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        val bundle = Bundle()
+        webView.saveState(bundle)
+        outState.putBundle(KEY_WEB_VIEW, bundle)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        val bundle = savedInstanceState.getBundle(KEY_WEB_VIEW)
+        if (bundle != null) {
+            webView.restoreState(bundle)
+        }
+        super.onRestoreInstanceState(savedInstanceState)
+    }
+
     override fun onPageStarted(url: String?, favicon: Bitmap?) {
         runOnUiThread {
             url?.let { viewModel.currentPageUrl.value = it }
@@ -200,5 +215,9 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             return
         }
         super.onBackPressed()
+    }
+
+    companion object {
+        const val KEY_WEB_VIEW = "KEY_WEB_VIEW"
     }
 }
