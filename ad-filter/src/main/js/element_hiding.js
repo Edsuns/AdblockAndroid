@@ -22,6 +22,19 @@ var hideElements = function () {
         {{DEBUG}} console.log('stylesheet is empty, skipping injection');
     }
 
+    // hide by ExtendedCss
+    try {
+        var css = {{BRIDGE}}.getExtendedCssStyleSheet(document.location.href);
+        {{DEBUG}} console.log(`ExtendedCss rules(length: ${css.length}) injecting for ${document.location.href}`);
+        if (css.length > 0) {
+            var extendedCss = new ExtendedCss({ styleSheet: css });
+            extendedCss.apply();
+        }
+        {{DEBUG}} console.log(`ExtendedCss rules success for ${document.location.href}`);
+    } catch (err) {
+        {{DEBUG}} console.log(`ExtendedCss rules failed '${css}' for ${document.location.href} by ${err}`);
+    }
+
     document.{{HIDDEN_FLAG}} = true; // set flag not to do it again
 };
 

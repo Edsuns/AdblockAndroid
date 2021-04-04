@@ -54,6 +54,8 @@ public:
 
     const char *getElementHidingSelectors(const char *contextUrl);
 
+    const LinkedList<std::string> *getExtendedCssSelectors(const char *contextUrl);
+
     const LinkedList<std::string> *getCssRules(const char *contextUrl);
 
     const LinkedList<std::string> *getScriptlets(const char *contextUrl);
@@ -119,6 +121,7 @@ public:
     CosmeticFilter *genericElementHidingSelectors;
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingSelectorHashMap;
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingExceptionSelectorHashMap;
+    HashMap<NoFingerprintDomain, CosmeticFilterHashSet> *extendedCssMap;
 
     HashMap<NoFingerprintDomain, CosmeticFilterHashSet> *cssRulesMap;
 
@@ -162,6 +165,7 @@ protected:
     bool initHashMap(HashMap<K, V> **, char *buffer, int len);
 
     HashMap<NoFingerprintDomain, CosmeticFilter> *elementHidingSelectorsCache;
+    HashMap<NoFingerprintDomain, LinkedList<std::string>> *extendedCssCache;
     HashMap<NoFingerprintDomain, LinkedList<std::string>> *cssRulesCache;
     HashMap<NoFingerprintDomain, LinkedList<std::string>> *scriptletCache;
     char *deserializedBuffer;

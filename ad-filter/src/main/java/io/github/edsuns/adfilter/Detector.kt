@@ -17,16 +17,16 @@ interface AbstractDetector {
     fun shouldBlock(url: String, documentUrl: String, resourceType: ResourceType): String?
     fun getElementHidingSelectors(documentUrl: String): String
     fun getCustomElementHidingSelectors(documentUrl: String): String
+    fun getExtendedCssSelectors(documentUrl: String): List<String>
     fun getCssRules(documentUrl: String): List<String>
-    fun getCustomCssRules(documentUrl: String): List<String>
-    fun getScriptlets(documentUrl: String): List<String>?
-    fun getCustomScriptlets(documentUrl: String): List<String>?
+    fun getScriptlets(documentUrl: String): List<String>
 }
 
 internal class Detector : AbstractDetector {
 
     val clients = CopyOnWriteArrayList<Client>()
 
+    // null means disabled
     internal var customFilterClient: Client? = null
         set(value) {
             field = value
@@ -96,29 +96,27 @@ internal class Detector : AbstractDetector {
         return customFilterClient?.getElementHidingSelectors(documentUrl) ?: ""
     }
 
-    override fun getCssRules(documentUrl: String): List<String> {
+    private fun getRulesIntoList(transform: (client: Client) -> Array<String>?): List<String> {
         val result = ArrayList<String>()
         for (client in clients) {
-            val rules = client.getCssRules(documentUrl) ?: continue
+            val rules = transform(client) ?: continue
+            result.addAll(rules)
+        }
+        // TODO: validate custom rules because rules containing any wrong will break
+        customFilterClient?.let {
+            val rules = transform(it) ?: return@let
             result.addAll(rules)
         }
         return result
     }
 
-    override fun getCustomCssRules(documentUrl: String): List<String> {
-        return customFilterClient?.getCssRules(documentUrl)?.toList() ?: emptyList()
-    }
+    override fun getExtendedCssSelectors(documentUrl: String): List<String> =
+        getRulesIntoList { it.getExtendedCssSelectors(documentUrl) }
 
-    override fun getScriptlets(documentUrl: String): List<String> {
-        val result = ArrayList<String>()
-        for (client in clients) {
-            val rules = client.getScriptlets(documentUrl) ?: continue
-            result.addAll(rules)
-        }
-        return result
-    }
+    override fun getCssRules(documentUrl: String): List<String> =
+        getRulesIntoList { it.getCssRules(documentUrl) }
 
-    override fun getCustomScriptlets(documentUrl: String): List<String> {
-        return customFilterClient?.getScriptlets(documentUrl)?.toList() ?: emptyList()
-    }
+    override fun getScriptlets(documentUrl: String): List<String> =
+        getRulesIntoList { it.getScriptlets(documentUrl) }
+
 }

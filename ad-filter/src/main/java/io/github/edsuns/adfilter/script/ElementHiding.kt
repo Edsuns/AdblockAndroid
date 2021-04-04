@@ -20,19 +20,25 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
         fun js(): String
     }
 
+    @FileStream("src/main/js/extended-css.min.js")
+    interface ExtendedCssInjection {
+        fun js(): String
+    }
+
     @FileStream("src/main/js/element_hiding.js")
     interface EleHidingInjection {
         fun js(): String
     }
 
     private val eleHidingJS by lazy {
-        val js = MezzanineGenerator.EleHidingInjection().js()
-        ScriptInjection.parseScript(js, JS_BRIDGE_NAME)
+        var js = MezzanineGenerator.ExtendedCssInjection().js()
+        js += ScriptInjection.parseScript(this, MezzanineGenerator.EleHidingInjection().js())
+        js
     }
 
     private val elemhideBlockedJs by lazy {
         val js = MezzanineGenerator.ElemhideBlockedInjection().js()
-        ScriptInjection.parseScript(js, JS_BRIDGE_NAME)
+        ScriptInjection.parseScript(this, js)
     }
 
     internal fun elemhideBlockedResource(webView: WebView?, resourceUrl: String?) {
@@ -85,12 +91,6 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
         return builder.toString()
     }
 
-    private fun getAllCssRules(documentUrl: String): List<String> {
-        val rules = ArrayList(detector.getCssRules(documentUrl))
-        rules.addAll(detector.getCustomCssRules(documentUrl))
-        return rules
-    }
-
     @JavascriptInterface
     fun getEleHidingStyleSheet(documentUrl: String): String? {
         var selectors = detector.getElementHidingSelectors(documentUrl)
@@ -104,12 +104,23 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
         if (customSelectors.isNotBlank()) {
             customSelectors += HIDING_CSS
         }
-        return selectors + customSelectors + getAllCssRules(documentUrl).joinString()
+        return selectors + customSelectors + detector.getCssRules(documentUrl).joinString()
+    }
+
+    @JavascriptInterface
+    fun getExtendedCssStyleSheet(documentUrl: String): String {
+        val extendedCss = detector.getExtendedCssSelectors(documentUrl)
+        if (extendedCss.isNotEmpty()) {
+            // join to String with ", "
+            return extendedCss.joinToString() + HIDING_CSS
+        }
+        return ""
     }
 
     // TODO: planing to use this function to inject every rule separately
     @JavascriptInterface
-    fun getCssRules(documentUrl: String): String = JSONArray(getAllCssRules(documentUrl)).toString()
+    fun getCssRules(documentUrl: String): String =
+        JSONArray(detector.getCssRules(documentUrl)).toString()
 
     /**
      * Extract path with query from URL
@@ -155,7 +166,6 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
         private val U2028 = String(byteArrayOf(0xE2.toByte(), 0x80.toByte(), 0xA8.toByte()))
         private val U2029 = String(byteArrayOf(0xE2.toByte(), 0x80.toByte(), 0xA9.toByte()))
 
-        const val JS_BRIDGE_NAME = "getEleHidingStyleSheet"
         private const val HIDING_CSS = "{display: none !important; visibility: hidden !important;}"
     }
 }

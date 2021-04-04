@@ -37,10 +37,7 @@ class Scriptlet internal constructor(private val detector: AbstractDetector) {
         var js = MezzanineGenerator.Scriptlets1().js()
         js += MezzanineGenerator.Scriptlets2().js()
         js += MezzanineGenerator.Scriptlets3().js()
-        js += ScriptInjection.parseScript(
-            MezzanineGenerator.ScriptletsInjection().js(),
-            JS_BRIDGE_NAME
-        )
+        js += ScriptInjection.parseScript(this, MezzanineGenerator.ScriptletsInjection().js())
         js
     }
 
@@ -51,9 +48,7 @@ class Scriptlet internal constructor(private val detector: AbstractDetector) {
 
     @JavascriptInterface
     fun getScriptlets(documentUrl: String): String {
-        val list = (detector.getScriptlets(documentUrl) ?: return "[]") as ArrayList
-        val custom = detector.getCustomScriptlets(documentUrl) ?: return "[]"
-        list.addAll(custom)
+        val list = detector.getScriptlets(documentUrl)
         val json = list.toScriptletsJSON()
         Timber.v("offer scriptlets: $json")
         return json
@@ -70,9 +65,5 @@ class Scriptlet internal constructor(private val detector: AbstractDetector) {
         builder.insert(0, '[')
         builder.append(']')
         return builder.toString().replace('\'', '"')// only allow double quotes
-    }
-
-    companion object {
-        const val JS_BRIDGE_NAME = "getScriptlets"
     }
 }

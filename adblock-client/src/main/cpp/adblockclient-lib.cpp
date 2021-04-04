@@ -202,6 +202,23 @@ jobjectArray toStringArray(JNIEnv *env, const LinkedList<std::string> *rules) {
 
 extern "C"
 JNIEXPORT jobjectArray JNICALL
+Java_io_github_edsuns_adblockclient_AdBlockClient_getExtendedCssSelectors(JNIEnv *env,
+                                                                          jobject /* this */,
+                                                                          jlong clientPointer,
+                                                                          jstring url) {
+    jboolean isUrlCopy;
+    const char *urlChars = env->GetStringUTFChars(url, &isUrlCopy);
+
+    auto *client = (AdBlockClient *) clientPointer;
+    const LinkedList<std::string> *rules = client->getExtendedCssSelectors(urlChars);
+
+    env->ReleaseStringUTFChars(url, urlChars);
+
+    return toStringArray(env, rules);
+}
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
 Java_io_github_edsuns_adblockclient_AdBlockClient_getCssRules(JNIEnv *env,
                                                               jobject /* this */,
                                                               jlong clientPointer,

@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.work.WorkInfo
 import io.github.edsuns.adblockclient.ResourceType
 import io.github.edsuns.adfilter.script.ElementHiding
+import io.github.edsuns.adfilter.script.ScriptInjection
 import io.github.edsuns.adfilter.script.Scriptlet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -149,8 +150,8 @@ class AdFilter internal constructor(appContext: Context) {
         this === ResourceType.IMAGE || this === ResourceType.MEDIA || this === ResourceType.SUBDOCUMENT
 
     fun setupWebView(webView: WebView) {
-        webView.addJavascriptInterface(elementHiding, ElementHiding.JS_BRIDGE_NAME)
-        webView.addJavascriptInterface(scriptlet, Scriptlet.JS_BRIDGE_NAME)
+        webView.addJavascriptInterface(elementHiding, ScriptInjection.bridgeNameFor(elementHiding))
+        webView.addJavascriptInterface(scriptlet, ScriptInjection.bridgeNameFor(scriptlet))
     }
 
     fun performScript(webView: WebView?, url: String?) {

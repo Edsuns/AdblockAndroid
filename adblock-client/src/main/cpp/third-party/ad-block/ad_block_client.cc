@@ -308,6 +308,10 @@ const LinkedList<std::string> *getRulesFrom(HashMap<NoFingerprintDomain,
   return result;
 }
 
+const LinkedList<std::string> *AdBlockClient::getExtendedCssSelectors(const char *contextUrl) {
+  return getRulesFrom(extendedCssMap, &extendedCssCache, contextUrl);
+}
+
 const LinkedList<std::string> *AdBlockClient::getCssRules(const char *contextUrl) {
   return getRulesFrom(cssRulesMap, &cssRulesCache, contextUrl);
 }
@@ -646,7 +650,7 @@ void parseFilter(const char *input, const char *end, Filter *f,
             f->filterType = FTCssException;
             p += 4;
             break;
-          case '?':
+          case '?':// ignore
           case '%':// example.com#@%#window.__gaq = undefined;
           default:
             break;
@@ -662,6 +666,9 @@ void parseFilter(const char *input, const char *end, Filter *f,
             p += 3;
             break;
           case '?':// https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#extended-css-selectors-1
+            f->filterType = FTExtendedCss;
+            p += 3;
+            break;
           case '%':
             // example.org#%#//scriptlet("abort-on-property-read", "alert")
             if (*(p + 3) == '/' && *(p + 4) == '/') {
@@ -723,7 +730,8 @@ void parseFilter(const char *input, const char *end, Filter *f,
   char fingerprintBuffer[AdBlockClient::kFingerprintSize + 1];
   fingerprintBuffer[AdBlockClient::kFingerprintSize] = '\0';
 
-  if (f->filterType == FTCss || f->filterType == FTCssException || f->filterType == FTScriptlet) {
+  if (f->filterType == FTCss || f->filterType == FTCssException
+      || f->filterType == FTScriptlet || f->filterType == FTExtendedCss) {
     return;// do nothing
   }
   if (f->filterType == FTElementHiding) {
@@ -795,6 +803,8 @@ AdBlockClient::AdBlockClient() : filters(nullptr),
                                  genericElementHidingSelectors(nullptr),
                                  elementHidingSelectorsCache(nullptr),
                                  isGenericElementHidingEnabled(false),
+                                 extendedCssMap(nullptr),
+                                 extendedCssCache(nullptr),
                                  cssRulesMap(nullptr),
                                  cssRulesCache(nullptr),
                                  scriptletMap(nullptr),
@@ -894,6 +904,14 @@ void AdBlockClient::clear() {
   if (elementHidingSelectorsCache) {
     delete elementHidingSelectorsCache;
     elementHidingSelectorsCache = nullptr;
+  }
+  if (extendedCssMap) {
+    delete extendedCssMap;
+    extendedCssMap = nullptr;
+  }
+  if (extendedCssCache) {
+    delete extendedCssCache;
+    extendedCssCache = nullptr;
   }
   if (cssRulesMap) {
     delete cssRulesMap;
@@ -1463,6 +1481,7 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
   int newNumHostAnchoredExceptionFilters = 0;
 
   int numCssRules = 0;
+  int numExtendedCss = 0;
 
   // Simple cosmetic filters apply to all sites without exception
   CosmeticFilterHashSet genericCosmeticFilters(1000);
@@ -1497,8 +1516,13 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
             newNumNoFingerprintExceptionFilters++;
           }
           break;
+        case FTExtendedCss:
+          numExtendedCss++;// ExtendedCss belong to Element Hiding
+          // without break
         case FTElementHiding:
         case FTElementHidingException:
+          newNumCosmeticFilters++;
+          break;
         case FTCss:
         case FTCssException:
           numCssRules++;
@@ -1708,6 +1732,7 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
   CosmeticFilterHashMap elementHidingFilterHashMap(6000);
   CosmeticFilterHashMap elementHidingExceptionFilterHashMap(2000);
   // rules count is often close to rules domain count, so we use rules count here
+  auto *extendedCssHashMap = new CosmeticFilterHashMap(numExtendedCss);
   auto *cssRulesHashMap = new CosmeticFilterHashMap(numCssRules);
   auto *scriptletHashMap = new CosmeticFilterHashMap(numScriptletFilters);
 
@@ -1737,6 +1762,9 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
       break;
     case FTElementHidingException:
       putElementHidingFilterToHashMap(&f, &elementHidingExceptionFilterHashMap);
+      break;
+    case FTExtendedCss:
+      putElementHidingFilterToHashMap(&f, extendedCssHashMap);
       break;
     case FTCss:
       putElementHidingFilterToHashMap(&f, cssRulesHashMap);
@@ -1801,6 +1829,9 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
 
   delete cssRulesMap;
   cssRulesMap = cssRulesHashMap;
+
+  delete extendedCssMap;
+  extendedCssMap = extendedCssHashMap;
 
   delete scriptletMap;
   scriptletMap = scriptletHashMap;
@@ -1912,6 +1943,13 @@ char *AdBlockClient::serialize(int *totalSize, bool ignoreHtmlFilters) const {
     genericElementHidingSelectorsSize = genericElementHidingSelectors->Serialize(nullptr);
   }
 
+  uint32_t extendedCssHashMapSize = 0;
+  char *extendedCssHashMapBuffer = nullptr;
+  if (extendedCssMap) {
+    extendedCssHashMapBuffer =
+        extendedCssMap->SerializeOut(&extendedCssHashMapSize);
+  }
+
   uint32_t cssRulesHashMapSize = 0;
   char *cssRulesHashMapBuffer = nullptr;
   if (cssRulesMap) {
@@ -1930,7 +1968,7 @@ char *AdBlockClient::serialize(int *totalSize, bool ignoreHtmlFilters) const {
   char sz[512];
   *totalSize += 1 + snprintf(sz,
                              sizeof(sz),
-                             "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
+                             "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
                              numFilters,
                              numExceptionFilters,
                              numCosmeticFilters,
@@ -1956,6 +1994,7 @@ char *AdBlockClient::serialize(int *totalSize, bool ignoreHtmlFilters) const {
                              elementHidingHashMapSize,
                              elementHidingExceptionHashMapSize,
                              genericElementHidingSelectorsSize,
+                             extendedCssHashMapSize,
                              cssRulesHashMapSize,
                              scriptletHashMapSize);
   *totalSize += serializeFilters(nullptr, 0, filters, numFilters) +
@@ -1988,6 +2027,7 @@ char *AdBlockClient::serialize(int *totalSize, bool ignoreHtmlFilters) const {
   *totalSize += elementHidingHashMapSize;
   *totalSize += elementHidingExceptionHashMapSize;
   *totalSize += genericElementHidingSelectorsSize;
+  *totalSize += extendedCssHashMapSize;
   *totalSize += cssRulesHashMapSize;
   *totalSize += scriptletHashMapSize;
 
@@ -2082,6 +2122,11 @@ char *AdBlockClient::serialize(int *totalSize, bool ignoreHtmlFilters) const {
     genericElementHidingSelectors->Serialize(buffer + pos);
     pos += genericElementHidingSelectorsSize;
   }
+  if (extendedCssMap) {
+    memcpy(buffer + pos, extendedCssHashMapBuffer, extendedCssHashMapSize);
+    pos += extendedCssHashMapSize;
+    delete[] extendedCssHashMapBuffer;
+  }
   if (cssRulesMap) {
     memcpy(buffer + pos, cssRulesHashMapBuffer, cssRulesHashMapSize);
     pos += cssRulesHashMapSize;
@@ -2119,11 +2164,12 @@ bool AdBlockClient::deserialize(char *buffer) {
       elementHidingHashMapSize = 0,
       elementHidingExceptionHashMapSize = 0,
       genericElementHidingSelectorsSize = 0,
+      extendedCssHashMapSize = 0,
       cssRulesHashMapSize = 0,
       scriptletHashMapSize = 0;
   int pos = 0;
   sscanf(buffer + pos,
-         "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
+         "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
          &numFilters,
          &numExceptionFilters, &numCosmeticFilters, &numHtmlFilters, &numScriptletFilters,
          &numNoFingerprintFilters, &numNoFingerprintExceptionFilters,
@@ -2139,7 +2185,8 @@ bool AdBlockClient::deserialize(char *buffer) {
          &noFingerprintDomainExceptionHashSetSize,
          &noFingerprintAntiDomainExceptionHashSetSize,
          &elementHidingHashMapSize, &elementHidingExceptionHashMapSize,
-         &genericElementHidingSelectorsSize, &cssRulesHashMapSize, &scriptletHashMapSize);
+         &genericElementHidingSelectorsSize, &extendedCssHashMapSize,
+         &cssRulesHashMapSize, &scriptletHashMapSize);
   pos += static_cast<int>(strlen(buffer + pos)) + 1;
 
   filters = new Filter[numFilters];
@@ -2234,6 +2281,11 @@ bool AdBlockClient::deserialize(char *buffer) {
   genericElementHidingSelectors = new CosmeticFilter();
   genericElementHidingSelectors->Deserialize(buffer + pos, genericElementHidingSelectorsSize);
   pos += genericElementHidingSelectorsSize;
+
+  if (!initHashMap(&extendedCssMap, buffer + pos, extendedCssHashMapSize)) {
+    return false;
+  }
+  pos += extendedCssHashMapSize;
 
   if (!initHashMap(&cssRulesMap, buffer + pos, cssRulesHashMapSize)) {
     return false;
