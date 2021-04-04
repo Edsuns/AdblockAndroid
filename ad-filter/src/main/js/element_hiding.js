@@ -38,26 +38,23 @@ var hideElements = function () {
     document.{{HIDDEN_FLAG}} = true; // set flag not to do it again
 };
 
-if (document.readyState === 'complete') {
-    {{DEBUG}} console.log('document is in "complete" state, apply hiding')
+try {// run directly in order to take effect faster
     hideElements();
-} else {
-    {{DEBUG}} console.log('installing listener')
-
+} catch (err) {
+    // ignore, may be document isn't ready
+}
+if (document.readyState !== 'complete') {
     document.onreadystatechange = function () {
-        {{DEBUG}} console.log('onreadystatechange() event fired (' + document.readyState + ')')
         if (document.readyState == 'interactive') {
             hideElements();
         }
     }
 
     window.addEventListener('load', function (event) {
-        {{DEBUG}} console.log('load() event fired');
         hideElements();
     });
 
     document.addEventListener('DOMContentLoaded', function () {
-        {{DEBUG}} console.log('DOMContentLoaded() event fired');
         hideElements();
     }, false);
 }
