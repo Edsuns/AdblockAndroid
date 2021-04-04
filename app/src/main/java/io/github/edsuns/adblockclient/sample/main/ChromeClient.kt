@@ -1,5 +1,7 @@
 package io.github.edsuns.adblockclient.sample.main
 
+import android.graphics.Bitmap
+import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 
@@ -10,5 +12,20 @@ class ChromeClient(private val webViewClientListener: WebViewClientListener) : W
 
     override fun onProgressChanged(view: WebView?, newProgress: Int) {
         webViewClientListener.progressChanged(newProgress)
+    }
+
+    override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+        webViewClientListener.onShowCustomView(view, callback)
+    }
+
+    override fun onHideCustomView() {
+        webViewClientListener.onHideCustomView()
+    }
+
+    private val transparent: Bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+
+    override fun getDefaultVideoPoster(): Bitmap {
+        // make video play button a transparent image
+        return transparent
     }
 }
