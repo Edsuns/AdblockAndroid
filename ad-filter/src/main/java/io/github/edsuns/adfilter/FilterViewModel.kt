@@ -40,7 +40,10 @@ class FilterViewModel internal constructor(
 
     val filters: LiveData<LinkedHashMap<String, Filter>> = filterMap
 
-    val downloadFilterIdMap: HashMap<String, String> by lazy { sharedPreferences.downloadFilterIdMap }
+    internal val downloadFilterIdMap: HashMap<String, String> by lazy { sharedPreferences.downloadFilterIdMap }
+
+    // used to observe download has been added or removed
+    val workToFilterMap: LiveData<Map<String, String>> = MutableLiveData(emptyMap())
 
     val onDirty: LiveData<None> = MutableLiveData()
 
@@ -141,6 +144,9 @@ class FilterViewModel internal constructor(
     }
 
     fun download(id: String) {
+        if (downloadFilterIdMap.any { it.value == id }) {
+            return
+        }
         filterMap.value?.get(id)?.let {
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -174,6 +180,8 @@ class FilterViewModel internal constructor(
             downloadFilterIdMap[download.id.toString()] = it.id
             downloadFilterIdMap[install.id.toString()] = it.id
             sharedPreferences.downloadFilterIdMap = downloadFilterIdMap
+            // notify download work added
+            (workToFilterMap as MutableLiveData).postValue(downloadFilterIdMap)
             // mark the beginning of the download
             it.downloadState = DownloadState.NONE
             // start the work

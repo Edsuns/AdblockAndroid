@@ -1,6 +1,15 @@
 package io.github.edsuns.adblockclient.sample
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import io.github.edsuns.adblockclient.sample.main.MainActivity
+import io.github.edsuns.adblockclient.sample.settings.SettingsActivity
 import io.github.edsuns.adfilter.AdFilter
 import timber.log.Timber
 
@@ -16,19 +25,62 @@ class App : Application() {
 
         val filter = AdFilter.create(this)
         val viewModel = filter.viewModel
-        if (!filter.hasInstallation) {
-            val map = mapOf(
-                "EasyList" to "https://filters.adtidy.org/extension/chromium/filters/101.txt",
-                "EasyPrivacy" to "https://filters.adtidy.org/extension/chromium/filters/118.txt",
-                "AdGuard Tracking Protection" to "https://filters.adtidy.org/extension/chromium/filters/3.txt",
-                "AdGuard Annoyances" to "https://filters.adtidy.org/extension/chromium/filters/14.txt",
-                "AdGuard Chinese" to "https://filters.adtidy.org/extension/chromium/filters/224.txt",
-                "NoCoin Filter List" to "https://filters.adtidy.org/extension/chromium/filters/242.txt"
-            )
-            for ((key, value) in map) {
-                val f = viewModel.addFilter(key, value)
-                viewModel.download(f.id)
+
+        viewModel.workToFilterMap.observeForever { notifyDownloading(it.isEmpty()) }
+    }
+
+    private var isDownloading = false
+    private val channelId = "DOWNLOAD"
+    private val notificationId = 1
+
+    private fun notifyDownloading(finished: Boolean) {
+        if (isDownloading != finished) {// only accept valid event
+            return
+        }
+
+        val clazz = if (finished) MainActivity::class.java else SettingsActivity::class.java
+        val intent = Intent(this, clazz).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+
+        val builder = NotificationCompat.Builder(this, channelId).apply {
+            setContentTitle(getString(R.string.filter_download))
+            setContentText(getString(R.string.download_in_progress))
+            setSmallIcon(R.drawable.ic_launcher_foreground)
+            setContentIntent(pendingIntent)
+            setDefaults(NotificationCompat.DEFAULT_ALL)
+            setVibrate(longArrayOf(0L))
+            setSound(null)
+            priority = NotificationCompat.PRIORITY_HIGH
+        }
+        NotificationManagerCompat.from(this).apply {
+            // Make a channel if necessary
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // Create the NotificationChannel, but only on API 26+ because
+                // the NotificationChannel class is new and not in the support library
+                val name: CharSequence = getString(R.string.notification_channel_name)
+                val description: String = getString(R.string.notification_description)
+                val importance = NotificationManager.IMPORTANCE_HIGH
+                val channel = NotificationChannel(channelId, name, importance)
+                channel.setSound(null, null)
+                channel.description = description
+
+                // Add the channel
+                createNotificationChannel(channel)
             }
+            if (finished) {
+                isDownloading = false
+                builder.setContentText(getString(R.string.download_complete))
+                    .setProgress(0, 0, false)
+                    .setOngoing(false)
+            } else {
+                isDownloading = true
+                builder.setProgress(0, 0, true)
+                    .setOngoing(true)// make the notification unable to be cleared
+            }
+            val notification = builder.build()
+            notify(notificationId, notification)
         }
     }
 }

@@ -24,10 +24,19 @@
     <string name="waiting">Waiting…</string>
     <string name="installing">Installing…</string>
     <string name="cancelled">Cancelled</string>
+    <string name="update_all">Update All</string>
+    <string name="cancel_all">Cancel All</string>
     <string name="url_copied">URL copied to clipboard</string>
     <string name="blocked">Blocked</string>
     <string name="empty">Empty</string>
     <string name="requests">request(s)</string>
     <string name="times_blocked">time(s) blocked</string>
     <string name="connections">Connection(s)</string>
+    <string name="filter_download">Filter Download</string>
+    <string name="download_in_progress">Download in progress…</string>
+    <string name="download_complete">Download complete.</string>
+    <string name="notification_description">Shows notifications whenever downloading filter</string>
+    <string name="notification_channel_name">Download Notifications</string>
+    <string name="filter_download_title">Download Filter List</string>
+    <string name="filter_download_msg">Confirm downloading the required list of filters (about 10MB)?</string>
 </resources>

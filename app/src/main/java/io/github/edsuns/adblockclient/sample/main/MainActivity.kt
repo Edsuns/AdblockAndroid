@@ -1,6 +1,7 @@
 package io.github.edsuns.adblockclient.sample.main
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -44,7 +45,8 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        filterViewModel = AdFilter.get().viewModel
+        val filter = AdFilter.get()
+        filterViewModel = filter.viewModel
 
         val popupMenu = PopupMenu(
             this,
@@ -100,7 +102,7 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         // allow Mixed Content
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
 
-        AdFilter.get().setupWebView(webView)
+        filter.setupWebView(webView)
 
         progressAnimator = SmoothProgressAnimator(binding.loadProgress)
 
@@ -154,6 +156,33 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             viewModel.dirtyBlockingInfo = true
             updateBlockedCount()
         })
+
+        if (!filter.hasInstallation) {
+            val map = mapOf(
+                "EasyList" to "https://filters.adtidy.org/extension/chromium/filters/101.txt",
+                "EasyPrivacy" to "https://filters.adtidy.org/extension/chromium/filters/118.txt",
+                "AdGuard Tracking Protection" to "https://filters.adtidy.org/extension/chromium/filters/3.txt",
+                "AdGuard Annoyances" to "https://filters.adtidy.org/extension/chromium/filters/14.txt",
+                "AdGuard Chinese" to "https://filters.adtidy.org/extension/chromium/filters/224.txt",
+                "NoCoin Filter List" to "https://filters.adtidy.org/extension/chromium/filters/242.txt"
+            )
+            for ((key, value) in map) {
+                filterViewModel.addFilter(key, value)
+            }
+            AlertDialog.Builder(this)
+                .setTitle(R.string.filter_download_title)
+                .setMessage(R.string.filter_download_msg)
+                .setCancelable(true)
+                .setPositiveButton(
+                    android.R.string.ok
+                ) { _, _ ->
+                    val filters = filterViewModel.filters.value ?: return@setPositiveButton
+                    for ((key, _) in filters) {
+                        filterViewModel.download(key)
+                    }
+                }
+                .show()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

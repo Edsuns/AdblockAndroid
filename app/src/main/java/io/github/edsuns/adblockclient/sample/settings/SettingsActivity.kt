@@ -75,16 +75,31 @@ class SettingsActivity : AppCompatActivity() {
             }
             .setView(dialogView)
             .create()
+
+        viewModel.workToFilterMap.observe(this, { invalidateOptionsMenu() })
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
-            onBackPressed()
-            return true
+        when (item.itemId) {
+            android.R.id.home -> {
+                onBackPressed()
+            }
+            R.id.menu_update -> {
+                viewModel.filters.value?.keys?.forEach {
+                    viewModel.download(it)
+                }
+            }
+            R.id.menu_cancel -> {
+                viewModel.filters.value?.keys?.forEach {
+                    viewModel.cancelDownload(it)
+                }
+            }
+            R.id.menu_add_filter -> {
+                val urlEdit: EditText = dialogView.findViewById(R.id.filterUrlEdit)
+                urlEdit.setText("")
+                addFilterDialog.show()
+            }
         }
-        val urlEdit: EditText = dialogView.findViewById(R.id.filterUrlEdit)
-        urlEdit.setText("")
-        addFilterDialog.show()
         return true
     }
 
@@ -95,8 +110,21 @@ class SettingsActivity : AppCompatActivity() {
             view.visibility = View.GONE
     }
 
+    private fun setMenuDownloading(menu: Menu?, downloading: Boolean) {
+        if (downloading) {
+            menu?.findItem(R.id.menu_update)?.isVisible = false
+            menu?.findItem(R.id.menu_cancel)?.isVisible = true
+        } else {
+            menu?.findItem(R.id.menu_update)?.isVisible = true
+            menu?.findItem(R.id.menu_cancel)?.isVisible = false
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_settings, menu)
+        viewModel.workToFilterMap.value?.let {
+            setMenuDownloading(menu, it.isNotEmpty())
+        }
         return super.onCreateOptionsMenu(menu)
     }
 

@@ -105,6 +105,8 @@ class AdFilter internal constructor(appContext: Context) {
             viewModel.downloadFilterIdMap.remove(workInfo.id.toString())
             // save shared preferences
             viewModel.sharedPreferences.downloadFilterIdMap = viewModel.downloadFilterIdMap
+            // notify download work removed
+            (viewModel.workToFilterMap as MutableLiveData).postValue(viewModel.downloadFilterIdMap)
         }
         if (downloadState != filter.downloadState) {
             filter.downloadState = downloadState
