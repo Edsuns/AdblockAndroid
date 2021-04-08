@@ -32,7 +32,7 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
 
     private val eleHidingJS by lazy {
         var js = MezzanineGenerator.ExtendedCssInjection().js()
-        js += ScriptInjection.parseScript(this, MezzanineGenerator.EleHidingInjection().js())
+        js += ScriptInjection.parseScript(this, MezzanineGenerator.EleHidingInjection().js(), true)
         js
     }
 

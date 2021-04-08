@@ -1,21 +1,30 @@
 package io.github.edsuns.adfilter.script
 
+import com.anthonycr.mezzanine.FileStream
+import com.anthonycr.mezzanine.MezzanineGenerator
 import io.github.edsuns.adfilter.BuildConfig
 
 /**
  * Created by Edsuns@qq.com on 2021/4/3.
  */
 object ScriptInjection {
+
+    @FileStream("src/main/js/inject.js")
+    interface Injection {
+        fun js(): String
+    }
+
+    private const val INJECTION = "{{INJECTION}}"
     private const val DEBUG_FLAG = "{{DEBUG}}"
     private const val JS_BRIDGE = "{{BRIDGE}}"
-    private const val HIDDEN_FLAG = "{{HIDDEN_FLAG}}"
+
+    private val injectJS = parse(MezzanineGenerator.Injection().js())
 
     private val bridgeRegister = arrayListOf(
         ElementHiding::class.java,
         Scriptlet::class.java
     )
 
-    private val hiddenFlag = randomAlphanumericString()
     private val bridgeNamePrefix = randomAlphanumericString()
 
     fun bridgeNameFor(owner: Any): String {
@@ -37,10 +46,16 @@ object ScriptInjection {
             .joinToString("")
     }
 
-    fun parseScript(owner: Any, raw: String): String {
+    private fun parse(raw: String, bridgeName: String? = null): String {
         var js = raw.replace(DEBUG_FLAG, if (BuildConfig.DEBUG) "" else "//")
-        js = js.replace(JS_BRIDGE, bridgeNameFor(owner))
-        js = js.replace(HIDDEN_FLAG, hiddenFlag)
+        if (bridgeName != null) {
+            js = js.replace(JS_BRIDGE, bridgeName)
+        }
         return js
+    }
+
+    fun parseScript(owner: Any, raw: String, wrapper: Boolean = false): String {
+        val js = parse(raw, bridgeNameFor(owner))
+        return if (wrapper) injectJS.replace(INJECTION, js) else js
     }
 }

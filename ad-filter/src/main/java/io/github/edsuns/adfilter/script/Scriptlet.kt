@@ -37,7 +37,7 @@ class Scriptlet internal constructor(private val detector: AbstractDetector) {
         var js = MezzanineGenerator.Scriptlets1().js()
         js += MezzanineGenerator.Scriptlets2().js()
         js += MezzanineGenerator.Scriptlets3().js()
-        js += ScriptInjection.parseScript(this, MezzanineGenerator.ScriptletsInjection().js())
+        js += ScriptInjection.parseScript(this, MezzanineGenerator.ScriptletsInjection().js(), true)
         js
     }
 

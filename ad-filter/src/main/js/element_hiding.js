@@ -1,12 +1,5 @@
 (function () {
-var hideElements = function () {
-    // no need to invoke if already invoked on another event
-    if (document.{{HIDDEN_FLAG}} === true) {
-        {{DEBUG}} console.log('already hidden, exiting');
-        return;
-    }
-
-    {{DEBUG}} console.log('not yet hidden!')
+    {{DEBUG}} console.log('element hiding started');
 
     // hide by injecting CSS stylesheet
     {{DEBUG}} console.log('starting injecting eh css rules for ' + document.location.href);
@@ -33,29 +26,6 @@ var hideElements = function () {
         {{DEBUG}} console.log(`ExtendedCss rules success for ${document.location.href}`);
     } catch (err) {
         {{DEBUG}} console.log(`ExtendedCss rules failed '${css}' for ${document.location.href} by ${err}`);
+        throw err;
     }
-
-    document.{{HIDDEN_FLAG}} = true; // set flag not to do it again
-};
-
-try {// run directly in order to take effect faster
-    hideElements();
-} catch (err) {
-    // ignore, may be document isn't ready
-}
-if (document.readyState !== 'complete') {
-    document.onreadystatechange = function () {
-        if (document.readyState == 'interactive') {
-            hideElements();
-        }
-    }
-
-    window.addEventListener('load', function (event) {
-        hideElements();
-    });
-
-    document.addEventListener('DOMContentLoaded', function () {
-        hideElements();
-    }, false);
-}
 })();
