@@ -3,6 +3,6 @@
 `scriptlets.js` is from https://github.com/AdguardTeam/Scriptlets/blob/master/dist/scriptlets.js
 
 
-#### Build
+### Build
 
-Run `glup` to generate output files
+Run `glup` to generate output files into `../src/main/js/scriptlets/`.

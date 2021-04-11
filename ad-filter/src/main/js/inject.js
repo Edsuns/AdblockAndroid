@@ -4,7 +4,7 @@
             script();
         }
     }
-    const addListener = function () {
+    const addListeners = function () {
         // here don't use document.onreadystatechange, which won't fire sometimes
         document.addEventListener('readystatechange', onReadystatechange);
 
@@ -12,7 +12,7 @@
 
         window.addEventListener('load', script);
     }
-    const removeListener = function () {
+    const removeListeners = function () {
         document.removeEventListener('readystatechange', onReadystatechange);
 
         document.removeEventListener('DOMContentLoaded', script, false);
@@ -21,11 +21,11 @@
     }
     const script = function () {
         {{INJECTION}}
-        removeListener();
+        removeListeners();
     }
     if (document.readyState == 'interactive' || document.readyState == 'complete') {
         script();
     } else {
-        addListener();
+        addListeners();
     }
 })();

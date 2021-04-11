@@ -37,9 +37,9 @@ object Fullscreen {
         )
     }
 
-    fun onHideCustomView(context: Context) {
+    fun onHideCustomView() {
         val view = customView?.get() ?: return
-        val activity = getActivity(context) ?: return
+        val activity = getActivity(view.context) ?: return
         activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setImmersiveMode(activity, false)
         val viewGroup = view.parent as ViewGroup

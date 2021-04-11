@@ -7,10 +7,8 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.Gravity
 import android.view.KeyEvent
-import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.webkit.URLUtil
-import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.PopupMenu
@@ -198,16 +196,6 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
             webView.restoreState(bundle)
         }
         super.onRestoreInstanceState(savedInstanceState)
-    }
-
-    override fun onShowCustomView(view: View?, callback: WebChromeClient.CustomViewCallback?) {
-        if (view != null && callback != null) {
-            Fullscreen.onShowCustomView(view.context, view, callback)
-        }
-    }
-
-    override fun onHideCustomView() {
-        Fullscreen.onHideCustomView(this)
     }
 
     override fun onPageStarted(url: String?, favicon: Bitmap?) {

@@ -20,6 +20,13 @@ import android.webkit.WebResourceRequest
 import java.util.*
 
 
+/**
+ * Modified by Edsuns@qq.com.
+ *
+ * Description: In `duckduckgo/Android`, `tag/5.38.1` is the last version that has the implement of AdBlockClient.
+ *
+ * Reference: [github.com/duckduckgo/Android/releases/tag/5.38.1](https://github.com/duckduckgo/Android/releases/tag/5.38.1)
+ */
 enum class ResourceType(val filterOption: Int) {
 
     UNKNOWN(0),

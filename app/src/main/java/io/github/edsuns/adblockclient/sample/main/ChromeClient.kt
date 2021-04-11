@@ -15,11 +15,13 @@ class ChromeClient(private val webViewClientListener: WebViewClientListener) : W
     }
 
     override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
-        webViewClientListener.onShowCustomView(view, callback)
+        if (view != null && callback != null) {
+            Fullscreen.onShowCustomView(view.context, view, callback)
+        }
     }
 
     override fun onHideCustomView() {
-        webViewClientListener.onHideCustomView()
+        Fullscreen.onHideCustomView()
     }
 
     private val transparent: Bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
