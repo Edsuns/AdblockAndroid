@@ -1,18 +1,18 @@
 (function () {
-    {{DEBUG}} console.log('element hiding started');
+    {{DEBUG}} console.log('element hiding started on ' + document.location.href);
 
-    // hide by injecting CSS stylesheet
-    {{DEBUG}} console.log('starting injecting eh css rules for ' + document.location.href);
-    var styleSheet = {{BRIDGE}}.getEleHidingStyleSheet(document.location.href);
-    if (styleSheet) {
+    // hide by injecting CSS
+    var styleSheet = {{BRIDGE}}.getStyleSheet(document.location.href);
+    if (styleSheet.length) {
         {{DEBUG}} console.log('stylesheet length: ' + styleSheet.length);
-        var head = document.getElementsByTagName('head')[0];
+        // Why `html` here? Because the css at the end of `html` usually has a higher priority.
+        var html = document.getElementsByTagName('html')[0];
         var style = document.createElement('style');
-        head.appendChild(style);
+        html.appendChild(style);
         style.textContent = styleSheet;
-        {{DEBUG}} console.log('finished injecting css rules');
+        {{DEBUG}} console.log('finished injecting stylesheet');
     } else {
-        {{DEBUG}} console.log('stylesheet is empty, skipping injection');
+        {{DEBUG}} console.log('stylesheet is empty, skipped');
     }
 
     // hide by ExtendedCss
@@ -28,4 +28,6 @@
         {{DEBUG}} console.log(`ExtendedCss rules failed '${css}' for ${document.location.href} by ${err}`);
         throw err;
     }
+
+    {{DEBUG}} console.log('element hiding finished');
 })();
