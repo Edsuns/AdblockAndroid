@@ -157,8 +157,8 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 
         if (!filter.hasInstallation) {
             val map = mapOf(
-                "EasyList" to "https://filters.adtidy.org/extension/chromium/filters/101.txt",
-                "EasyPrivacy" to "https://filters.adtidy.org/extension/chromium/filters/118.txt",
+                "AdGuard Base" to "https://filters.adtidy.org/extension/chromium/filters/2.txt",
+                "EasyPrivacy Lite" to "https://filters.adtidy.org/extension/chromium/filters/118_optimized.txt",
                 "AdGuard Tracking Protection" to "https://filters.adtidy.org/extension/chromium/filters/3.txt",
                 "AdGuard Annoyances" to "https://filters.adtidy.org/extension/chromium/filters/14.txt",
                 "AdGuard Chinese" to "https://filters.adtidy.org/extension/chromium/filters/224.txt",
