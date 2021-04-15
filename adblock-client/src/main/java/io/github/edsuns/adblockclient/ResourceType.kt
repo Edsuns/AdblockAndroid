@@ -33,55 +33,79 @@ enum class ResourceType(val filterOption: Int) {
     SCRIPT(1),
     IMAGE(2),
     CSS(4),
+    XMLHTTPREQUEST(0x10),
     SUBDOCUMENT(0x40),
     FONT(0x80000),
     MEDIA(0x100000);
 
     companion object {
-
         /**
          * A coarse approach to guessing the resource type from a request
          * to assist the tracker matcher
          */
         fun from(webResourceRequest: WebResourceRequest): ResourceType {
-
-            var headerResult: ResourceType? = null
-
-            val acceptHeader = webResourceRequest.requestHeaders?.get("Accept")
-            if (acceptHeader != null) {
-                headerResult = from(acceptHeader)
+            var result = HeadersResourceTypeDetector.detect(webResourceRequest.requestHeaders)
+            if (result == null) {
+                result = UrlResourceTypeDetector.detect(webResourceRequest)
             }
-
-            return headerResult ?: UrlResourceTypeDetector.detect(webResourceRequest) ?: UNKNOWN
-        }
-
-        private fun from(acceptHeader: String): ResourceType? {
-            if (acceptHeader.contains("image/")) {
-                return IMAGE
+            if (result == null) {
+                result = UNKNOWN
             }
-            if (acceptHeader.contains("/css")) {
-                return CSS
-            }
-            if (acceptHeader.contains("javascript")) {
-                return SCRIPT
-            }
-            if (acceptHeader.contains("text/html")) {
-                return SUBDOCUMENT
-            }
-            if (acceptHeader.contains("font/")) {
-                return FONT
-            }
-            if (acceptHeader.contains("audio/") || acceptHeader.contains("video/")
-                || acceptHeader.contains("application/ogg")
-            ) {
-                return MEDIA
-            }
-            return null
+            return result
         }
     }
 }
 
-object UrlResourceTypeDetector {
+private object HeadersResourceTypeDetector {
+
+    private const val HEADER_REQUESTED_WITH = "X-Requested-With"
+    private const val HEADER_REQUESTED_WITH_XMLHTTPREQUEST = "XMLHttpRequest"
+
+    fun detect(headers: Map<String, String>?): ResourceType? {
+        if (headers == null) {
+            return null
+        }
+
+        // Be aware that this header can be removed by JavaScript, so there will still be misses.
+        val isXmlHttpRequest =
+            HEADER_REQUESTED_WITH_XMLHTTPREQUEST == headers[HEADER_REQUESTED_WITH]
+        if (isXmlHttpRequest) {
+            return ResourceType.XMLHTTPREQUEST
+        }
+
+        val acceptHeader = headers["Accept"]
+        if (acceptHeader != null) {
+            return detect(acceptHeader)
+        }
+        return null
+    }
+
+    private fun detect(acceptHeader: String): ResourceType? {
+        if (acceptHeader.contains("image/")) {
+            return ResourceType.IMAGE
+        }
+        if (acceptHeader.contains("/css")) {
+            return ResourceType.CSS
+        }
+        if (acceptHeader.contains("javascript")) {
+            return ResourceType.SCRIPT
+        }
+        if (acceptHeader.contains("text/html")) {
+            return ResourceType.SUBDOCUMENT
+        }
+        if (acceptHeader.contains("font/")) {
+            return ResourceType.FONT
+        }
+        if (acceptHeader.contains("audio/") || acceptHeader.contains("video/")
+            || acceptHeader.contains("application/ogg")
+        ) {
+            return ResourceType.MEDIA
+        }
+        return null
+    }
+}
+
+private object UrlResourceTypeDetector {
 
     private val EXTENSIONS_JS = arrayOf("js")
     private val EXTENSIONS_CSS = arrayOf("css")
