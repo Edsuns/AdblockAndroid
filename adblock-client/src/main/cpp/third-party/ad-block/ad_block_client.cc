@@ -320,7 +320,10 @@ const LinkedList<std::string> *AdBlockClient::getScriptlets(const char *contextU
   return getRulesFrom(scriptletMap, &scriptletCache, contextUrl);
 }
 
-void extractScriptletArgsAsData(Filter &filter) {
+bool extractScriptletArgsAsData(Filter &filter) {
+  if (!filter.data) {
+    return false;// fix nullptr when scriptlet rule data is empty
+  }
   char *p = filter.data;
   char *q = filter.data + filter.dataLen;
   while (*p != '(' && *p != '\0') {
@@ -339,6 +342,7 @@ void extractScriptletArgsAsData(Filter &filter) {
     delete[] filter.data;
     filter.data = args;
   }
+  return true;
 }
 
 inline bool isFingerprintChar(char c) {
@@ -1777,8 +1781,9 @@ bool AdBlockClient::parse(const char *input, bool preserveRules) {
       curHtmlFilters++;
       break;
     case FTScriptlet:
-      extractScriptletArgsAsData(f);
-      putElementHidingFilterToHashMap(&f, scriptletHashMap);
+      if (extractScriptletArgsAsData(f)) {
+        putElementHidingFilterToHashMap(&f, scriptletHashMap);
+      }
       break;
     case FTEmpty:
     case FTComment:
