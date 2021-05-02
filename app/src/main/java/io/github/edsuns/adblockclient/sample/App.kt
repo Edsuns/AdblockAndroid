@@ -46,13 +46,28 @@ class App : Application() {
 
         val builder = NotificationCompat.Builder(this, channelId).apply {
             setContentTitle(getString(R.string.filter_download))
-            setContentText(getString(R.string.download_in_progress))
-            setSmallIcon(R.drawable.ic_launcher_foreground)
             setContentIntent(pendingIntent)
             setDefaults(NotificationCompat.DEFAULT_ALL)
             setVibrate(longArrayOf(0L))
             setSound(null)
             priority = NotificationCompat.PRIORITY_HIGH
+        }
+        if (finished) {
+            isDownloading = false
+            builder.apply {
+                setContentText(getString(R.string.download_complete))
+                setSmallIcon(android.R.drawable.stat_sys_download_done)
+                setProgress(0, 0, false)
+                setOngoing(false)
+            }
+        } else {
+            isDownloading = true
+            builder.apply {
+                setContentText(getString(R.string.download_in_progress))
+                setSmallIcon(android.R.drawable.stat_sys_download)
+                setProgress(0, 0, true)
+                setOngoing(true)// make the notification unable to be cleared
+            }
         }
         NotificationManagerCompat.from(this).apply {
             // Make a channel if necessary
@@ -69,17 +84,8 @@ class App : Application() {
                 // Add the channel
                 createNotificationChannel(channel)
             }
-            if (finished) {
-                isDownloading = false
-                builder.setContentText(getString(R.string.download_complete))
-                    .setProgress(0, 0, false)
-                    .setOngoing(false)
-            } else {
-                isDownloading = true
-                builder.setProgress(0, 0, true)
-                    .setOngoing(true)// make the notification unable to be cleared
-            }
             val notification = builder.build()
+            cancel(notificationId)// fix notification remains on MIUI 12.5
             notify(notificationId, notification)
         }
     }
