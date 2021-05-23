@@ -12,19 +12,8 @@ import timber.log.Timber
  */
 class Scriptlet internal constructor(private val detector: AbstractDetector) {
 
-    // due to there is a limit of file size, split it into 3 files
-    @FileStream("src/main/js/scriptlets/scriptlets.js-1")
-    interface Scriptlets1 {
-        fun js(): String
-    }
-
-    @FileStream("src/main/js/scriptlets/scriptlets.js-2")
-    interface Scriptlets2 {
-        fun js(): String
-    }
-
-    @FileStream("src/main/js/scriptlets/scriptlets.js-3")
-    interface Scriptlets3 {
+    @FileStream("src/main/js/scriptlets.js")
+    interface Scriptlets {
         fun js(): String
     }
 
@@ -33,10 +22,8 @@ class Scriptlet internal constructor(private val detector: AbstractDetector) {
         fun js(): String
     }
 
-    private val scriptletsJS: String by lazy {
-        var js = MezzanineGenerator.Scriptlets1().js()
-        js += MezzanineGenerator.Scriptlets2().js()
-        js += MezzanineGenerator.Scriptlets3().js()
+    private val scriptletsJS: String by lazy(LazyThreadSafetyMode.NONE) {
+        var js = MezzanineGenerator.Scriptlets().js()
         js += ScriptInjection.parseScript(this, MezzanineGenerator.ScriptletsInjection().js(), true)
         js
     }

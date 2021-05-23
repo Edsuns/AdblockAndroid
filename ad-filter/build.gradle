@@ -43,7 +43,7 @@ ext {
     timber = "4.7.1"
     coroutines = "1.3.7"
     ankoVersion = "0.10.4"
-    mezzanineVersion = '1.1.1'
+    mezzanineVersion = '1.2.1'
 }
 
 dependencies {
@@ -72,8 +72,8 @@ dependencies {
 
     implementation 'com.github.Edsuns:HttpRequest:0.2'
 
-    implementation "com.anthonycr.mezzanine:mezzanine:$mezzanineVersion"
-    kapt "com.anthonycr.mezzanine:mezzanine-compiler:$mezzanineVersion"
+    implementation "com.github.Edsuns.Mezzanine:mezzanine:$mezzanineVersion"
+    kapt "com.github.Edsuns.Mezzanine:mezzanine-compiler:$mezzanineVersion"
 }
 
 kapt {

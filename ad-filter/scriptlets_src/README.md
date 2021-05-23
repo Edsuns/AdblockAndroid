@@ -5,4 +5,4 @@
 
 ### Build
 
-Run `glup` to generate output files into `../src/main/js/scriptlets/`.
+Run `gulp` to generate output files into `../src/main/js/`.
