@@ -26,7 +26,7 @@ class AdFilter internal constructor(appContext: Context) {
     private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
     private val elementHiding: ElementHiding = ElementHiding(detector)
     private val scriptlet: Scriptlet = Scriptlet(detector)
-    val customFilter = CustomFilter(filterDataLoader)
+    val customFilter = filterDataLoader.getCustomFilter()
     val viewModel = FilterViewModel(appContext, filterDataLoader)
 
     val hasInstallation: Boolean

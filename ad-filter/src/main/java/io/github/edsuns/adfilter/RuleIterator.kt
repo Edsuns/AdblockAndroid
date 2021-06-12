@@ -3,9 +3,10 @@ package io.github.edsuns.adfilter
 /**
  * Created by Edsuns@qq.com on 2021/1/24.
  */
-class RuleIterator internal constructor(data: String? = null) {
+open class RuleIterator internal constructor(data: String? = null) : Iterator<String> {
 
-    val dataBuilder: StringBuilder = if (data == null) StringBuilder() else StringBuilder(data)
+    internal val dataBuilder: StringBuilder =
+        if (data == null) StringBuilder() else StringBuilder(data)
 
     private var curLine: Int = -1
     private var lineStart: Int = 0
@@ -17,9 +18,21 @@ class RuleIterator internal constructor(data: String? = null) {
         lineEnd = 0
     }
 
-    fun hasNext(): Boolean = lineEnd + 1 < dataBuilder.length
+    override fun hasNext(): Boolean = lineEnd + 1 < dataBuilder.length
 
-    fun next(): String = get(curLine + 1)
+    override fun next(): String = get(curLine + 1)
+
+    fun size(): Int {
+        var count = 0
+        var start = 0
+        var end = dataBuilder.indexOf(LINE_END, start)
+        while (end > 0 && (end - start) > 0) {
+            start = end + 1
+            end = dataBuilder.indexOf(LINE_END, start)
+            count++
+        }
+        return count
+    }
 
     fun get(line: Int): String {
         if (curLine == line) {
@@ -44,10 +57,26 @@ class RuleIterator internal constructor(data: String? = null) {
     }
 
     fun contains(rule: String): Boolean {
-        return dataBuilder.contains(rule + LINE_END)
+        return indexOf(rule) > -1
     }
 
-    internal fun append(rule: String) {
+    private fun indexOf(rule: String): Int {
+        var start = 0
+        var end = dataBuilder.indexOf(LINE_END)
+        while (end > 0) {
+            if (dataBuilder.substring(start, end) == rule) {
+                return start
+            }
+            start = end + 1
+            end = dataBuilder.indexOf(LINE_END, start)
+        }
+        return -1
+    }
+
+    fun append(rule: String) {
+        if (rule.isBlank()) {
+            return
+        }
         if (!contains(rule)) {
             dataBuilder.append(rule).append(LINE_END)
         }
@@ -58,22 +87,43 @@ class RuleIterator internal constructor(data: String? = null) {
     }
 
     fun comment(rule: String) {
-        if (contains(rule)) {
-            dataBuilder.replace(Regex("^(!\\s+)?${Regex.escape(rule)}\\n$"), "! $rule")
+        if (!isComment(rule)) {
+            val index = indexOf(rule)
+            if (index > -1) {
+                dataBuilder.delete(index, index + rule.length)
+                dataBuilder.insert(index, rule.toComment())
+            }
         }
     }
 
     fun uncomment(rule: String) {
-        var mRule = rule
+        val comment: String
+        val uncomment: String
         if (isComment(rule)) {
-            mRule = rule.substring(2).trim()
+            comment = rule
+            uncomment = rule.substring(2).trim()
+        } else {
+            comment = rule.toComment()
+            uncomment = rule
         }
-        dataBuilder.replace(Regex("^!\\s+${Regex.escape(mRule)}\\n$", RegexOption.MULTILINE), mRule)
+        val index = indexOf(comment)
+        if (index > -1) {
+            dataBuilder.delete(index, index + comment.length)
+            dataBuilder.insert(index, uncomment)
+        }
     }
 
     fun remove(rule: String) {
-        dataBuilder.replace(Regex("^${Regex.escape(rule)}\\n$", RegexOption.MULTILINE), "")
+        if (rule.isBlank()) {
+            return
+        }
+        val index = indexOf(rule)
+        if (index > -1) {
+            dataBuilder.delete(index, index + rule.length + 1)
+        }
     }
+
+    private fun String.toComment() = "! $this"
 
     companion object {
         private const val LINE_END = "\n"

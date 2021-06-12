@@ -41,11 +41,11 @@ internal class FilterDataLoader(
 
     fun isCustomFilterEnabled() = detector.customFilterClient != null
 
-    fun getRawCustomFilter(): RuleIterator {
+    fun getCustomFilter(): CustomFilter {
         if (binaryDataStore.hasData(RAW_CUSTOM)) {
-            return RuleIterator(String(binaryDataStore.loadData(RAW_CUSTOM)))
+            return CustomFilter(this, String(binaryDataStore.loadData(RAW_CUSTOM)))
         }
-        return RuleIterator()
+        return CustomFilter(this)
     }
 
     fun loadCustomFilter(rawData: ByteArray) {
