@@ -52,7 +52,7 @@ class ElementHiding internal constructor(private val detector: AbstractDetector)
             Timber.e("Failed to parse URI for blocked resource:$resourceUrl. Skipping element hiding")
             return
         }
-        Timber.d("Trying to elemhide visible blocked resource with url `$resourceUrl` and path `$filenameWithQuery`")
+        Timber.d("Trying to elemhide visible blocked resource with url `$resourceUrl`")
 
         // It finds all the elements with source URLs ending with ... and then compare full paths.
         // We do this trick because the paths in JS (code) can be relative and in DOM tree they are absolute.

@@ -1,5 +1,6 @@
 package io.github.edsuns.adfilter
 
+import io.github.edsuns.adfilter.util.RuleIterator
 import org.junit.Assert.*
 import org.junit.Test
 

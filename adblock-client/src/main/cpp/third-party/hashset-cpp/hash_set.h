@@ -3,6 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * Modified by Edsuns@qq.com.
+ * Origin: https://github.com/brave/ad-block
+ */
+
 // You should probably not be using this.  This is only useful in environments
 // without std lib and having specific serialization and memory requirements.
 // Instead consider using `hash_set` which is a more generic implementation

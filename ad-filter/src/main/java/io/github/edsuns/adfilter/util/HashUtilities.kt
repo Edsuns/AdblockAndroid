@@ -1,4 +1,4 @@
-package io.github.edsuns.adfilter
+package io.github.edsuns.adfilter.util
 
 import java.math.BigInteger
 import java.security.MessageDigest

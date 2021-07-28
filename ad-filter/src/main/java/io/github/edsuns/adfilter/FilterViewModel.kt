@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.work.*
+import io.github.edsuns.adfilter.util.None
 import io.github.edsuns.adfilter.workers.DownloadWorker
 import io.github.edsuns.adfilter.workers.InstallationWorker
 import kotlinx.serialization.decodeFromString
@@ -22,29 +23,53 @@ class FilterViewModel internal constructor(
     internal val sharedPreferences: FilterSharedPreferences =
         FilterSharedPreferences(context)
 
+    /**
+     * Status of the filter master switch.
+     */
     val isEnabled: MutableLiveData<Boolean> by lazy { MutableLiveData(sharedPreferences.isEnabled) }
 
     private val workManager: WorkManager = WorkManager.getInstance(context)
 
     val workInfo: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_FILTER_WORK)
 
+    /**
+     * Count of enabled filters (excluding custom filter).
+     */
     val enabledFilterCount: LiveData<Int> = MutableLiveData()
 
     internal fun updateEnabledFilterCount() {
         (enabledFilterCount as MutableLiveData).value = filterDataLoader.detector.clients.size
     }
 
+    /**
+     * [Filter.id] to [Filter]
+     */
     private val filterMap: MutableLiveData<LinkedHashMap<String, Filter>> by lazy {
         MutableLiveData(Json.decodeFromString(sharedPreferences.filterMap))
     }
 
+    /**
+     * All added filters.
+     * [Filter.id] to [Filter]
+     * @see filterMap
+     */
     val filters: LiveData<LinkedHashMap<String, Filter>> = filterMap
 
+    /**
+     * [WorkRequest.getId] to [Filter.id]
+     */
     internal val downloadFilterIdMap: HashMap<String, String> by lazy { sharedPreferences.downloadFilterIdMap }
 
-    // used to observe download has been added or removed
+    /**
+     * Used to observe download has been added or removed.
+     * [WorkRequest.getId] to [Filter.id]
+     * @see downloadFilterIdMap
+     */
     val workToFilterMap: LiveData<Map<String, String>> = MutableLiveData(emptyMap())
 
+    /**
+     * Used to notify that the filters have changed (enable, disable, add, remove).
+     */
     val onDirty: LiveData<None> = MutableLiveData()
 
     init {
@@ -193,7 +218,7 @@ class FilterViewModel internal constructor(
         workManager.cancelUniqueWork(id)
     }
 
-    fun flushFilter() {
+    internal fun flushFilter() {
         // refresh
         filterMap.postValue(filterMap.value)
         saveFilterMap()

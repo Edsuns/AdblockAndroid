@@ -1,5 +1,7 @@
 package io.github.edsuns.adfilter
 
+import io.github.edsuns.adfilter.util.RuleIterator
+
 /**
  * Created by Edsuns@qq.com on 2021/1/24.
  */

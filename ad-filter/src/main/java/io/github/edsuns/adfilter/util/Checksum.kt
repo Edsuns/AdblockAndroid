@@ -1,4 +1,4 @@
-package io.github.edsuns.adfilter
+package io.github.edsuns.adfilter.util
 
 import android.util.Base64
 

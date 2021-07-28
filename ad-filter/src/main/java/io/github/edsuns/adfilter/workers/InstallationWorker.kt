@@ -6,6 +6,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import io.github.edsuns.adblockclient.AdBlockClient
 import io.github.edsuns.adfilter.*
+import io.github.edsuns.adfilter.util.Checksum
 import timber.log.Timber
 
 /**

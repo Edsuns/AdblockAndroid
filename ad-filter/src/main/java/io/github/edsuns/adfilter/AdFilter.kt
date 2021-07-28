@@ -1,6 +1,7 @@
 package io.github.edsuns.adfilter
 
 import android.content.Context
+import android.net.Uri
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -10,6 +11,7 @@ import io.github.edsuns.adblockclient.ResourceType
 import io.github.edsuns.adfilter.script.ElementHiding
 import io.github.edsuns.adfilter.script.ScriptInjection
 import io.github.edsuns.adfilter.script.Scriptlet
+import io.github.edsuns.adfilter.util.None
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -126,25 +128,37 @@ class AdFilter internal constructor(appContext: Context) {
     fun shouldIntercept(
         webView: WebView,
         request: WebResourceRequest
-    ): MatchedRule {
-        return runBlocking {
-            val url = request.url.toString()
-            if (request.isForMainFrame) {
-                return@runBlocking MatchedRule(null, url, null)
-            }
+    ): FilterResult = runBlocking {
+        val url = request.url.toString()
+        if (request.isForMainFrame) {
+            return@runBlocking FilterResult(null, url, null)
+        }
 
-            val documentUrl = withContext(Dispatchers.Main) { webView.url }
-                ?: return@runBlocking MatchedRule(null, url, null)
+        val documentUrl = withContext(Dispatchers.Main) { webView.url }
+            ?: return@runBlocking FilterResult(null, url, null)
 
-            val resourceType = ResourceType.from(request)
-            val rule = detector.shouldBlock(url, documentUrl, resourceType)
+        val resourceType = ResourceType.from(request)
 
-            return@runBlocking if (rule != null) {
-                if (resourceType.isVisibleResource()) {
-                    elementHiding.elemhideBlockedResource(webView, url)
-                }
-                MatchedRule(rule, url, WebResourceResponse(null, null, null))
-            } else MatchedRule(null, url, null)
+        val result = shouldIntercept(url, documentUrl, resourceType)
+        if (result.shouldBlock && resourceType.isVisibleResource()) {
+            elementHiding.elemhideBlockedResource(webView, url)
+        }
+
+        return@runBlocking result
+    }
+
+    fun shouldIntercept(
+        url: String,
+        documentUrl: String = url,
+        resourceType: ResourceType? = null
+    ): FilterResult {
+        val type = resourceType ?: ResourceType.from(Uri.parse(url)) ?: ResourceType.UNKNOWN
+        val rule = detector.shouldBlock(url, documentUrl, type)
+
+        return if (rule != null) {
+            FilterResult(rule, url, WebResourceResponse(null, null, null))
+        } else {
+            FilterResult(null, url, null)
         }
     }
 
@@ -170,12 +184,10 @@ class AdFilter internal constructor(appContext: Context) {
         fun get(): AdFilter =
             instance ?: throw RuntimeException("Should call create() before get()")
 
-        fun get(context: Context): AdFilter {
-            return instance ?: synchronized(this) {
-                // keep application context rather than any other context to avoid memory leak
-                instance = instance ?: AdFilter(context.applicationContext)
-                instance!!
-            }
+        fun get(context: Context): AdFilter = instance ?: synchronized(this) {
+            // keep application context rather than any other context to avoid memory leak
+            instance = instance ?: AdFilter(context.applicationContext)
+            instance!!
         }
 
         fun create(context: Context): AdFilter = get(context)

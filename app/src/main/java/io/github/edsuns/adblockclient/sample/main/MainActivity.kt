@@ -21,8 +21,8 @@ import io.github.edsuns.adblockclient.sample.main.blocking.BlockingInfoDialogFra
 import io.github.edsuns.adblockclient.sample.settings.SettingsActivity
 import io.github.edsuns.adblockclient.sample.smartUrlFilter
 import io.github.edsuns.adfilter.AdFilter
+import io.github.edsuns.adfilter.FilterResult
 import io.github.edsuns.adfilter.FilterViewModel
-import io.github.edsuns.adfilter.MatchedRule
 import io.github.edsuns.smoothprogress.SmoothProgressAnimator
 
 class MainActivity : AppCompatActivity(), WebViewClientListener {
@@ -237,8 +237,8 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         }
     }
 
-    override fun onShouldInterceptRequest(rule: MatchedRule) {
-        viewModel.logRequest(rule)
+    override fun onShouldInterceptRequest(result: FilterResult) {
+        viewModel.logRequest(result)
     }
 
     override fun onBackPressed() {

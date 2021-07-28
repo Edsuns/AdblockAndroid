@@ -1,5 +1,6 @@
 package io.github.edsuns.adfilter
 
+import io.github.edsuns.adfilter.util.sha1
 import kotlinx.serialization.Serializable
 
 /**

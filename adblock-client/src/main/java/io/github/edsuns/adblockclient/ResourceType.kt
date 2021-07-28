@@ -16,6 +16,7 @@
 
 package io.github.edsuns.adblockclient
 
+import android.net.Uri
 import android.webkit.WebResourceRequest
 import java.util.*
 
@@ -46,13 +47,15 @@ enum class ResourceType(val filterOption: Int) {
         fun from(webResourceRequest: WebResourceRequest): ResourceType {
             var result = HeadersResourceTypeDetector.detect(webResourceRequest.requestHeaders)
             if (result == null) {
-                result = UrlResourceTypeDetector.detect(webResourceRequest)
+                result = from(webResourceRequest.url)
             }
             if (result == null) {
                 result = UNKNOWN
             }
             return result
         }
+
+        fun from(url: Uri): ResourceType? = UrlResourceTypeDetector.detect(url)
     }
 }
 
@@ -147,8 +150,8 @@ private object UrlResourceTypeDetector {
         }
     }
 
-    fun detect(request: WebResourceRequest?): ResourceType? {
-        val path = request?.url?.path ?: return null
+    fun detect(url: Uri): ResourceType? {
+        val path = url.path ?: return null
         val lastIndexOfDot = path.lastIndexOf('.')
         if (lastIndexOfDot > -1) {
             val fileExtension = path.substring(lastIndexOfDot + 1)

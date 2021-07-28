@@ -4,7 +4,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import io.github.edsuns.adblockclient.sample.main.blocking.BlockingInfo
 import io.github.edsuns.adblockclient.sample.stripParamsAndAnchor
-import io.github.edsuns.adfilter.MatchedRule
+import io.github.edsuns.adfilter.FilterResult
 import timber.log.Timber
 
 /**
@@ -27,16 +27,16 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun logRequest(matchedRule: MatchedRule) {
+    fun logRequest(filterResult: FilterResult) {
         val pageUrl = currentPageUrl.value ?: return
         val data = _blockingInfoMap
         val blockingInfo = data[pageUrl] ?: BlockingInfo()
         data[pageUrl] = blockingInfo
-        if (matchedRule.shouldBlock) {
-            val requestUrl = matchedRule.resourceUrl.stripParamsAndAnchor()
-            blockingInfo.blockedUrlMap[requestUrl] = matchedRule.rule ?: ""
+        if (filterResult.shouldBlock) {
+            val requestUrl = filterResult.resourceUrl.stripParamsAndAnchor()
+            blockingInfo.blockedUrlMap[requestUrl] = filterResult.rule ?: ""
             blockingInfo.blockedRequests++
-            Timber.v("Web request $requestUrl blocked by rule \"${matchedRule.rule}\"")
+            Timber.v("Web request $requestUrl blocked by rule \"${filterResult.rule}\"")
         }
         blockingInfo.allRequests++
         blockingInfoMap.postValue(data)

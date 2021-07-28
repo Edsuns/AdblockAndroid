@@ -12,7 +12,7 @@ import timber.log.Timber
  */
 class Scriptlet internal constructor(private val detector: AbstractDetector) {
 
-    @FileStream("src/main/js/scriptlets.js")
+    @FileStream("src/main/js/scriptlets.min.js")
     interface Scriptlets {
         fun js(): String
     }
