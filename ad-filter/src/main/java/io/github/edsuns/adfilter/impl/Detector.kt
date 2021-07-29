@@ -1,4 +1,4 @@
-package io.github.edsuns.adfilter
+package io.github.edsuns.adfilter.impl
 
 import io.github.edsuns.adblockclient.Client
 import io.github.edsuns.adblockclient.MatchResult
@@ -10,7 +10,9 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
-interface AbstractDetector {
+internal interface Detector {
+    val clients: List<Client>
+    var customFilterClient: Client?
     fun addClient(client: Client)
     fun removeClient(id: String)
     fun clearAllClient()
@@ -22,12 +24,12 @@ interface AbstractDetector {
     fun getScriptlets(documentUrl: String): List<String>
 }
 
-internal class Detector : AbstractDetector {
+internal class DetectorImpl : Detector {
 
-    val clients = CopyOnWriteArrayList<Client>()
+    override val clients = CopyOnWriteArrayList<Client>()
 
     // null means disabled
-    internal var customFilterClient: Client? = null
+    override var customFilterClient: Client? = null
         set(value) {
             field = value
             Timber.v("Blacklist client changed")

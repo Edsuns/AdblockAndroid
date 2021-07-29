@@ -1,195 +1,81 @@
 package io.github.edsuns.adfilter
 
 import android.content.Context
-import android.net.Uri
 import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import android.webkit.WebView
-import androidx.lifecycle.MutableLiveData
-import androidx.work.WorkInfo
+import android.webkit.WebViewClient
 import io.github.edsuns.adblockclient.ResourceType
-import io.github.edsuns.adfilter.script.ElementHiding
-import io.github.edsuns.adfilter.script.ScriptInjection
-import io.github.edsuns.adfilter.script.Scriptlet
-import io.github.edsuns.adfilter.util.None
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import java.io.File
+import io.github.edsuns.adfilter.impl.AdFilterImpl
 
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
-class AdFilter internal constructor(appContext: Context) {
-
-    private val detector: Detector = Detector()
-    internal val binaryDataStore: BinaryDataStore =
-        BinaryDataStore(File(appContext.filesDir, FILE_STORE_DIR))
-    private val filterDataLoader: FilterDataLoader = FilterDataLoader(detector, binaryDataStore)
-    private val elementHiding: ElementHiding = ElementHiding(detector)
-    private val scriptlet: Scriptlet = Scriptlet(detector)
-    val customFilter = filterDataLoader.getCustomFilter()
-    val viewModel = FilterViewModel(appContext, filterDataLoader)
-
-    val hasInstallation: Boolean
-        get() = viewModel.sharedPreferences.hasInstallation
-
-    init {
-        viewModel.isEnabled.observeForever { enable ->
-            if (enable) {
-                viewModel.filters.value?.values?.forEach {
-                    if (it.isEnabled && it.hasDownloaded()) {
-                        viewModel.enableFilter(it)
-                    }
-                }
-                filterDataLoader.load(FilterDataLoader.ID_CUSTOM)
-            } else {
-                filterDataLoader.unloadAll()
-                filterDataLoader.unloadCustomFilter()
-            }
-            viewModel.updateEnabledFilterCount()
-            viewModel.sharedPreferences.isEnabled = enable
-            // notify onDirty
-            (viewModel.onDirty as MutableLiveData).value = None.Value
-        }
-        viewModel.workInfo.observeForever { list -> processWorkInfo(list) }
-    }
-
-    private fun processWorkInfo(workInfoList: List<WorkInfo>) {
-        workInfoList.forEach { workInfo ->
-            val filterId = viewModel.downloadFilterIdMap[workInfo.id.toString()]
-            viewModel.filters.value?.get(filterId)?.let {
-                updateFilter(it, workInfo)
-            }
-        }
-    }
-
-    private fun updateFilter(filter: Filter, workInfo: WorkInfo) {
-        val state = workInfo.state
-        val isInstallation = workInfo.tags.contains(TAG_INSTALLATION)
-        var downloadState = filter.downloadState
-        if (isInstallation) {
-            downloadState =
-                when (state) {
-                    WorkInfo.State.RUNNING -> DownloadState.INSTALLING
-                    WorkInfo.State.SUCCEEDED -> {
-                        val alreadyUpToDate =
-                            workInfo.outputData.getBoolean(KEY_ALREADY_UP_TO_DATE, false)
-                        if (!alreadyUpToDate) {
-                            filter.filtersCount =
-                                workInfo.outputData.getInt(KEY_FILTERS_COUNT, 0)
-                            workInfo.outputData.getString(KEY_RAW_CHECKSUM)
-                                ?.let { filter.checksum = it }
-                            if (filter.isEnabled || !filter.hasDownloaded()) {
-                                viewModel.enableFilter(filter)
-                            }
-                        }
-                        if (filter.name.isBlank()) {
-                            workInfo.outputData.getString(KEY_FILTER_NAME)
-                                ?.let { filter.name = it }
-                        }
-                        filter.updateTime = System.currentTimeMillis()
-                        DownloadState.SUCCESS
-                    }
-                    WorkInfo.State.FAILED -> DownloadState.FAILED
-                    WorkInfo.State.CANCELLED -> DownloadState.CANCELLED
-                    else -> downloadState
-                }
-        } else {
-            downloadState = when (state) {
-                WorkInfo.State.ENQUEUED -> DownloadState.ENQUEUED
-                WorkInfo.State.RUNNING -> DownloadState.DOWNLOADING
-                WorkInfo.State.FAILED -> DownloadState.FAILED
-                else -> downloadState
-            }
-        }
-        if (state.isFinished) {
-            viewModel.downloadFilterIdMap.remove(workInfo.id.toString())
-            // save shared preferences
-            viewModel.sharedPreferences.downloadFilterIdMap = viewModel.downloadFilterIdMap
-            // notify download work removed
-            (viewModel.workToFilterMap as MutableLiveData).postValue(viewModel.downloadFilterIdMap)
-        }
-        if (downloadState != filter.downloadState) {
-            filter.downloadState = downloadState
-            viewModel.flushFilter()
-        }
-    }
+interface AdFilter {
 
     /**
-     * Notify the application of a resource request and allow the application to return the data.
-     *
-     * If the return value is null, the WebView will continue to load the resource as usual.
-     * Otherwise, the return response and data will be used.
-     *
-     * NOTE: This method is called on a thread other than the UI thread so clients should exercise
-     * caution when accessing private data or the view system.
+     * View model of AdFilter.
      */
-    fun shouldIntercept(
-        webView: WebView,
-        request: WebResourceRequest
-    ): FilterResult = runBlocking {
-        val url = request.url.toString()
-        if (request.isForMainFrame) {
-            return@runBlocking FilterResult(null, url, null)
-        }
+    val viewModel: FilterViewModel
 
-        val documentUrl = withContext(Dispatchers.Main) { webView.url }
-            ?: return@runBlocking FilterResult(null, url, null)
+    /**
+     * Whether any filters have been added since the app was installed.
+     */
+    val hasInstallation: Boolean
 
-        val resourceType = ResourceType.from(request)
+    /**
+     * Custom filter.
+     */
+    val customFilter: CustomFilter
 
-        val result = shouldIntercept(url, documentUrl, resourceType)
-        if (result.shouldBlock && resourceType.isVisibleResource()) {
-            elementHiding.elemhideBlockedResource(webView, url)
-        }
+    /**
+     * Call this function when [WebViewClient.shouldInterceptRequest],
+     * and use [FilterResult.resourceResponse] as return value.
+     */
+    fun shouldIntercept(webView: WebView, request: WebResourceRequest): FilterResult
 
-        return@runBlocking result
-    }
-
+    /**
+     * @param url url of the request
+     * @param documentUrl the origin of the request
+     * @param resourceType [ResourceType]
+     */
     fun shouldIntercept(
         url: String,
         documentUrl: String = url,
         resourceType: ResourceType? = null
-    ): FilterResult {
-        val type = resourceType ?: ResourceType.from(Uri.parse(url)) ?: ResourceType.UNKNOWN
-        val rule = detector.shouldBlock(url, documentUrl, type)
+    ): FilterResult
 
-        return if (rule != null) {
-            FilterResult(rule, url, WebResourceResponse(null, null, null))
-        } else {
-            FilterResult(null, url, null)
-        }
-    }
+    /**
+     * Call this function when [WebViewClient.onPageStarted], it will run the filter script.
+     */
+    fun performScript(webView: WebView?, url: String?)
 
-    private fun ResourceType.isVisibleResource(): Boolean =
-        this === ResourceType.IMAGE || this === ResourceType.MEDIA || this === ResourceType.SUBDOCUMENT
-
-    fun setupWebView(webView: WebView) {
-        webView.addJavascriptInterface(elementHiding, ScriptInjection.bridgeNameFor(elementHiding))
-        webView.addJavascriptInterface(scriptlet, ScriptInjection.bridgeNameFor(scriptlet))
-    }
-
-    fun performScript(webView: WebView?, url: String?) {
-        if (viewModel.isEnabled.value == true) {
-            elementHiding.perform(webView, url)
-            scriptlet.perform(webView, url)
-        }
-    }
+    /**
+     * Call this function when [webView] is created to setup filter on it.
+     */
+    fun setupWebView(webView: WebView)
 
     companion object {
         @Volatile
         private var instance: AdFilter? = null
 
+        /**
+         * @return [AdFilter] singleton (if it is not instantiated, an exception is thrown)
+         */
         fun get(): AdFilter =
             instance ?: throw RuntimeException("Should call create() before get()")
 
+        /**
+         * @return [AdFilter] singleton (if it is not instantiated, singleton will be created)
+         */
         fun get(context: Context): AdFilter = instance ?: synchronized(this) {
             // keep application context rather than any other context to avoid memory leak
-            instance = instance ?: AdFilter(context.applicationContext)
+            instance = instance ?: AdFilterImpl(context.applicationContext)
             instance!!
         }
 
+        /**
+         * Instantiate [AdFilter] singleton.
+         */
         fun create(context: Context): AdFilter = get(context)
     }
 }

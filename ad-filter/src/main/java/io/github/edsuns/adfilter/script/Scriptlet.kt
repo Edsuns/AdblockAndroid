@@ -4,13 +4,13 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import com.anthonycr.mezzanine.FileStream
 import com.anthonycr.mezzanine.MezzanineGenerator
-import io.github.edsuns.adfilter.AbstractDetector
+import io.github.edsuns.adfilter.impl.Detector
 import timber.log.Timber
 
 /**
  * Created by Edsuns@qq.com on 2021/4/3.
  */
-class Scriptlet internal constructor(private val detector: AbstractDetector) {
+internal class Scriptlet constructor(private val detector: Detector) {
 
     @FileStream("src/main/js/scriptlets.min.js")
     interface Scriptlets {

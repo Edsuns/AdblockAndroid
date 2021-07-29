@@ -1,4 +1,4 @@
-package io.github.edsuns.adfilter
+package io.github.edsuns.adfilter.impl
 
 import android.content.Context
 import android.content.SharedPreferences

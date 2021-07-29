@@ -1,4 +1,4 @@
-package io.github.edsuns.adfilter
+package io.github.edsuns.adfilter.impl
 
 import timber.log.Timber
 import java.io.File
@@ -6,7 +6,7 @@ import java.io.File
 /**
  * Created by Edsuns@qq.com on 2020/10/24.
  */
-class BinaryDataStore(private val dir: File) {
+internal class BinaryDataStore(private val dir: File) {
 
     init {
         if (!dir.exists() && !dir.mkdirs()) {

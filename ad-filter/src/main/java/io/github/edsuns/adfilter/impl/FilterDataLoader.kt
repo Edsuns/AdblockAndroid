@@ -1,6 +1,7 @@
-package io.github.edsuns.adfilter
+package io.github.edsuns.adfilter.impl
 
 import io.github.edsuns.adblockclient.AdBlockClient
+import io.github.edsuns.adfilter.CustomFilter
 import timber.log.Timber
 
 /**
@@ -43,9 +44,9 @@ internal class FilterDataLoader(
 
     fun getCustomFilter(): CustomFilter {
         if (binaryDataStore.hasData(RAW_CUSTOM)) {
-            return CustomFilter(this, String(binaryDataStore.loadData(RAW_CUSTOM)))
+            return CustomFilterImpl(this, String(binaryDataStore.loadData(RAW_CUSTOM)))
         }
-        return CustomFilter(this)
+        return CustomFilterImpl(this)
     }
 
     fun loadCustomFilter(rawData: ByteArray) {

@@ -7,7 +7,7 @@ import io.github.edsuns.adfilter.BuildConfig
 /**
  * Created by Edsuns@qq.com on 2021/4/3.
  */
-object ScriptInjection {
+internal object ScriptInjection {
 
     @FileStream("src/main/js/inject.js")
     interface Injection {
