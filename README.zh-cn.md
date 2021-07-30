@@ -2,25 +2,25 @@
 
 [![](https://jitpack.io/v/Edsuns/AdblockAndroid.svg)](https://jitpack.io/#Edsuns/AdblockAndroid)
 
-*Read this in other languages: English | [简体中文](README.zh-cn.md)*
+*阅读其他语言版本：[English](README.md) | 简体中文*
 
-A lightweight and efficient adblock engine library for Android, which has strong compatibility for filters like [EasyList](https://easylist.to/) and [AdGuard Filters](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters).
+一个轻量级、高性能、为安卓量身打造的 adblock 过滤引擎依赖库，支持 [EasyList](https://easylist.to/) 和 [AdGuard Filters](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters) 的过滤规则。
 
-The native C++ code is based on [brave/ad-block](https://github.com/brave/ad-block). Beyond adapting it to Android platform, I fixed some fatal issues ([d85d341](https://github.com/Edsuns/AdblockAndroid/commit/d85d341692efbde551712f44b79ae590f4df64d5), [583f87a](https://github.com/Edsuns/AdblockAndroid/commit/583f87a2b193257aff797e3f6ba093e619700335)), made 40x better parsing performance ([ab18236](https://github.com/Edsuns/AdblockAndroid/commit/ab182369edcd2c86d6fbc3e9e2d85ca8ec82954e), [a0009c8](https://github.com/Edsuns/AdblockAndroid/commit/a0009c83857f435ea6c055a2b5fff6ec3ee88bdc)) and implemented some new features.
+底层的算法实现基于 [brave/ad-block](https://github.com/brave/ad-block)，在将其适配到安卓平台之外，我还修复了几个致命的错误（[d85d341](https://github.com/Edsuns/AdblockAndroid/commit/d85d341692efbde551712f44b79ae590f4df64d5)，[583f87a](https://github.com/Edsuns/AdblockAndroid/commit/583f87a2b193257aff797e3f6ba093e619700335)）、使安装规则的性能提升了40倍（[ab18236](https://github.com/Edsuns/AdblockAndroid/commit/ab182369edcd2c86d6fbc3e9e2d85ca8ec82954e)，[a0009c8](https://github.com/Edsuns/AdblockAndroid/commit/a0009c83857f435ea6c055a2b5fff6ec3ee88bdc)），并实现了许多新的特性。
 
-## Features
+## 特性
 
-- All features from [brave/ad-block](https://github.com/brave/ad-block)
-- Support for [element hiding](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#cosmetic-elemhide-rules)
-- Support for [Extended CSS selectors](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#extended-css-selectors)
-- Support for [CSS rules](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#cosmetic-css-rules)
-- Support for [Scriptlet rules](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#scriptlets)
-- Support for [checksum](https://hg.adblockplus.org/adblockplus/file/tip/validateChecksum.py)
-- Support for background download and installation
-- Custom filter subscriptions
-- Custom rules
+- 所有来自 [brave/ad-block](https://github.com/brave/ad-block) 的特性
+- 支持 [element hiding](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#cosmetic-elemhide-rules)
+- 支持 [Extended CSS selectors](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#extended-css-selectors)
+- 支持 [CSS rules](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#cosmetic-css-rules)
+- 支持 [Scriptlet rules](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#scriptlets)
+- 支持 [checksum](https://hg.adblockplus.org/adblockplus/file/tip/validateChecksum.py)
+- 支持在后台下载和安装
+- 支持订阅过滤列表
+- 支持自定义过滤规则
 
-## Tech Stack
+## 技术栈
 
 - Android
 - Kotlin
@@ -28,19 +28,19 @@ The native C++ code is based on [brave/ad-block](https://github.com/brave/ad-blo
 - JavaScript
 - JNI
 
-## Demo
+## 示例
 
-See [releases](https://github.com/Edsuns/AdblockAndroid/releases) and the code in `app/src`.
+请查看 [releases](https://github.com/Edsuns/AdblockAndroid/releases) 和 `app/src`里的代码。
 
-## Get Started
+## 快速上手
 
-*Note: This development requires you to have fundamental Android WebView experience.*
+*注意：本教程要求阅读者有基本的WebView开发经验*
 
-*Note: A full application example can be found in `:app` module.*
+*注意：完整的示例应用可查看 `:app` 模块*
 
-### 1. Gradle Configuration
+### 1. Gradle 配置
 
-Add it in your root build.gradle at the end of repositories:
+在项目根目录的 build.gradle 添加仓库地址：
 
 ```groovy
 allprojects {
@@ -51,7 +51,7 @@ allprojects {
 }
 ```
 
-Add the dependency:
+在具体模块添加依赖：
 
 ```groovy
 dependencies {
@@ -59,25 +59,25 @@ dependencies {
 }
 ```
 
-### 2. Coding
+### 2. 代码
 
-Add the code in your `Application` class
+添加以下代码到 `Application` 类
 
 ```kotlin
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Debug configuration.
+        // Debug配置
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
-        // Start adfilter.
+        // 启动过滤器
         val filter = AdFilter.create(this)
     }
 }
 ```
 
-Add the code in your `WebChromeClient` class
+添加以下代码到 `WebChromeClient` 类
 
 ```kotlin
 class WebClient(private val webViewClientListener: WebViewClientListener) : WebViewClient() {
@@ -98,7 +98,7 @@ class WebClient(private val webViewClientListener: WebViewClientListener) : WebV
 }
 ```
 
-Add the code in your `Activity` class
+添加以下代码到 `Activity` 类
 
 ```kotlin
 class MainActivity : AppCompatActivity(), WebViewClientListener {
@@ -113,10 +113,10 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
         val filter = AdFilter.get()
         val filterViewModel = filter.viewModel
 
-        // Setup AdblockAndroid for your WebView.
+        // 为WebView安装过滤器
         filter.setupWebView(binding.webView)
 
-        // Add filter list subscriptions on first installation.
+        // 在首次安装时添加订阅并下载
         if (!filter.hasInstallation) {
             val map = mapOf(
                 "AdGuard Base" to "https://filters.adtidy.org/extension/chromium/filters/2.txt",
@@ -135,9 +135,9 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
 }
 ```
 
-**Congratulations, great success!**
+**大功告成！**
 
-## Thanks To
+## 致谢
 
 - [brave/ad-block](https://github.com/brave/ad-block)
 - [github.com/AdguardTeam](https://github.com/AdguardTeam)
