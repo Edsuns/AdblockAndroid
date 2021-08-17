@@ -481,7 +481,7 @@ void parseFilter(const char *input, Filter *f, BloomFilter *bloomFilter,
 
 enum FilterParseState {
   FPStart,
-  FPPastWhitespace,
+  FPGenericException,
   FPOneBar,
   FPOneAt,
   FPData,
@@ -520,13 +520,12 @@ void parseFilter(const char *input, const char *end, Filter *f,
 
       switch (*p) {
       case '|':
-        if (parseState == FPStart || parseState == FPPastWhitespace) {
+        if (parseState == FPStart || parseState == FPGenericException) {
           parseState = FPOneBar;
           filterRuleEndPos++;
           p++;
           continue;
         } else if (parseState == FPOneBar) {
-          parseState = FPOneBar;
           f->filterType = static_cast<FilterType>(f->filterType | FTHostAnchored);
           parseState = FPData;
           filterRuleEndPos++;
@@ -559,15 +558,14 @@ void parseFilter(const char *input, const char *end, Filter *f,
         }
         break;
       case '@':
-        if (parseState == FPStart || parseState == FPPastWhitespace) {
+        if (parseState == FPStart || parseState == FPGenericException) {
           parseState = FPOneAt;
           filterRuleEndPos++;
           p++;
           continue;
         } else if (parseState == FPOneAt) {
-          parseState = FPOneBar;
           f->filterType = FTException;
-          parseState = FPPastWhitespace;
+          parseState = FPGenericException;
           filterRuleEndPos++;
           p++;
           continue;
@@ -575,7 +573,7 @@ void parseFilter(const char *input, const char *end, Filter *f,
         break;
       case '!':
       case '[':
-        if (parseState == FPStart || parseState == FPPastWhitespace) {
+        if (parseState == FPStart || parseState == FPGenericException) {
           f->filterType = FTComment;
           // We don't care about comments right now
           return;
@@ -594,24 +592,26 @@ void parseFilter(const char *input, const char *end, Filter *f,
         }
         break;
       case '/': {
-        const size_t inputLen = end - input;
-        if (parseState == FPStart || parseState == FPPastWhitespace) {
-          if (input[inputLen - 1] == '/' && inputLen > 1) {
-            // Just copy out the whole regex and return early
-            int len = static_cast<int>(inputLen) - i - 1;
-            f->data = new char[len];
-            f->data[len - 1] = '\0';
-            memcpy(f->data, input + i + 1, len - 1);
+        if (parseState == FPStart || parseState == FPGenericException) {
+          filterRuleEndPos = end;
+          while (*filterRuleEndPos != '/') {
+            filterRuleEndPos--;
+          }
+          int regexLen = filterRuleEndPos - p - 1;
+          filterRuleEndPos++;
 
-            if (preserveRules) {
-              f->ruleDefinition = new char[len];
-              f->ruleDefinition[len - 1] = '\0';
-              memcpy(f->ruleDefinition, input + i + 1, len - 1);
-            }
+          if (regexLen > 0 && (filterRuleEndPos == end || *filterRuleEndPos == '$')) {
+            f->data = new char[regexLen + 1];
+            f->data[regexLen] = '\0';
+            memcpy(f->data, p + 1, regexLen);
 
             f->filterType = FTRegex;
-            return;
+            p = filterRuleEndPos;
+            parseState = FPData;
+            continue;
           } else {
+            // it isn't a regex rule, recovery and break
+            filterRuleEndPos = p;
             parseState = FPData;
           }
         }
@@ -641,7 +641,7 @@ void parseFilter(const char *input, const char *end, Filter *f,
         continue;
       case '#':
         // ublock uses some comments of the form #[space]
-        if (parseState == FPStart || parseState == FPPastWhitespace) {
+        if (parseState == FPStart || parseState == FPGenericException) {
           if (*(p + 1) == ' ') {
             f->filterType = FTComment;
             // We don't care about comments right now
@@ -725,6 +725,11 @@ void parseFilter(const char *input, const char *end, Filter *f,
     f->ruleDefinition = new char[ruleTextLength + 1];
     memcpy(f->ruleDefinition, filterRuleStart, ruleTextLength);
     f->ruleDefinition[ruleTextLength] = '\0';
+  }
+
+  // regex rule has finished
+  if (f->filterType == FTRegex) {
+    return;
   }
 
   if (i > 0) {

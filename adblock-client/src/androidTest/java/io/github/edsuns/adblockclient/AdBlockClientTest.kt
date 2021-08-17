@@ -63,11 +63,7 @@ class AdBlockClientTest {
 
     @Test
     fun whenProcessedDataLoadedThenTrackerIsBlocked() {
-        val original = AdBlockClient(id)
-        original.loadBasicData(data(), true)
-        val processedData = original.getProcessedData()
-        val testee = AdBlockClient(id)
-        testee.loadProcessedData(processedData)
+        val testee = loadClientFromProcessedData()
         val result = testee.matches(trackerUrl, documentUrl, resourceType)
         assertTrue(result.shouldBlock)
         assertFalse(result.matchedRule.isNullOrBlank())
@@ -75,33 +71,31 @@ class AdBlockClientTest {
 
     @Test
     fun whenProcessedDataLoadedThenNonTrackerIsNotBlocked() {
-        val original = AdBlockClient(id)
-        original.loadBasicData(data())
-        val processedData = original.getProcessedData()
-        val testee = AdBlockClient(id)
-        testee.loadProcessedData(processedData)
+        val testee = loadClientFromProcessedData()
         val result = testee.matches(nonTrackerUrl, documentUrl, resourceType)
         assertFalse(result.shouldBlock)
     }
 
     @Test
     fun whenProcessedDataLoadedWithThirdPartyOptionThenFirstPartyIsNotBlocked() {
-        val original = AdBlockClient(id)
-        original.loadBasicData(data())
-        val processedData = original.getProcessedData()
-        val testee = AdBlockClient(id)
-        testee.loadProcessedData(processedData)
+        val testee = loadClientFromProcessedData()
         val result = testee.matches(trackerUrl, trackerUrl, resourceType)
         assertFalse(result.shouldBlock)
     }
 
     @Test
+    fun whenProcessedDataLoadedThenUrlBlockedByRegexRule() {
+        val testee = loadClientFromProcessedData()
+        testee.loadBasicData(data(), true)
+        val urlBlockedByRegexRule = "https://example.com:4443/ty/c-2705-25-1.html"
+        val result = testee.matches(urlBlockedByRegexRule, documentUrl, ResourceType.SUBDOCUMENT)
+        assertTrue(result.shouldBlock)
+        assertFalse(result.matchedRule.isNullOrBlank())
+    }
+
+    @Test
     fun whenGetSelectorsForNonTrackerUrlThenOnlyObtainGenericSelectors() {
-        val original = AdBlockClient(id)
-        original.loadBasicData(data())
-        val processedData = original.getProcessedData()
-        val testee = AdBlockClient(id)
-        testee.loadProcessedData(processedData)
+        val testee = loadClientFromProcessedData()
         testee.setGenericElementHidingEnabled(true)
         val selectors =
             testee.getElementHidingSelectors(nonTrackerUrl) ?: throw NullPointerException()
@@ -112,11 +106,7 @@ class AdBlockClientTest {
 
     @Test
     fun whenGetSelectorsWithExceptionsThenItDoNotContainsExceptions() {
-        val original = AdBlockClient(id)
-        original.loadBasicData(data())
-        val processedData = original.getProcessedData()
-        val testee = AdBlockClient(id)
-        testee.loadProcessedData(processedData)
+        val testee = loadClientFromProcessedData()
         testee.setGenericElementHidingEnabled(true)
         val selectors =
             testee.getElementHidingSelectors(documentUrl) ?: throw NullPointerException()
@@ -124,6 +114,15 @@ class AdBlockClientTest {
         assertTrue(selectors.contains("#videoad"))
         assertTrue(selectors.contains(".video_ads"))
         assertFalse(selectors.contains("#videoads"))
+    }
+
+    private fun loadClientFromProcessedData(): AdBlockClient {
+        val original = AdBlockClient(id)
+        original.loadBasicData(data(), true)
+        val processedData = original.getProcessedData()
+        val testee = AdBlockClient(id)
+        testee.loadProcessedData(processedData)
+        return testee
     }
 
     private fun data(): ByteArray =

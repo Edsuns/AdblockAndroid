@@ -8,6 +8,13 @@
  * Origin: https://github.com/brave/ad-block
  */
 
+#define ENABLE_REGEX
+
+#ifdef ENABLE_REGEX
+// putting it at the top can solve the dependency conflict problem
+#include <regex> // NOLINT
+#endif
+
 #include "./filter.h"
 #include <string.h>
 #include <stdio.h>
@@ -15,10 +22,6 @@
 #include <iostream>
 #include <set>
 #include <string>
-
-#ifdef ENABLE_REGEX
-#include <regex> // NOLINT
-#endif
 
 #include "../hashset-cpp/hash_set.h"
 #include "./ad_block_client.h"
@@ -563,9 +566,13 @@ bool Filter::matches(const char *input, int inputLen,
     // Check for a regex match
     if (filterType & FTRegex) {
 #ifdef ENABLE_REGEX
-        std::smatch m;
-        std::regex e(data, std::regex_constants::extended);
-        return std::regex_search(std::string(input), m, e);
+        try {
+            std::regex exp(data, std::regex_constants::ECMAScript);
+            std::string s(input);
+            return std::regex_search(s, exp);
+        } catch (std::regex_error &ignore) {
+            return false;
+        }
 #else
         return false;
 #endif
