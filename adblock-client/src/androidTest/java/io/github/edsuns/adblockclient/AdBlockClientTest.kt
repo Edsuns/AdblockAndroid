@@ -96,7 +96,7 @@ class AdBlockClientTest {
     @Test
     fun whenGetSelectorsForNonTrackerUrlThenOnlyObtainGenericSelectors() {
         val testee = loadClientFromProcessedData()
-        testee.setGenericElementHidingEnabled(true)
+        testee.isGenericElementHidingEnabled = true
         val selectors =
             testee.getElementHidingSelectors(nonTrackerUrl) ?: throw NullPointerException()
         assertEquals(2, selectors.split(", ").size)
@@ -107,7 +107,7 @@ class AdBlockClientTest {
     @Test
     fun whenGetSelectorsWithExceptionsThenItDoNotContainsExceptions() {
         val testee = loadClientFromProcessedData()
-        testee.setGenericElementHidingEnabled(true)
+        testee.isGenericElementHidingEnabled = true
         val selectors =
             testee.getElementHidingSelectors(documentUrl) ?: throw NullPointerException()
         assertEquals(2, selectors.split(", ").size)

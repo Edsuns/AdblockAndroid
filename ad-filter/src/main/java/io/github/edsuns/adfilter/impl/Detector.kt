@@ -31,11 +31,24 @@ internal class DetectorImpl : Detector {
     // null means disabled
     override var customFilterClient: Client? = null
         set(value) {
+            if (value != null) {
+                value.isGenericElementHidingEnabled = genericElementHidingEnabled
+            }
             field = value
             Timber.v("Blacklist client changed")
         }
 
+    var genericElementHidingEnabled: Boolean = true
+        set(value) {
+            for (client in clients) {
+                client.isGenericElementHidingEnabled = value
+            }
+            customFilterClient?.let { it.isGenericElementHidingEnabled = value }
+            field = value
+        }
+
     override fun addClient(client: Client) {
+        client.isGenericElementHidingEnabled = genericElementHidingEnabled
         clients.removeAll { it.id == client.id }
         clients.add(client)
         Timber.v("Client count: ${clients.size} (after addClient)")

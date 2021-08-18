@@ -51,8 +51,11 @@ class AdBlockClient(override val id: String) : Client {
         Timber.d("Loading basic data for $id completed in ${System.currentTimeMillis() - timestamp}ms")
     }
 
-    fun setGenericElementHidingEnabled(enabled: Boolean) =
-        setGenericElementHidingEnabled(nativeClientPointer, enabled)
+    override var isGenericElementHidingEnabled: Boolean
+        get() = isGenericElementHidingEnabled(nativeClientPointer)
+        set(value) = setGenericElementHidingEnabled(nativeClientPointer, value)
+
+    private external fun isGenericElementHidingEnabled(clientPointer: Long): Boolean
 
     private external fun setGenericElementHidingEnabled(clientPointer: Long, enabled: Boolean)
 

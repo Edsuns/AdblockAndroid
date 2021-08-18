@@ -27,6 +27,8 @@ interface Client {
 
     val id: String
 
+    var isGenericElementHidingEnabled: Boolean
+
     fun matches(url: String, documentUrl: String, resourceType: ResourceType): MatchResult
 
     fun getElementHidingSelectors(url: String): String?

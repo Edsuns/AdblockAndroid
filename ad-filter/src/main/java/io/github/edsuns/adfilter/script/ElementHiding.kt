@@ -5,7 +5,6 @@ import android.webkit.WebView
 import com.anthonycr.mezzanine.FileStream
 import com.anthonycr.mezzanine.MezzanineGenerator
 import io.github.edsuns.adfilter.impl.Detector
-import org.json.JSONArray
 import timber.log.Timber
 import java.net.MalformedURLException
 import java.net.URL
@@ -106,7 +105,8 @@ internal class ElementHiding constructor(private val detector: Detector) {
         if (cssRules.isNotBlank()) {
             result.append(cssRules)
         }
-        return result.toString()
+        // stylesheet has a limit of length, split it into smaller pieces by the replacement
+        return result.toString().replace(", ", HIDING_CSS, 200)
     }
 
     @JavascriptInterface
@@ -118,11 +118,6 @@ internal class ElementHiding constructor(private val detector: Detector) {
         }
         return ""
     }
-
-    // TODO: planing to use this function to inject every rule separately
-    @JavascriptInterface
-    fun getCssRules(documentUrl: String): String =
-        JSONArray(detector.getCssRules(documentUrl)).toString()
 
     /**
      * Extract path with query from URL
@@ -162,6 +157,45 @@ internal class ElementHiding constructor(private val detector: Detector) {
         return sb.toString()
             .replace(U2028, "\u2028")
             .replace(U2029, "\u2029")
+    }
+
+    /**
+     * Modified from String.replace(String, String, Boolean)
+     */
+    private fun String.replace(
+        oldValue: String,
+        newValue: String,
+        every: Int,
+        ignoreCase: Boolean = false
+    ): String {
+        run {
+            var occurrenceIndex: Int = indexOf(oldValue, 0, ignoreCase)
+            // FAST PATH: no match
+            if (occurrenceIndex < 0) return this
+
+            val oldValueLength = oldValue.length
+            val searchStep = oldValueLength.coerceAtLeast(1)
+            val newLengthHint = length - oldValueLength + newValue.length
+            if (newLengthHint < 0) throw OutOfMemoryError()
+            val stringBuilder = StringBuilder(newLengthHint)
+
+            var count = 0
+            var i = 0
+            do {
+                count++
+                stringBuilder.append(this, i, occurrenceIndex)
+                if (count == every) {
+                    stringBuilder.append(newValue)
+                    count = 0
+                } else {
+                    stringBuilder.append(oldValue)
+                }
+                i = occurrenceIndex + oldValueLength
+                if (occurrenceIndex >= length) break
+                occurrenceIndex = indexOf(oldValue, occurrenceIndex + searchStep, ignoreCase)
+            } while (occurrenceIndex > 0)
+            return stringBuilder.append(this, i, length).toString()
+        }
     }
 
     companion object {

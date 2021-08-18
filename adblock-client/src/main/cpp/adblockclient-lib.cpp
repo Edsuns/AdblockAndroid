@@ -29,6 +29,15 @@ Java_io_github_edsuns_adblockclient_AdBlockClient_releaseClient(JNIEnv *env,
 }
 
 extern "C"
+JNIEXPORT jboolean JNICALL
+Java_io_github_edsuns_adblockclient_AdBlockClient_isGenericElementHidingEnabled(JNIEnv *env,
+                                                                                jobject /* this */,
+                                                                                jlong clientPointer) {
+    auto *client = (AdBlockClient *) clientPointer;
+    return client->isGenericElementHidingEnabled;
+}
+
+extern "C"
 JNIEXPORT void JNICALL
 Java_io_github_edsuns_adblockclient_AdBlockClient_setGenericElementHidingEnabled(JNIEnv *env,
                                                                                  jobject /* this */,
