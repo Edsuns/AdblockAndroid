@@ -34,7 +34,6 @@ class AdBlockClient(override val id: String) : Client {
     private var processedDataPointer: Long
 
     init {
-        System.loadLibrary("adblock-client")
         nativeClientPointer = createClient()
         rawDataPointer = 0
         processedDataPointer = 0
@@ -129,5 +128,11 @@ class AdBlockClient(override val id: String) : Client {
 
     private fun String.baseHost(): String? {
         return Uri.parse(this).host?.removePrefix("www.")
+    }
+
+    companion object {
+        init {
+            System.loadLibrary("adblock-client")
+        }
     }
 }
