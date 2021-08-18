@@ -84,23 +84,27 @@ private object HeadersResourceTypeDetector {
     }
 
     private fun detect(acceptHeader: String): ResourceType? {
-        if (acceptHeader.contains("image/")) {
+        // accept header may contain different MIME types, pick up the first one
+        val comma = acceptHeader.indexOf(',')
+        val firstMIME = if (comma > -1) acceptHeader.substring(0, comma) else acceptHeader
+
+        if (firstMIME.contains("image/")) {
             return ResourceType.IMAGE
         }
-        if (acceptHeader.contains("/css")) {
+        if (firstMIME.contains("/css")) {
             return ResourceType.CSS
         }
-        if (acceptHeader.contains("javascript")) {
+        if (firstMIME.contains("javascript")) {
             return ResourceType.SCRIPT
         }
-        if (acceptHeader.contains("text/html")) {
+        if (firstMIME.contains("text/html")) {
             return ResourceType.SUBDOCUMENT
         }
-        if (acceptHeader.contains("font/")) {
+        if (firstMIME.contains("font/")) {
             return ResourceType.FONT
         }
-        if (acceptHeader.contains("audio/") || acceptHeader.contains("video/")
-            || acceptHeader.contains("application/ogg")
+        if (firstMIME.contains("audio/") || firstMIME.contains("video/")
+            || firstMIME.contains("application/ogg")
         ) {
             return ResourceType.MEDIA
         }
