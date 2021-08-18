@@ -2,7 +2,7 @@
 
 [![](https://jitpack.io/v/Edsuns/AdblockAndroid.svg)](https://jitpack.io/#Edsuns/AdblockAndroid)
 
-*Read this in other languages: English | [简体中文](README.zh-cn.md)*
+*English | [简体中文](README.zh-cn.md)*
 
 A lightweight and efficient adblock engine library for Android, which has strong compatibility for filters like [EasyList](https://easylist.to/) and [AdGuard Filters](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters).
 
@@ -55,7 +55,7 @@ Add the dependency:
 
 ```groovy
 dependencies {
-    implementation 'com.github.Edsuns.AdblockAndroid:ad-filter:Tag'
+    implementation 'com.github.Edsuns.AdblockAndroid:ad-filter:1.0'
 }
 ```
 
@@ -131,6 +131,12 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
                 filterViewModel.download(subscription.id)
             }
         }
+
+        filterViewModel.onDirty.observe(this, {
+            // Clear cache when there are changes to the filter.
+            // You need to refresh the page manually to make the changes take effect.
+            binding.webView.clearCache(false)
+        })
     }
 }
 ```

@@ -2,7 +2,7 @@
 
 [![](https://jitpack.io/v/Edsuns/AdblockAndroid.svg)](https://jitpack.io/#Edsuns/AdblockAndroid)
 
-*阅读其他语言版本：[English](README.md) | 简体中文*
+*[English](README.md) | 简体中文*
 
 一个轻量级、高性能、为安卓量身打造的 adblock 过滤引擎依赖库，支持 [EasyList](https://easylist.to/) 和 [AdGuard Filters](https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters) 的过滤规则。
 
@@ -55,7 +55,7 @@ allprojects {
 
 ```groovy
 dependencies {
-    implementation 'com.github.Edsuns.AdblockAndroid:ad-filter:Tag'
+    implementation 'com.github.Edsuns.AdblockAndroid:ad-filter:1.0'
 }
 ```
 
@@ -131,6 +131,11 @@ class MainActivity : AppCompatActivity(), WebViewClientListener {
                 filterViewModel.download(subscription.id)
             }
         }
+
+        filterViewModel.onDirty.observe(this, {
+            // 在过滤器有变更时清除缓存，需要手动刷新网页使变更生效
+            binding.webView.clearCache(false)
+        })
     }
 }
 ```

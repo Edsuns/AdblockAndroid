@@ -3,6 +3,7 @@ package io.github.edsuns.adfilter
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.work.WorkInfo
+import androidx.work.WorkInfo.State.*
 import androidx.work.WorkRequest
 import io.github.edsuns.adfilter.util.None
 
@@ -34,6 +35,7 @@ interface FilterViewModel {
 
     /**
      * Used to observe download has been added or removed.
+     * Only includes [ENQUEUED], [RUNNING] and [BLOCKED].
      * [WorkRequest.getId] to [Filter.id]
      */
     val workToFilterMap: LiveData<Map<String, String>>
