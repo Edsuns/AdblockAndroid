@@ -54,6 +54,17 @@ class AdBlockClientTest {
     }
 
     @Test
+    fun whenBasicDataLoadedThenExceptionIsNotBlocked() {
+        val testee = AdBlockClient(id)
+        testee.loadBasicData(data())// do not enable preserveRules, test disabling it here
+        val exceptionUrl = "https://exception-rule.com/a/b/info"
+        val result = testee.matches(exceptionUrl, documentUrl, resourceType)
+        assertTrue(result.hasException)
+        assertFalse(result.matchedRule.isNullOrBlank())
+        assertFalse(result.shouldBlock)
+    }
+
+    @Test
     fun whenBasicDataLoadedWithThirdPartyOptionThenFirstPartyIsNotBlocked() {
         val testee = AdBlockClient(id)
         testee.loadBasicData(data())

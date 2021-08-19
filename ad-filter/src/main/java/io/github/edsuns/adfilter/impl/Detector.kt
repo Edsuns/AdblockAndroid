@@ -3,7 +3,7 @@ package io.github.edsuns.adfilter.impl
 import io.github.edsuns.adblockclient.Client
 import io.github.edsuns.adblockclient.MatchResult
 import io.github.edsuns.adblockclient.ResourceType
-import io.github.edsuns.adblockclient.isException
+import io.github.edsuns.adblockclient.hasException
 import timber.log.Timber
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -72,25 +72,27 @@ internal class DetectorImpl : Detector {
         documentUrl: String,
         resourceType: ResourceType
     ): String? {
+        // custom filter have a higher priority, match it first
         customFilterClient?.matches(url, documentUrl, resourceType)?.let {
-            if (it.isException) {
+            if (it.hasException) {
                 return null// don't block exception
             }
             if (it.shouldBlock) {
-                return it.matchedRule ?: ""
+                return it.matchedRule
             }
         }
-        var matchResult: MatchResult? = null
+
+        var shouldBlock: MatchResult? = null
         for (client in clients) {
             val match: MatchResult = client.matches(url, documentUrl, resourceType)
-            if (match.isException) {
+            if (match.hasException) {
                 return null// don't block exception
             }
             if (match.shouldBlock) {
-                matchResult = match
+                shouldBlock = match
             }
         }
-        return if (matchResult?.shouldBlock == true) matchResult.matchedRule ?: "" else null
+        return shouldBlock?.matchedRule
     }
 
     override fun getElementHidingSelectors(documentUrl: String): String {

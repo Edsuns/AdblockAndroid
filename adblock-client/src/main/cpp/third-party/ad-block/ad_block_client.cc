@@ -48,6 +48,8 @@ const int AdBlockClient::kFingerprintSize = 6;
 
 static HashFn2Byte hashFn2Byte;
 
+static char *rule_definition_fallback = "-";
+
 /**
  * Finds the host within the passed in URL and returns its length
  */
@@ -1165,22 +1167,12 @@ bool AdBlockClient::matches(const char *input, FilterOption contextOption,
                            matchedFilter);
   }
 
-  hasMatch = hasMatch || hasMatchingFilters(noFingerprintFilters,
-                                            numNoFingerprintFilters, input, inputLen, contextOption,
-                                            contextDomain, &inputBloomFilter, inputHost,
-                                            inputHostLen,
-                                            matchedFilter);
-
   // If no noFingerprintFilters were hit, check the bloom filter substring
-  // fingerprint for the normal
-  // filter list.   If no substring exists for the input then we know for sure
-  // the URL should not be blocked.
-  bool bloomFilterMiss = false;
-  bool hostAnchoredHashSetMiss = false;
+  // fingerprint for the normal filter list.
   if (!hasMatch) {
-    bloomFilterMiss = bloomFilter
+    bool bloomFilterMiss = bloomFilter
         && !bloomFilter->substringExists(input, AdBlockClient::kFingerprintSize);
-    hostAnchoredHashSetMiss = isHostAnchoredHashSetMiss(input, inputLen,
+    bool hostAnchoredHashSetMiss = isHostAnchoredHashSetMiss(input, inputLen,
                                                         hostAnchoredHashSet, inputHost,
                                                         inputHostLen,
                                                         contextOption, contextDomain,
@@ -1192,31 +1184,39 @@ bool AdBlockClient::matches(const char *input, FilterOption contextOption,
       if (hostAnchoredHashSetMiss) {
         numHashSetSaves++;
       }
-      return false;
     }
 
-    hasMatch = !hostAnchoredHashSetMiss;
-  }
+    if (!hostAnchoredHashSetMiss) {
+      numHashSetSaves++;
+      hasMatch = true;
+    }
 
-  // We need to check the filters list manually because there is either a match
-  // or a false positive
-  if (!hasMatch && !bloomFilterMiss) {
-    hasMatch = hasMatchingFilters(filters, numFilters, input, inputLen,
-                                  contextOption, contextDomain, &inputBloomFilter,
-                                  inputHost, inputHostLen, matchedFilter);
-    // If there's still no match after checking the block filters, then no need
-    // to try to block this because there is a false positive.
-    if (!hasMatch) {
-      numFalsePositives++;
-      if (badFingerprintsHashSet) {
-        // cout << "false positive for input: " << input << " bloomFilterMiss: "
-        // << bloomFilterMiss << ", hostAnchoredHashSetMiss: "
-        // << hostAnchoredHashSetMiss << endl;
-        discoverMatchingPrefix(badFingerprintsHashSet, input, bloomFilter);
+    // We need to check the filters list manually because there is either a match
+    // or a false positive
+    if (hostAnchoredHashSetMiss && !bloomFilterMiss) {
+      hasMatch = hasMatchingFilters(filters, numFilters, input, inputLen,
+                                    contextOption, contextDomain, &inputBloomFilter,
+                                    inputHost, inputHostLen, matchedFilter);
+      // If there's still no match after checking the block filters, then no need
+      // to try to block this because there is a false positive.
+      if (!hasMatch) {
+        numFalsePositives++;
+        if (badFingerprintsHashSet) {
+          // cout << "false positive for input: " << input << " bloomFilterMiss: "
+          // << bloomFilterMiss << ", hostAnchoredHashSetMiss: "
+          // << hostAnchoredHashSetMiss << endl;
+          discoverMatchingPrefix(badFingerprintsHashSet, input, bloomFilter);
+        }
       }
-      return false;
     }
   }
+
+  // Iteration at the end can increase efficiency.
+  hasMatch = hasMatch || hasMatchingFilters(noFingerprintFilters,
+                                            numNoFingerprintFilters, input, inputLen, contextOption,
+                                            contextDomain, &inputBloomFilter, inputHost,
+                                            inputHostLen,
+                                            matchedFilter);
 
   bool hasExceptionMatch = false;
 
@@ -1244,6 +1244,48 @@ bool AdBlockClient::matches(const char *input, FilterOption contextOption,
                            matchedExceptionFilter);
   }
 
+  // If there's a matching no fingerprint exception then we can just return
+  // right away because we shouldn't block
+  if (!hasExceptionMatch) {
+    bool bloomExceptionFilterMiss = exceptionBloomFilter
+        && !exceptionBloomFilter->substringExists(input, AdBlockClient::kFingerprintSize);
+    bool hostAnchoredExceptionHashSetMiss =
+        isHostAnchoredHashSetMiss(input, inputLen, hostAnchoredExceptionHashSet,
+                                  inputHost, inputHostLen, contextOption, contextDomain,
+                                  matchedExceptionFilter);
+
+    if (bloomExceptionFilterMiss && hostAnchoredExceptionHashSetMiss) {
+      if (bloomExceptionFilterMiss) {
+        numExceptionBloomFilterSaves++;
+      }
+      if (hostAnchoredExceptionHashSetMiss) {
+        numExceptionHashSetSaves++;
+      }
+    }
+
+    if (!hostAnchoredExceptionHashSetMiss) {
+      numExceptionHashSetSaves++;
+      hasExceptionMatch = true;
+    }
+
+    if (hostAnchoredExceptionHashSetMiss && !bloomExceptionFilterMiss) {
+      hasExceptionMatch = hasMatchingFilters(exceptionFilters, numExceptionFilters, input,
+                                             inputLen, contextOption, contextDomain,
+                                             &inputBloomFilter, inputHost, inputHostLen,
+                                             matchedExceptionFilter);
+      if (!hasExceptionMatch) {
+        // False positive on the exception filter list
+        numExceptionFalsePositives++;
+        // cout << "exception false positive for input: " << input << endl;
+        if (badFingerprintsHashSet) {
+          discoverMatchingPrefix(badFingerprintsHashSet,
+                                 input, exceptionBloomFilter);
+        }
+      }
+    }
+  }
+
+  // Iteration at the end can increase efficiency.
   hasExceptionMatch = hasExceptionMatch ||
       hasMatchingFilters(noFingerprintExceptionFilters,
                          numNoFingerprintExceptionFilters, input, inputLen,
@@ -1251,56 +1293,15 @@ bool AdBlockClient::matches(const char *input, FilterOption contextOption,
                          contextDomain, &inputBloomFilter, inputHost, inputHostLen,
                          matchedExceptionFilter);
 
-  // If there's a matching no fingerprint exception then we can just return
-  // right away because we shouldn't block
-  if (hasExceptionMatch) {
-    return false;
+  // If rule definitions have not been saved, use fallback.
+  if (*matchedFilter && !(*matchedFilter)->ruleDefinition) {
+    (*matchedFilter)->ruleDefinition = rule_definition_fallback;
+  }
+  if (*matchedExceptionFilter && !(*matchedExceptionFilter)->ruleDefinition) {
+    (*matchedExceptionFilter)->ruleDefinition = rule_definition_fallback;
   }
 
-  bool bloomExceptionFilterMiss = exceptionBloomFilter
-      && !exceptionBloomFilter->substringExists(input,
-                                                AdBlockClient::kFingerprintSize);
-  bool hostAnchoredExceptionHashSetMiss =
-      isHostAnchoredHashSetMiss(input, inputLen, hostAnchoredExceptionHashSet,
-                                inputHost, inputHostLen, contextOption, contextDomain,
-                                matchedExceptionFilter);
-
-  // Now that we have a matching rule, we should check if no exception rule
-  // hits, if none hits, we should block
-  if (bloomExceptionFilterMiss && hostAnchoredExceptionHashSetMiss) {
-    if (bloomExceptionFilterMiss) {
-      numExceptionBloomFilterSaves++;
-    }
-    if (hostAnchoredExceptionHashSetMiss) {
-      numExceptionHashSetSaves++;
-    }
-    return true;
-  }
-
-  // If tehre wasn't an exception has set miss, it was a hit, and hash set is
-  // deterministic so we shouldn't block this resource.
-  if (!hostAnchoredExceptionHashSetMiss) {
-    numExceptionHashSetSaves++;
-    return false;
-  }
-
-  if (!bloomExceptionFilterMiss) {
-    if (!hasMatchingFilters(exceptionFilters, numExceptionFilters, input,
-                            inputLen, contextOption, contextDomain,
-                            &inputBloomFilter, inputHost, inputHostLen,
-                            matchedExceptionFilter)) {
-      // False positive on the exception filter list
-      numExceptionFalsePositives++;
-      // cout << "exception false positive for input: " << input << endl;
-      if (badFingerprintsHashSet) {
-        discoverMatchingPrefix(badFingerprintsHashSet,
-                               input, exceptionBloomFilter);
-      }
-      return true;
-    }
-  }
-
-  return false;
+  return hasMatch && !hasExceptionMatch;
 }
 
 /**
