@@ -1,4 +1,12 @@
 #pragma once
+
+const char *badSubstrings[] = {"http", "www"};
+
+// BadFingerprints exclusion is not reliable and appreciable for performance optimization.
+// Disable it temporarily.
+#ifndef ENABLE_BadFingerprints_Exclusion
+const char *badFingerprints[] = {};
+#else
 /**
   *
   * Auto generated bad filters
@@ -14751,5 +14759,4 @@ const char *badFingerprints[] = {
         "oo7.cl",
         "et/u/I",
 };
-
-const char *badSubstrings[] = {"http", "www"};
+#endif
